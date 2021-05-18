@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="CommonTypes.fs" />
+        <Compile Include="Errors.fs" />
+        <Compile Include="Session.fs" />
+        <Compile Include="Story.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="FSharp.UMX" Version="1.0.0" />
+    </ItemGroup>
+
+</Project>
