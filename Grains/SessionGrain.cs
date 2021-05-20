@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Gateway;
 using GrainInterfaces;
 using Orleans;
 using Orleans.EventSourcing;
@@ -47,35 +48,40 @@ namespace Grains
 			await _domainEventStream.OnNextAsync(e);
 		}
 
-		public async Task SetOwner(CommonTypes.User user)
-			=> await _aggregate.Exec(State.Session, Session.Command.NewSetOwner(user));
+        public async Task<Views.SessionView> SetOwner(CommonTypes.User user)
+        {
+            await _aggregate.Exec(State.Session, Session.Command.NewSetOwner(user));
+            return Views.SessionView.create(this.GetPrimaryKey(), Version, State.Session);
+        }
 
 
-		public async Task<Guid> AddStory(CommonTypes.User user, string title)
+        public async Task<Views.SessionView> AddStory(CommonTypes.User user, string title)
 		{
 			var id = Guid.NewGuid();
 			var story = GrainFactory.GetGrain<IStoryGrain>(id);
 			await story.Start(State.Session.Owner.Value, title);
 			await _aggregate.Exec(State.Session, Session.Command.NewAddStory(user, id));
-			return id;
+            return Views.SessionView.create(this.GetPrimaryKey(), Version, State.Session);
 		}
 
-		public async Task AddParticipant(CommonTypes.User user)
-		  => await _aggregate.Exec(State.Session, Session.Command.NewAddParticipant(user));
+        public async Task<Views.SessionView> AddParticipant(CommonTypes.User user)
+        {
+            await _aggregate.Exec(State.Session, Session.Command.NewAddParticipant(user));
+            return Views.SessionView.create(this.GetPrimaryKey(), Version, State.Session);
+        }
+
+        public Task<Views.SessionView> GetState()
+            => Task.FromResult(Views.SessionView.create(this.GetPrimaryKey(), Version, State.Session));
+
+        public async Task<Views.SessionView> RemoveParticipant(Guid id)
+        {
+            await _aggregate.Exec(State.Session, Session.Command.NewRemoveParticipant(id));
+            return Views.SessionView.create(this.GetPrimaryKey(), Version, State.Session);
+        }
+
+        public async Task<IReadOnlyList<Session.Event>> GetEventsAfter(int version)
+            => await RetrieveConfirmedEvents(version, Version);
 
 
-		public Task<ReadOnlyCollection<Guid>> GetStories()
-			=> Task.FromResult(State.Session.Stories.ToList().AsReadOnly());
-
-
-		public async Task<IReadOnlyList<Session.Event>> GetEventsAfter(int version)
-			=> await RetrieveConfirmedEvents(version, Version);
-
-
-		public async Task RemoveParticipant(Guid id)
-			=> await _aggregate.Exec(State.Session, Session.Command.NewRemoveParticipant(id));
-
-		public Task<GrainState<Guid,SessionObj>> GetSate() 
-			=> Task.FromResult(new GrainState<Guid, SessionObj>(Version, this.GetPrimaryKey(),  State.Session));
 	}
 }

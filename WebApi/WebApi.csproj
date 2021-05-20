@@ -19,8 +19,4 @@
       <ProjectReference Include="..\Grains\Grains.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Api\" />
-    </ItemGroup>
-
 </Project>

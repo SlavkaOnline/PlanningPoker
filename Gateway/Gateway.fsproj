@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="Views.fs" />
+        <Compile Include="Requests.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\PlanningPoker\PlanningPoker.fsproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="FSharp.UMX" Version="1.0.0" />
+    </ItemGroup>
+
+</Project>

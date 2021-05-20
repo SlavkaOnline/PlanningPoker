@@ -15,6 +15,7 @@
 
 
     <ItemGroup>
+      <ProjectReference Include="..\Gateway\Gateway.fsproj" />
       <ProjectReference Include="..\PlanningPoker\PlanningPoker.fsproj" />
     </ItemGroup>
     
