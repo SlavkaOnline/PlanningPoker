@@ -16,6 +16,6 @@ namespace GrainInterfaces
         Task<Views.SessionView> AddParticipant(CommonTypes.User user);
         Task<Views.SessionView> RemoveParticipant(Guid id);
 
-        Task<IReadOnlyList<Session.Event>> GetEventsAfter(int version);
+        Task<IReadOnlyList<Views.EventView<Session.Event>>> GetEventsAfter(int version);
     }
 }

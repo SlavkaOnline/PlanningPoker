@@ -93,3 +93,8 @@ module Views =
                   | ClosedStory s -> Nullable s.FinishedAt
 
             }
+
+        type EventView<'TPayload> = {
+            Order: int32
+            Payload: 'TPayload
+        }

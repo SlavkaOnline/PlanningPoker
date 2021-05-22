@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Gateway;
 using GrainInterfaces;
 using Orleans;
+using Orleans.Concurrency;
 using Orleans.EventSourcing;
 using Orleans.Providers;
 using Orleans.Streams;
@@ -13,40 +14,42 @@ using PlanningPoker.Domain;
 
 namespace Grains
 {
-	public class SessionGrainState
-	{
-		public SessionObj Session { get; private set; } = SessionObj.zero;
-		public void Apply (Session.Event e)
-		{
-			Session = PlanningPoker.Domain.Session.reducer(Session, e);
-		}
-	}
+    public class SessionGrainState
+    {
+        public SessionObj Session { get; private set; } = SessionObj.zero;
+
+        public void Apply(Session.Event e)
+        {
+            Session = PlanningPoker.Domain.Session.reducer(Session, e);
+        }
+    }
 
 
-	[StorageProvider(ProviderName = "InMemory")]
-	[LogConsistencyProvider(ProviderName = "LogStorage")]
-	public class SessionGrain : JournaledGrain<SessionGrainState, Session.Event>, ISessionGrain
-	{
-		private readonly Aggregate<SessionObj, Session.Command, Session.Event> _aggregate = null;
-		private IAsyncStream<Session.Event> _domainEventStream = null;
+    [StorageProvider(ProviderName = "InMemory")]
+    [LogConsistencyProvider(ProviderName = "LogStorage")]
+    public class SessionGrain : JournaledGrain<SessionGrainState, Session.Event>, ISessionGrain
+    {
+        private readonly Aggregate<SessionObj, Session.Command, Session.Event> _aggregate = null;
+        private IAsyncStream<Views.EventView<Session.Event>> _domainEventStream = null;
 
-		public SessionGrain()
-		{
-			_aggregate = new Aggregate<SessionObj, Session.Command, Session.Event>(Session.producer, Commit);
-		}
+        public SessionGrain()
+        {
+            _aggregate = new Aggregate<SessionObj, Session.Command, Session.Event>(Session.producer, Commit);
+        }
 
-		public override Task OnActivateAsync()
-		{
-			_domainEventStream = GetStreamProvider("SMS").GetStream<Session.Event>(this.GetPrimaryKey(), "DomainEvents");
-			return base.OnActivateAsync();
-		}
+        public override Task OnActivateAsync()
+        {
+            _domainEventStream =
+                GetStreamProvider("SMS").GetStream<Views.EventView<Session.Event>>(this.GetPrimaryKey(), "DomainEvents");
+            return base.OnActivateAsync();
+        }
 
-		private async Task Commit(Session.Event e)
-		{
-			RaiseEvent(e);
-			await ConfirmEvents();
-			await _domainEventStream.OnNextAsync(e);
-		}
+        private async Task Commit(Session.Event e)
+        {
+            RaiseEvent(e);
+            await ConfirmEvents();
+            await _domainEventStream.OnNextAsync(new Views.EventView<Session.Event>(Version - 1, e));
+        }
 
         public async Task<Views.SessionView> SetOwner(CommonTypes.User user)
         {
@@ -54,15 +57,14 @@ namespace Grains
             return Views.SessionView.create(this.GetPrimaryKey(), Version, State.Session);
         }
 
-
         public async Task<Views.SessionView> AddStory(CommonTypes.User user, string title)
-		{
-			var id = Guid.NewGuid();
-			var story = GrainFactory.GetGrain<IStoryGrain>(id);
-			await story.Start(State.Session.Owner.Value, title);
-			await _aggregate.Exec(State.Session, Session.Command.NewAddStory(user, id));
+        {
+            var id = Guid.NewGuid();
+            var story = GrainFactory.GetGrain<IStoryGrain>(id);
+            await story.Start(State.Session.Owner.Value, title);
+            await _aggregate.Exec(State.Session, Session.Command.NewAddStory(user, id));
             return Views.SessionView.create(this.GetPrimaryKey(), Version, State.Session);
-		}
+        }
 
         public async Task<Views.SessionView> AddParticipant(CommonTypes.User user)
         {
@@ -79,9 +81,10 @@ namespace Grains
             return Views.SessionView.create(this.GetPrimaryKey(), Version, State.Session);
         }
 
-        public async Task<IReadOnlyList<Session.Event>> GetEventsAfter(int version)
-            => await RetrieveConfirmedEvents(version, Version);
-
-
-	}
+        public async Task<IReadOnlyList<Views.EventView<Session.Event>>> GetEventsAfter(int version)
+        {
+            var versions = await RetrieveConfirmedEvents(version, Version);
+            return versions.Select((v, order) => new Views.EventView<Session.Event>(order, v)).ToArray();
+        }
+    }
 }
