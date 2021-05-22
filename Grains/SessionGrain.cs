@@ -48,7 +48,7 @@ namespace Grains
         {
             RaiseEvent(e);
             await ConfirmEvents();
-            await _domainEventStream.OnNextAsync(new Views.EventView<Session.Event>(Version - 1, e));
+            await _domainEventStream.OnNextAsync(new Views.EventView<Session.Event>(Version, e));
         }
 
         public async Task<Views.SessionView> SetOwner(CommonTypes.User user)

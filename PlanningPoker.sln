@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApi", "WebApi\WebApi.csp
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Gateway", "Gateway\Gateway.fsproj", "{B8E72629-8366-4A8C-9DB2-6A093CDC1495}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "EventsDelivery", "EventsDelivery\EventsDelivery.fsproj", "{AB1CD715-1060-4F14-A206-C2B083EFBB2A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{B8E72629-8366-4A8C-9DB2-6A093CDC1495}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B8E72629-8366-4A8C-9DB2-6A093CDC1495}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B8E72629-8366-4A8C-9DB2-6A093CDC1495}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB1CD715-1060-4F14-A206-C2B083EFBB2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB1CD715-1060-4F14-A206-C2B083EFBB2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB1CD715-1060-4F14-A206-C2B083EFBB2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB1CD715-1060-4F14-A206-C2B083EFBB2A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

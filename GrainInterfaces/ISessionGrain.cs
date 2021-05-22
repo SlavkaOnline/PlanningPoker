@@ -8,7 +8,7 @@ using PlanningPoker.Domain;
 
 namespace GrainInterfaces
 {
-    public interface ISessionGrain : IGrainWithGuidKey
+    public interface ISessionGrain : IDomainGrain<Session.Event>
     {
         Task<Views.SessionView> GetState();
         Task<Views.SessionView> SetOwner(CommonTypes.User user);

@@ -6,7 +6,7 @@ using Gateway;
 
 namespace GrainInterfaces
 {
-	public interface IStoryGrain : IGrainWithGuidKey
+	public interface IStoryGrain : IDomainGrain<Story.Event>
 	{
 		Task<Views.StoryView> GetState();
 		Task<Views.StoryView> Start(CommonTypes.User user, string title);

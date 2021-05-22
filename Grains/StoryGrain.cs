@@ -44,7 +44,7 @@ namespace Grains
         {
             RaiseEvent(e);
             await ConfirmEvents();
-            await _domainEventStream.OnNextAsync(new Views.EventView<Story.Event>(Version - 1, e));
+            await _domainEventStream.OnNextAsync(new Views.EventView<Story.Event>(Version, e));
         }
 
         public async Task<Views.StoryView> Start(CommonTypes.User user, string title)
