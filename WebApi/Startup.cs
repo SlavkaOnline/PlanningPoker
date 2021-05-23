@@ -48,6 +48,9 @@ namespace WebApi
                     options.PayloadSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
                 });
 
+
+            services.AddCors();
+
             services.AddSwaggerGen(c => { c.SwaggerDoc("v1", new OpenApiInfo {Title = "WebApi", Version = "v1"}); });
         }
 
@@ -67,6 +70,12 @@ namespace WebApi
 
            app.UseAuthentication();
            app.UseAuthorization();
+
+           app.UseCors(o =>
+               o.AllowAnyHeader()
+               .AllowAnyOrigin()
+               .AllowCredentials()
+               .AllowAnyMethod());
 
            app.UseEndpoints(endpoints =>
             {

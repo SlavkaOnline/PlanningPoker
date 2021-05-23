@@ -10,7 +10,9 @@ namespace Grains
 		private readonly Func<TState, TCommand, FSharpResult<TEvent, Errors>> _producer;
 		private readonly Func<TEvent, Task> _commiter;
 
-        public Aggregate(Func<TState, TCommand, FSharpResult<TEvent, Errors>> producer, Func<TEvent, Task> commiter)
+        public Aggregate(
+            Func<TState, TCommand, FSharpResult<TEvent, Errors>> producer,
+            Func<TEvent, Task> commiter)
         {
 			_producer = producer;
 			_commiter = commiter;
