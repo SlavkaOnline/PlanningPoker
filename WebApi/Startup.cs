@@ -1,8 +1,10 @@
 using System;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using EventsDelivery;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Connections;
@@ -11,6 +13,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using WebApi.Application;
 
@@ -30,30 +33,22 @@ namespace WebApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            services.AddRazorPages();
-            services.AddIdentity<ApplicationUser, IdentityRole>()
-                .AddDefaultTokenProviders();
-            services.AddSingleton<IUserStore<ApplicationUser>, UserStore>();
-            services.AddSingleton<IRoleStore<IdentityRole>, RoleStore>();
+            services.AddSingleton<JwtTokenProvider>();
 
-            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                .AddCookie(options =>
+            services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+                .AddJwtBearer(x =>
                 {
-                    options.LoginPath = "/login";
-                    options.LogoutPath = "/logout";
-                    options.ClaimsIssuer = "UserName";
-                    options.ExpireTimeSpan = TimeSpan.FromDays(30);
-                    options.ReturnUrlParameter = CookieAuthenticationDefaults.ReturnUrlParameter;
-                    options.Events = new CookieAuthenticationEvents()
+                    x.SaveToken = true;
+                    x.TokenValidationParameters = new TokenValidationParameters()
                     {
-                        OnRedirectToLogin = redirectContext =>
-                        {
-                            var uri = redirectContext.RedirectUri;
-                            UriHelper.FromAbsolute(uri, out var scheme, out var host, out var path, out var query, out var fragment);
-                            uri = UriHelper.BuildAbsolute(scheme, host, path);
-                            redirectContext.Response.Redirect(uri);
-                            return Task.CompletedTask;
-                        }
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"])),
+                        ValidateIssuer = false,
+                        ValidateAudience = false
                     };
                 });
 
@@ -69,11 +64,9 @@ namespace WebApi
                     builder =>
                     {
                         builder
-                            .WithOrigins("http://localhost:3000")
+                            .AllowAnyOrigin()
                             .AllowAnyMethod()
-                            .AllowAnyHeader()
-                            .AllowCredentials()
-                            .WithExposedHeaders("Location");
+                            .AllowAnyHeader();
                     });
             });
 
@@ -107,7 +100,6 @@ namespace WebApi
                         HttpTransportType.LongPolling;
                 });
 
-                endpoints.MapRazorPages();
                 endpoints.MapControllers();
             });
         }
