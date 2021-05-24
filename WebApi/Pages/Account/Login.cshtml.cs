@@ -27,12 +27,13 @@ namespace WebApi.Pages.Account
             ReturnUrl = returnUrl;
         }
 
-        public async Task<IActionResult> OnPostAsync()
+        public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
+            returnUrl ??= Url.Content("~/");
             var user = new ApplicationUser() {UserName = UserName};
             await _userManager.CreateAsync(user);
             await _signInManager.SignInAsync(user, true);
-            return Redirect(ReturnUrl);
+            return Redirect(returnUrl);
         }
     }
 }

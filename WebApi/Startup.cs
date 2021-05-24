@@ -1,10 +1,12 @@
 using System;
 using System.Text.Json;
+using System.Threading.Tasks;
 using EventsDelivery;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Connections;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,6 +43,18 @@ namespace WebApi
                     options.LogoutPath = "/logout";
                     options.ClaimsIssuer = "UserName";
                     options.ExpireTimeSpan = TimeSpan.FromDays(30);
+                    options.ReturnUrlParameter = CookieAuthenticationDefaults.ReturnUrlParameter;
+                    options.Events = new CookieAuthenticationEvents()
+                    {
+                        OnRedirectToLogin = redirectContext =>
+                        {
+                            var uri = redirectContext.RedirectUri;
+                            UriHelper.FromAbsolute(uri, out var scheme, out var host, out var path, out var query, out var fragment);
+                            uri = UriHelper.BuildAbsolute(scheme, host, path);
+                            redirectContext.Response.Redirect(uri);
+                            return Task.CompletedTask;
+                        }
+                    };
                 });
 
             services.AddSignalR()
@@ -49,7 +63,19 @@ namespace WebApi
                 });
 
 
-            services.AddCors();
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll",
+                    builder =>
+                    {
+                        builder
+                            .WithOrigins("http://localhost:3000")
+                            .AllowAnyMethod()
+                            .AllowAnyHeader()
+                            .AllowCredentials()
+                            .WithExposedHeaders("Location");
+                    });
+            });
 
             services.AddSwaggerGen(c => { c.SwaggerDoc("v1", new OpenApiInfo {Title = "WebApi", Version = "v1"}); });
         }
@@ -68,15 +94,9 @@ namespace WebApi
 
             app.UseRouting();
 
+           app.UseCors("AllowAll");
            app.UseAuthentication();
            app.UseAuthorization();
-
-           app.UseCors(o =>
-               o.AllowAnyHeader()
-               .AllowAnyOrigin()
-               .AllowCredentials()
-               .AllowAnyMethod());
-
            app.UseEndpoints(endpoints =>
             {
 
