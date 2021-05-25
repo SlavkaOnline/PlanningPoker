@@ -51,9 +51,9 @@ namespace Grains
             await _domainEventStream.OnNextAsync(new Views.EventView<Session.Event>(Version, e));
         }
 
-        public async Task<Views.SessionView> SetOwner(CommonTypes.User user)
+        public async Task<Views.SessionView> Start(string title, CommonTypes.User user)
         {
-            await _aggregate.Exec(State.Session, Session.Command.NewSetOwner(user));
+            await _aggregate.Exec(State.Session, Session.Command.NewStart(title, user));
             return Views.SessionView.create(this.GetPrimaryKey(), Version, State.Session);
         }
 

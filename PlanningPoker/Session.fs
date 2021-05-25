@@ -6,7 +6,8 @@ open FSharp.UMX
 
 [<CLIMutable>]
 type SessionObj =
-    { Owner: User option
+    { Title: string
+      Owner: User option
       Participants: User list
       Stories: Guid<ObjectId> list }
     member this.hasAccessToChange user =
@@ -18,7 +19,8 @@ type SessionObj =
         List.contains participant this.Participants
 
     static member zero =
-        { Owner = None
+        { Title = ""
+          Owner = None
           Participants = []
           Stories = [] }
 
@@ -27,13 +29,13 @@ type SessionObj =
 module Session =
 
     type Command =
-        | SetOwner of user: User
+        | Start of title: string * user: User
         | AddStory of user: User * storyId: Guid<ObjectId>
         | AddParticipant of participant: User
         | RemoveParticipant of id: Guid<UserId>
 
     type Event =
-        | OwnerSet of user: User
+        | Started of title: string * user: User
         | StoryAdded of story: Guid<ObjectId>
         | ParticipantAdded of participant: User
         | ParticipantRemoved of participant: User
@@ -54,7 +56,7 @@ module Session =
 
     let producer (state: SessionObj) command =
         match command with
-        | SetOwner user -> Ok <| OwnerSet(user)
+        | Start (title, user) -> Ok <| Started(title, user)
         | AddStory (user, id) ->
             if state.hasAccessToChange user then
                 Ok <| StoryAdded id
@@ -74,7 +76,7 @@ module Session =
 
     let reducer (state: SessionObj) event =
         match event with
-        | OwnerSet user -> { state with Owner = Some user }
+        | Started (title, user) -> { state with Title = title; Owner = Some user }
         | StoryAdded story -> addStory story state
         | ParticipantAdded user -> addParticipant user state
         | ParticipantRemoved user -> removeParticipant user state

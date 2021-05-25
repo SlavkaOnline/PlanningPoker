@@ -1,0 +1,27 @@
+@import "index";
+
+.navbar {
+    background-color: rgba(27, 84, 134, .92);
+    color: white;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+
+    &_title {
+        margin-left: 10px;
+    }
+
+    &_login {
+        margin-left: auto;
+    }
+
+
+    &_link {
+        color: inherit;
+        @include simple_link;
+    }
+}

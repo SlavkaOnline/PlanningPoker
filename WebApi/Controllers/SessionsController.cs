@@ -42,12 +42,12 @@ namespace WebApi.Controllers
         }
 
 		[HttpPost]
-		public async Task<Views.SessionView> Create()
+		public async Task<Views.SessionView> Create(Requests.CreateSession request)
         {
             var (userId, userName) = HttpContext.User.GetUserParams();
             var id = Guid.NewGuid();
             var session = silo.GetGrain<ISessionGrain>(id);
-			return await session.SetOwner(new CommonTypes.User(userId, userName));
+			return await session.Start(request.Title, new CommonTypes.User(userId, userName));
         }
 
 		[HttpPost]
