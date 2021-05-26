@@ -1,0 +1,14 @@
+.wrapper {
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-flow: column;
+
+    .form {
+        border: 1px solid rgba(99, 97, 119, .25);
+        padding: 20px;
+        margin: 10% auto 0;
+        border-radius: 5px;
+        box-shadow: 2px 8px 8px rgba(0, 0, 0, .5);
+    }
+}

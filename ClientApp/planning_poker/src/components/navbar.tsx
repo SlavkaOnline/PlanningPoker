@@ -1,33 +1,53 @@
 import React from 'react';
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
 import {Link} from "react-router-dom";
 
-import '../styles/navbar.scss'
+import styles from '../styles/navbar.module.scss'
+import {useAuth} from "../contexts/auth-context";
+import {User} from "../models/models";
+import {Button} from "@material-ui/core";
 
 
 export const Navbar = () => {
 
+    const {user, signout} = useAuth()
+
+    function getAction(user: User | null) {
+        if (!user) {
+            return (<Typography>
+                <Button component={Link} className={styles.link} to="/login" >
+                    login
+                </Button>
+            </Typography>)
+        } else {
+            return (
+                <div className={styles.nameLoguot}>
+                <div className={styles.name}>{user.name}</div>
+                <Typography>
+                    <Button component={Link} className={styles.link} to="/" onClick={() => signout()}>
+                        logout
+                    </Button>
+                </Typography>
+            </div>)
+        }
+    }
+
+
     return (
-        <div className="navbar">
-                            <IconButton edge="start" color="inherit" aria-label="menu">
-                                <MenuIcon/>
-                            </IconButton>
-                        <div className="navbar_title">
-                            <Typography variant="h6">
-                                <Link className="navbar_link" to="/"> Planning poker </Link>
-                            </Typography>
-                        </div>
-                        <div className="navbar_login">
-                            <Typography>
-                                <Link className="navbar_link" to="/login">
-                                    login
-                                </Link>
-                            </Typography>
-                        </div>
+        <div className={styles.navbar}>
+            <IconButton edge="start" color="inherit" aria-label="menu">
+                <MenuIcon/>
+            </IconButton>
+            <div className={styles.title}>
+                <Typography variant="h6">
+                    <Link className={styles.link} to="/"> Planning poker </Link>
+                </Typography>
+            </div>
+            <div className={styles.login}>
+                {getAction(user)}
+            </div>
         </div>
     );
 }

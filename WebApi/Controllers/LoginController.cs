@@ -8,6 +8,7 @@ namespace WebApi.Controllers
 {
     [AllowAnonymous]
     [Route("api/[controller]")]
+    [ApiController]
     public class LoginController : ControllerBase
     {
         private readonly JwtTokenProvider _jwtTokenProvider;

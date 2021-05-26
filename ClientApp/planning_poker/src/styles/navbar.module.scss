@@ -11,16 +11,26 @@
     overflow: hidden;
     box-sizing: border-box;
 
-    &_title {
+    .title {
         margin-left: 10px;
     }
 
-    &_login {
+    .login {
         margin-left: auto;
     }
 
+    .nameLoguot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
 
-    &_link {
+        .name {
+            margin-right: 20px;
+            padding-bottom: 5px;
+        }
+    }
+
+    .link {
         color: inherit;
         @include simple_link;
     }
