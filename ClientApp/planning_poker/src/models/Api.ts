@@ -1,18 +1,29 @@
-import axios, { AxiosRequestConfig, AxiosPromise, AxiosResponse } from 'axios';
+import axios, {AxiosRequestConfig, AxiosPromise, AxiosResponse} from 'axios';
 import {User} from "./models";
+import {createBrowserHistory} from 'history'
 
-axios.interceptors.response.use((response) => {
+const history = createBrowserHistory();
 
-    return response;
-}, (error) => {
-    if (error.response.status === 401) {
-        window.location.href = error.response.headers.location ;
+axios.interceptors.request.use(request => {
+    const localUser = localStorage.getItem('user');
+    if (localUser) {
+        const {token} = JSON.parse(localUser) as User
+        request.headers.Authorization = `Bearer ${token}`;
     }
-});
+    return request;
+}, error => Promise.reject(error))
 
 
+axios.interceptors.response.use((response) => response,
+    (error) => {
+        if (error.response.status === 401) {
+            history.push('/login')
+        }
+        return Promise.reject(error);
+    });
 
-export async function login(name:string): Promise<User> {
+
+export async function login(name: string): Promise<User> {
     return axios.post<User>('/api/login', {name})
         .then(r => r.data)
 }
