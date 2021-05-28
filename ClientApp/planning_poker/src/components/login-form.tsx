@@ -35,7 +35,7 @@ export const LoginForm = () => {
                 />
             </div>
             <div className={styles.login}>
-                <Button variant="contained" color="primary" onClick={async () => await login()}>
+                <Button variant="contained" color="primary" onClick={() => login()}>
                     Login
                 </Button>
             </div>

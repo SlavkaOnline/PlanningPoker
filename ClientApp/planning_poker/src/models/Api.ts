@@ -1,5 +1,5 @@
 import axios, {AxiosRequestConfig, AxiosPromise, AxiosResponse} from 'axios';
-import {User} from "./models";
+import {Session, User} from "./models";
 import {createBrowserHistory} from 'history'
 
 const history = createBrowserHistory();
@@ -25,5 +25,10 @@ axios.interceptors.response.use((response) => response,
 
 export async function login(name: string): Promise<User> {
     return axios.post<User>('/api/login', {name})
-        .then(r => r.data)
+        .then(r => r.data);
+}
+
+export async function createSession(title:string): Promise<Session> {
+    return axios.post<Session>('/api/sessions', {title})
+        .then(r => r.data);
 }
