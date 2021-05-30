@@ -3,13 +3,13 @@ import {CircularProgress} from "@material-ui/core";
 import styles from '../styles/busy-wrapper.module.scss'
 
 export type BusyWrapperProps = Readonly<{
-    Component: React.ElementRef<any>
+    component: React.ElementRef<any>
 }>
 
 export const BusyWrapper = (props: BusyWrapperProps) => {
     const [isBusy, setBusy] = useState(false)
 
-    const refComponent = useRef<any>()
+    const refComponent = useRef<any>(props.component)
 
     useEffect(() => {
             if (refComponent.current) {

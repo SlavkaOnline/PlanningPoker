@@ -1,5 +1,4 @@
 ﻿namespace PlanningPoker.Domain
-
 open CommonTypes
 open FSharp.UMX
 
@@ -9,6 +8,7 @@ type SessionObj =
     { Title: string
       Owner: User option
       Participants: User list
+      ActiveStory: Guid<ObjectId> option
       Stories: Guid<ObjectId> list }
     member this.hasAccessToChange user =
         match this.Owner with
@@ -21,6 +21,7 @@ type SessionObj =
     static member zero =
         { Title = ""
           Owner = None
+          ActiveStory = None
           Participants = []
           Stories = [] }
 
@@ -33,12 +34,14 @@ module Session =
         | AddStory of user: User * storyId: Guid<ObjectId>
         | AddParticipant of participant: User
         | RemoveParticipant of id: Guid<UserId>
+        | SetActiveStory of user: User * id: Guid<ObjectId>
 
     type Event =
         | Started of title: string * user: User
         | StoryAdded of story: Guid<ObjectId>
         | ParticipantAdded of participant: User
         | ParticipantRemoved of participant: User
+        | ActiveStorySet of id: Guid<ObjectId>
 
     let addParticipant participant session =
         { session with
@@ -74,9 +77,22 @@ module Session =
             | Some p -> Ok <| ParticipantRemoved p
             | None -> Error <| Errors.ParticipantNotExist
 
+        | SetActiveStory (user, id) ->
+            if state.hasAccessToChange user then
+                if state.Stories |> List.contains id then
+                    Ok <| ActiveStorySet id
+                else
+                    Error <| Errors.StoryNotExist
+            else
+                Error <| Errors.UnauthorizedAccess
+
     let reducer (state: SessionObj) event =
         match event with
-        | Started (title, user) -> { state with Title = title; Owner = Some user }
+        | Started (title, user) ->
+            { state with
+                  Title = title
+                  Owner = Some user }
         | StoryAdded story -> addStory story state
         | ParticipantAdded user -> addParticipant user state
         | ParticipantRemoved user -> removeParticipant user state
+        | ActiveStorySet id -> { state with ActiveStory = Some id }

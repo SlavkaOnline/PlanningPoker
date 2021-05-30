@@ -1,5 +1,5 @@
 ﻿import React, {useState} from "react";
-import styles from "../styles/login-form.module.scss";
+import styles from "../styles/session-creater.module.scss";
 import {Button, TextField} from "@material-ui/core";
 import {createSession} from "../models/Api";
 import {useHistory} from "react-router-dom";
@@ -8,13 +8,10 @@ import {BusyWrapper} from "./busy-wrapper";
 export const SessionCreator = () => {
 
     const [title, setTitle] = useState("");
-    const [isBusy, setBusy] = useState(false)
     const history = useHistory();
 
     async function create() {
-        setBusy(true);
         const session = await createSession(title);
-        setBusy(false);
         history.push(`/session/${session.id}`)
     }
 
@@ -33,12 +30,10 @@ export const SessionCreator = () => {
                     onChange={(e) => setTitle(e.target.value)}
                 />
             </div>
-            <div className={styles.login}>
-                <BusyWrapper Component={
+            <div className={styles.create}>
                     <Button variant="contained" color="primary" onClick={() => create()}>
                         Create
                     </Button>
-                }/>
             </div>
         </form>)
 }

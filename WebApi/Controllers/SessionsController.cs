@@ -77,5 +77,13 @@ namespace WebApi.Controllers
             return await session.RemoveParticipant(userId);
         }
 
+        [HttpPost]
+        [Route("{id}/activestory")]
+        public async Task<Views.SessionView> SetActiveStory(Guid id, Requests.SetActiveStory request)
+        {
+            var (userId, userName) = HttpContext.User.GetUserParams();
+            var session = silo.GetGrain<ISessionGrain>(id);
+            return await session.SetActiveStory(new CommonTypes.User(userId, userName), Guid.Parse(request.Id));
+        }
 	}
 }

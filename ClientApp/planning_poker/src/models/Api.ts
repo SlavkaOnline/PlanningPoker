@@ -1,5 +1,5 @@
-import axios, {AxiosRequestConfig, AxiosPromise, AxiosResponse} from 'axios';
-import {Session, User} from "./models";
+import axios from 'axios';
+import {Session, Story, User} from "./models";
 import {createBrowserHistory} from 'history'
 
 const history = createBrowserHistory();
@@ -28,7 +28,27 @@ export async function login(name: string): Promise<User> {
         .then(r => r.data);
 }
 
-export async function createSession(title:string): Promise<Session> {
+export async function createSession(title: string): Promise<Session> {
     return axios.post<Session>('/api/sessions', {title})
+        .then(r => r.data);
+}
+
+export async function createStory(sessionId: string, title: string): Promise<Session> {
+    return axios.post<Session>(`/api/sessions/${sessionId}/stories`, {title})
+        .then(r => r.data);
+}
+
+export async function getSession(id: string): Promise<Session> {
+    return axios.get<Session>(`/api/sessions/${id}`)
+        .then(r => r.data);
+}
+
+export async function getStory(id: string): Promise<Story> {
+    return axios.get<Story>(`/api/stories/${id}`)
+        .then(r => r.data);
+}
+
+export async function setActiveStory(id: string, storyId: string): Promise<Session> {
+    return axios.post<Session>(`/api/sessions/${id}/activestory`, {id: storyId})
         .then(r => r.data);
 }

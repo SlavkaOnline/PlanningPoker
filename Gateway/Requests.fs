@@ -1,5 +1,8 @@
 namespace Gateway
 
+open FSharp.UMX
+open System
+
 module Requests =
 
 
@@ -16,4 +19,9 @@ module Requests =
     [<CLIMutable>]
     type Vote = {
         Card: string;
+    }
+
+    [<CLIMutable>]
+    type SetActiveStory = {
+        Id: string
     }

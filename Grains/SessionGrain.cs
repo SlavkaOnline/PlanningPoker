@@ -66,6 +66,12 @@ namespace Grains
             return Views.SessionView.create(this.GetPrimaryKey(), Version, State.Session);
         }
 
+        public async Task<Views.SessionView> SetActiveStory(CommonTypes.User user, Guid id)
+        {
+            await _aggregate.Exec(State.Session, Session.Command.NewSetActiveStory(user, id));
+            return Views.SessionView.create(this.GetPrimaryKey(), Version, State.Session);
+        }
+
         public async Task<Views.SessionView> AddParticipant(CommonTypes.User user)
         {
             await _aggregate.Exec(State.Session, Session.Command.NewAddParticipant(user));

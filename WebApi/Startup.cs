@@ -36,10 +36,10 @@ namespace WebApi
             services.AddSingleton<JwtTokenProvider>();
 
             services.AddAuthentication(x =>
-            {
-                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
+                {
+                    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
                 .AddJwtBearer(x =>
                 {
                     x.SaveToken = true;
@@ -50,10 +50,28 @@ namespace WebApi
                         ValidateIssuer = false,
                         ValidateAudience = false
                     };
+                    x.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken = context.Request.Query["access_token"];
+
+                            // If the request is for our hub...
+                            var path = context.HttpContext.Request.Path;
+                            if (!string.IsNullOrEmpty(accessToken) &&
+                                (path.StartsWithSegments("/events")))
+                            {
+                                // Read the token out of the query string
+                                context.Token = accessToken;
+                            }
+                            return Task.CompletedTask;
+                        }
+                    };
                 });
 
             services.AddSignalR()
-                .AddJsonProtocol(options => {
+                .AddJsonProtocol(options =>
+                {
                     options.PayloadSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
                 });
 
@@ -83,16 +101,15 @@ namespace WebApi
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "WebApi v1"));
             }
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
+            app.UseCors("AllowAll");
             app.UseRouting();
 
-           app.UseCors("AllowAll");
-           app.UseAuthentication();
-           app.UseAuthorization();
-           app.UseEndpoints(endpoints =>
+            app.UseAuthentication();
+            app.UseAuthorization();
+            app.UseEndpoints(endpoints =>
             {
-
                 endpoints.MapHub<EventsDeliveryHub.DomainEventHub>("/events", options =>
                 {
                     options.Transports =

@@ -17,18 +17,19 @@ type Card =
 
 type Vote = { Card: Card; VotedAt: DateTime }
 
+type VoteResult = { Percent: float; Voters: User list }
+
 type ActiveStory = { Votes: Map<User, Vote> }
 
 type ClosedStory =
-    { Votes: Map<User, Vote>
-      Statistics: Map<Card, float>
+    { Result: Card
+      Statistics: Map<Card, VoteResult>
       FinishedAt: DateTime }
 
 type StoryState =
     | ActiveStory of ActiveStory
     | ClosedStory of ClosedStory
-    static member createActive =
-        ActiveStory { Votes = Map.empty }
+    static member createActive = ActiveStory { Votes = Map.empty }
 
 [<CLIMutable>]
 type StoryObj =
@@ -58,38 +59,48 @@ module Story =
 
     type Event =
         | StoryStarted of user: User * title: string * startedAt: DateTime
-        | StoryClosed of votes: Map<User, Vote> * statistics: Map<Card, float> * finishedAt: DateTime
+        | StoryClosed of result: Card * statistics: Map<Card, VoteResult> * finishedAt: DateTime
         | Voted of user: User * vote: Vote
         | VoteRemoved of user: User
 
 
     let makeVote user vote (story: ActiveStory) =
-        { story with Votes = story.Votes.Add (user, vote)}
+        { story with
+              Votes = story.Votes.Add(user, vote) }
 
     let removeVote user (story: ActiveStory) =
-        { story with Votes = story.Votes.Remove user}
+        { story with
+              Votes = story.Votes.Remove user }
 
     let calculateStatistics (story: ActiveStory) =
         let votes =
             story.Votes
             |> Seq.map (fun kv -> kv.Value.Card)
             |> Seq.distinct
-            |> Seq.map (fun c -> (c, 0.0))
+            |> Seq.map (fun c -> (c, { Percent = 0.0; Voters = [] }))
 
-        story.Votes
-        |> Seq.fold
-            (fun (state: IDictionary<Card, float>) vote ->
-                state.[vote.Value.Card] <-
-                    Math.Round(
-                        (state.[vote.Value.Card] + 1.0)
-                        / (float story.Votes.Count),
-                        1
-                    )
+        let stats =
+            story.Votes
+            |> Seq.fold
+                (fun (state: IDictionary<Card, VoteResult>) vote ->
+                    let voted = state.[vote.Value.Card]
 
-                state)
-            (votes |> dict)
-        |> Seq.map (|KeyValue|)
-        |> Map.ofSeq
+                    let percent =
+                        Math.Round((voted.Percent + 1.0) / (float story.Votes.Count), 1)
+
+                    let voters = vote.Key :: voted.Voters
+                    state.[vote.Value.Card] <- { Percent = percent; Voters = voters }
+
+                    state)
+                (votes |> dict)
+            |> Seq.map (|KeyValue|)
+
+        let result =
+            stats
+            |> Seq.sortByDescending (fun v -> (snd v).Percent)
+            |> Seq.head
+
+        (stats |> Map.ofSeq, fst result)
 
     let producer (state: StoryObj) command =
         match command with
@@ -99,13 +110,15 @@ module Story =
                 match state.State with
                 | ActiveStory s ->
                     let stats = calculateStatistics s
-                    Ok <| StoryClosed(s.Votes, stats, dt)
+                    Ok <| StoryClosed(snd stats, fst stats, dt)
                 | ClosedStory _ -> Error <| Errors.StoryIsClosed
             else
                 Error <| Errors.UnauthorizedAccess
         | Vote (user, card, votedAt) ->
             match state.State with
-            | ActiveStory _ -> Ok <| Voted(user, {Card = card; VotedAt = votedAt})
+            | ActiveStory _ ->
+                Ok
+                <| Voted(user, { Card = card; VotedAt = votedAt })
             | ClosedStory _ -> Error <| Errors.StoryIsClosed
 
         | RemoveVote user ->
@@ -120,11 +133,11 @@ module Story =
                   Owner = Some user
                   Title = title
                   StartedAt = dt }
-        | StoryClosed (votes, stats, dt) ->
+        | StoryClosed (result, stats, dt) ->
             { state with
                   State =
                       ClosedStory
-                          { Votes = votes
+                          { Result = result
                             Statistics = stats
                             FinishedAt = dt } }
         | Voted (user, vote) ->

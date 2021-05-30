@@ -4,7 +4,7 @@ import {SessionCreator} from "../components/session-creator";
 
 export const HomePage = () => {
     const {user} = useAuth();
-    
+
     function renderSessionCreator()
     {
         if (user != null) {
@@ -13,12 +13,9 @@ export const HomePage = () => {
             return (<></>)
         }
     }
-    
+
     return (
         <>
-        <div>
-            Home
-        </div>
             {renderSessionCreator()}
         </>)
 }

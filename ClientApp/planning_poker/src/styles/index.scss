@@ -3,6 +3,10 @@ html, body, #root {
     overflow: hidden;
 }
 
+#root {
+    display: flex;
+    flex-flow: column;
+}
 
 body {
   margin: 0;
