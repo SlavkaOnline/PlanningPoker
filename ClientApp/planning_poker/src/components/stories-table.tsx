@@ -1,26 +1,26 @@
 import React, {useEffect, useRef, useState} from "react";
-import {getStory} from "../models/Api";
+import {getStory, setActiveStory} from "../models/Api";
 import {Story} from "../models/models";
 import styles from "../styles/stories-table.module.scss";
 import {Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from "@material-ui/core";
+import {OwnerWrapper} from "./OwnerWrapper";
+import {useSession} from "../contexts/session-context";
 
-type StoriesTableProps = Readonly<{
-    onSelect: (id: string) => void
-    stories: readonly string[]
-    activeStoryId: string | null
-}>
+export const StoriesTable = () => {
 
-
-export const StoriesTable = (props: StoriesTableProps) => {
-
+    const {session, dispatch} = useSession();
     const [stories, setStories] = useState<readonly Story[]>([])
 
     useEffect(() => {
-            const difference = props.stories.filter(s => !stories.map(s => s.id).includes(s));
+            const difference = session.stories.filter(s => !stories.map(s => s.id).includes(s));
             Promise.all(difference.map(id => getStory(id)))
                 .then(s => setStories([...s, ...stories]));
-    }, [props.stories])
+    }, [session])
 
+    function selectStory(id: string) {
+        setActiveStory(session.id, id)
+            .then(s => dispatch({tag: "init", session: s}))
+    }
 
     return (
         <TableContainer component={Paper} className={styles.table}>
@@ -31,7 +31,8 @@ export const StoriesTable = (props: StoriesTableProps) => {
                         <TableCell align="right">Status</TableCell>
                         <TableCell align="right">Result</TableCell>
                         <TableCell align="right">Votes&nbsp;count</TableCell>
-                        <TableCell align="right">Actions &nbsp;</TableCell>
+                        <OwnerWrapper component={<TableCell align="right">Actions &nbsp;</TableCell>}/>
+
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -43,16 +44,16 @@ export const StoriesTable = (props: StoriesTableProps) => {
                             <TableCell align="right">{(story.isClosed ? "Finished" : story.voted.length > 0 ? "In work" : "Not started")}</TableCell>
                             <TableCell align="right">{(story.result ? story.result : "")}</TableCell>
                             <TableCell align="right">{story.voted}</TableCell>
-                            <TableCell align="right">
-                                {story.id !== props.activeStoryId
+                            <OwnerWrapper component={<TableCell align="right">
+                                {story.id !== session.activeStory
                                 ?<Button
-                                        onClick={() => props.onSelect(story.id)}
+                                        onClick={() => selectStory(story.id)}
                                         variant="contained" color="primary">
                                         Select
                                     </Button>
                                 : <></>}
 
-                            </TableCell>
+                            </TableCell> } />
                         </TableRow>
                     ))}
                 </TableBody>

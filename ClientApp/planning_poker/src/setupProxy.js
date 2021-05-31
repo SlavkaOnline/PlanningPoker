@@ -9,7 +9,7 @@ module.exports = function(app) {
         })
     );
     app.use(
-        '/events',
+        '/events/*',
         createProxyMiddleware({
             target: 'http://localhost:5000',
             changeOrigin: true,

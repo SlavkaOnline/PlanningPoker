@@ -4,6 +4,11 @@ export type User = Readonly<{
     token: string
 }>
 
+export type Participant = Readonly<{
+    id: string
+    name: string
+}>
+
 export type Session = Readonly<{
     id: string
     title: string
@@ -11,7 +16,7 @@ export type Session = Readonly<{
     ownerId: string
     ownerName: string
     activeStory: string | null
-    participants: readonly User[]
+    participants: readonly Participant[]
     stories: readonly string[]
 }>
 
@@ -22,7 +27,7 @@ export type Story = Readonly<{
     ownerId: string
     ownerName: string
     isClosed: boolean
-    voted: readonly User[]
+    voted: readonly Participant[]
     result: string | null
     startedAt: string
     finishedAt: string
@@ -31,5 +36,5 @@ export type Story = Readonly<{
 
 export type VoteResult = Readonly<{
     percent: number
-    voters: readonly User[]
+    voters: readonly Participant[]
 }>

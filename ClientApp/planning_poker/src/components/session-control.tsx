@@ -2,22 +2,22 @@ import React, {useState} from "react";
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@material-ui/core";
 import styles from "../styles/session-control.module.scss"
 import {Story} from "../models/models";
-
-type SessionControlProps = Readonly<{
-    currentStoryId: string | null
-    onCreateStory: (title: string) => void
-}>
+import {createStory} from "../models/Api";
+import {useSession} from "../contexts/session-context";
 
 
-export const SessionControl = (props: SessionControlProps) => {
+export const SessionControl = () => {
 
     const [open, setOpen] = useState(false);
-    const [story, setStory] = useState("")
-
+    const [story, setStory] = useState("");
+    const {session, dispatch} = useSession()
 
     function create() {
-        props.onCreateStory(story);
-        setOpen(false);
+        if(story) {
+            setOpen(false);
+            createStory(session.id, story)
+                .then(s => dispatch({tag: "init", session: s}));
+        }
     }
 
     return (

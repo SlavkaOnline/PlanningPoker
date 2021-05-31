@@ -29,7 +29,33 @@ module EventsDeliveryHub =
             { Order = domainEvent.Order
               Type = "ActiveStorySet"
               Payload = JsonConvert.SerializeObject({| id = %id |}) }
-        | _ -> { Order = 1; Type = ""; Payload = "" }
+
+        | Session.Event.StoryAdded id ->
+            { Order = domainEvent.Order
+              Type = "StoryAdded"
+              Payload = JsonConvert.SerializeObject({| id = %id |}) }
+
+        | Session.Event.ParticipantAdded participant ->
+            { Order = domainEvent.Order
+              Type = "ParticipantAdded"
+              Payload =
+                  JsonConvert.SerializeObject(
+                      {| id = %participant.Id
+                         name = participant.Name |}
+                  ) }
+        | Session.Event.ParticipantRemoved participant ->
+            { Order = domainEvent.Order
+              Type = "ParticipantRemoved"
+              Payload =
+                  JsonConvert.SerializeObject(
+                      {| id = %participant.Id
+                         name = participant.Name |}
+                  ) }
+
+        | Session.Event.Started _ ->
+            { Order = domainEvent.Order
+              Type = "Started"
+              Payload = "" }
 
     let convertStoryEvent (domainEvent: EventView<Story.Event>) : Event = { Order = 1; Type = ""; Payload = "" }
 
@@ -73,7 +99,12 @@ module EventsDeliveryHub =
                     |> ignore
 
                     let! events = grain.GetEventsAfter(version) |> Async.AwaitTask
-                    let lastVersion = events.Item(events.Count - 1).Order
+
+                    let lastVersion =
+                        if events.Count > 0 then
+                            events.Item(events.Count - 1).Order
+                        else
+                            0
 
                     for e in events do
                         do!
@@ -112,20 +143,24 @@ module EventsDeliveryHub =
                 Seq.find (fun (c: Claim) -> c.Type = ClaimTypes.NameIdentifier) this.Context.User.Claims
 
             let userName =
-                Seq.find (fun (c: Claim) -> c.Type = ClaimTypes.NameIdentifier) this.Context.User.Claims
+                Seq.find (fun (c: Claim) -> c.Type = ClaimTypes.GivenName) this.Context.User.Claims
 
             let user =
                 { User.Id = %(Guid.Parse(userId.Value))
                   Name = userName.Value }
 
-            cancellationToken.Register(fun () -> session.RemoveParticipant(%user.Id) |> ignore)
+            cancellationToken.Register
+                (fun () ->  session.RemoveParticipant(%user.Id) |> ignore)
             |> ignore
 
             async {
-                do!
-                    session.AddParticipant(user)
-                    |> Async.AwaitTask
-                    |> Async.Ignore
+                let! state = session.GetState() |> Async.AwaitTask
+
+                if not (Array.Exists(state.Participants, (fun u -> u.Id = %user.Id))) then
+                    do!
+                        session.AddParticipant(user)
+                        |> Async.AwaitTask
+                        |> Async.Ignore
 
                 return this.CreateSubscriptionsToEvent(id, version, convertSessionEvent, cancellationToken)
             }

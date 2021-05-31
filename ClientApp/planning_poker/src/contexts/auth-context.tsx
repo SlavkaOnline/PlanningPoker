@@ -2,13 +2,13 @@ import React, {createContext, useContext, useEffect, useState} from "react";
 import {login} from "../models/Api";
 import {User} from "../models/models";
 
-type AuthProps = Readonly<{
+type AuthState = Readonly<{
     user: User | null
     signin: (name: string) => void
     signout: () => void
 }>
 
-const AuthPropsDefault = {
+const authPropsDefault: AuthState = {
     user: null,
     signin: (name: string) => {
     },
@@ -17,7 +17,7 @@ const AuthPropsDefault = {
 
 }
 
-export const authContext = createContext<AuthProps>(AuthPropsDefault);
+export const authContext = createContext<AuthState>(authPropsDefault);
 
 export const ProvideAuth = ({children}: { children: any }) => {
     const auth = useProvideAuth();

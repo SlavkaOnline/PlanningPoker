@@ -28,15 +28,14 @@
             overflow: hidden;
 
             .playground {
-                flex-grow: 3;
+                flex-grow: 7;
                 border: 1px solid black;
                 height: 100%;
             }
 
             .stories {
-                flex-grow: 2;
                 border: 1px solid black;
-                max-height: 30%;
+                height: 400px;
                 overflow: hidden;
             }
 

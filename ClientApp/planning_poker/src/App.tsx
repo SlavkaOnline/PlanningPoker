@@ -5,6 +5,8 @@ import {BrowserRouter as Router, Route, Switch} from "react-router-dom";
 import {LoginPage} from "./pages/login-page";
 import {ProvideAuth} from "./contexts/auth-context";
 import {SessionPage} from "./pages/session-page";
+import {ProvideHub} from "./contexts/hub-context";
+import {ProvideSession} from "./contexts/session-context";
 
 export const App = () => {
 
@@ -21,7 +23,11 @@ export const App = () => {
                             <LoginPage/>
                         </Route>
                         <Route path="/session/:id">
-                            <SessionPage/>
+                            <ProvideHub>
+                                <ProvideSession>
+                                     <SessionPage/>
+                                </ProvideSession>
+                            </ProvideHub>
                         </Route>
                     </Switch>
                 </Router>
