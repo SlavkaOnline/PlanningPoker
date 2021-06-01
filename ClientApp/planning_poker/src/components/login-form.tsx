@@ -2,22 +2,20 @@ import React, {useState} from "react";
 import {Button, TextField} from "@material-ui/core";
 
 import styles from "../styles/login-form.module.scss"
-import {useAuth} from "../contexts/auth-context";
-import { useHistory } from "react-router-dom";
+import { useAuth } from "../contexts/auth-context";
+import { useHistory, useLocation } from "react-router-dom";
 
 export const LoginForm = () => {
 
     const [userName, setUserName ] = useState("");
     const auth = useAuth();
     const history = useHistory();
+    const location = useLocation<{ from: { pathname: string } }>();
 
     async function login() {
         await auth.signin(userName);
-        if (history.length) {
-            history.goBack();
-        } else {
-            history.push('/');
-        }
+        let { from } = location.state || { from: { pathname: "/" } };
+        history.replace(from);
     }
 
     return (

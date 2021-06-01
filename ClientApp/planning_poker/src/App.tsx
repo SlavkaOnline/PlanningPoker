@@ -8,6 +8,7 @@ import {SessionPage} from "./pages/session-page";
 import {ProvideHub} from "./contexts/hub-context";
 import {ProvideSession} from "./contexts/session-context";
 import {ProvideStory} from "./contexts/story-context";
+import {PrivateRoute} from "./components/private-route";
 
 export const App = () => {
 
@@ -23,7 +24,7 @@ export const App = () => {
                         <Route path="/login">
                             <LoginPage/>
                         </Route>
-                        <Route path="/session/:id">
+                        <PrivateRoute path="/session/:id">
                             <ProvideHub>
                                 <ProvideSession>
                                     <ProvideStory>
@@ -31,7 +32,7 @@ export const App = () => {
                                     </ProvideStory>
                                 </ProvideSession>
                             </ProvideHub>
-                        </Route>
+                        </PrivateRoute>
                     </Switch>
                 </Router>
             </ProvideAuth>
