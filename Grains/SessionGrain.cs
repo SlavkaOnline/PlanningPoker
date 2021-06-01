@@ -40,7 +40,8 @@ namespace Grains
         public override Task OnActivateAsync()
         {
             _domainEventStream =
-                GetStreamProvider("SMS").GetStream<Views.EventView<Session.Event>>(this.GetPrimaryKey(), "DomainEvents");
+                GetStreamProvider("SMS")
+                    .GetStream<Views.EventView<Session.Event>>(this.GetPrimaryKey(), "DomainEvents");
             return base.OnActivateAsync();
         }
 
@@ -89,8 +90,9 @@ namespace Grains
 
         public async Task<IReadOnlyList<Views.EventView<Session.Event>>> GetEventsAfter(int version)
         {
-            var versions = await RetrieveConfirmedEvents(version, Version);
-            return versions.Select((v, order) => new Views.EventView<Session.Event>(order, v)).ToArray();
+            var events = await RetrieveConfirmedEvents(version, Version);
+            return events.Select((v, order) =>
+                new Views.EventView<Session.Event>(version > 0 ? order + version: order, v)).ToArray();
         }
     }
 }

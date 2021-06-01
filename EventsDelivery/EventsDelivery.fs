@@ -19,45 +19,50 @@ open PlanningPoker.Domain.CommonTypes
 module EventsDeliveryHub =
 
     type Event =
-        { Order: int32
+        { EntityId: Guid
+          Order: int32
           Type: string
           Payload: string }
 
-    let convertSessionEvent (domainEvent: EventView<Session.Event>) : Event =
+    let private createEvent entityId order _type payload =
+        { EntityId = entityId
+          Order = order
+          Type = _type
+          Payload = payload }
+
+    let convertSessionEvent (entityId: Guid) (domainEvent: EventView<Session.Event>) : Event =
+        let create = createEvent entityId domainEvent.Order
+
         match domainEvent.Payload with
         | Session.Event.ActiveStorySet id ->
-            { Order = domainEvent.Order
-              Type = "ActiveStorySet"
-              Payload = JsonConvert.SerializeObject({| id = %id |}) }
-
+            create "ActiveStorySet"
+            <| JsonConvert.SerializeObject({| id = %id |})
         | Session.Event.StoryAdded id ->
-            { Order = domainEvent.Order
-              Type = "StoryAdded"
-              Payload = JsonConvert.SerializeObject({| id = %id |}) }
-
+            create "StoryAdded"
+            <| JsonConvert.SerializeObject({| id = %id |})
         | Session.Event.ParticipantAdded participant ->
-            { Order = domainEvent.Order
-              Type = "ParticipantAdded"
-              Payload =
-                  JsonConvert.SerializeObject(
-                      {| id = %participant.Id
-                         name = participant.Name |}
-                  ) }
+            create "ParticipantAdded"
+            <| JsonConvert.SerializeObject(
+                {| id = %participant.Id
+                   name = participant.Name |}
+            )
         | Session.Event.ParticipantRemoved participant ->
-            { Order = domainEvent.Order
-              Type = "ParticipantRemoved"
-              Payload =
-                  JsonConvert.SerializeObject(
-                      {| id = %participant.Id
-                         name = participant.Name |}
-                  ) }
+            create "ParticipantRemoved"
+            <| JsonConvert.SerializeObject(
+                {| id = %participant.Id
+                   name = participant.Name |}
+            )
+        | Session.Event.Started _ -> create "Started" ""
 
-        | Session.Event.Started _ ->
-            { Order = domainEvent.Order
-              Type = "Started"
-              Payload = "" }
 
-    let convertStoryEvent (domainEvent: EventView<Story.Event>) : Event = { Order = 1; Type = ""; Payload = "" }
+    let convertStoryEvent (entityId: Guid) (domainEvent: EventView<Story.Event>) : Event =
+        let create = createEvent entityId domainEvent.Order
+
+        match domainEvent.Payload with
+        | Story.Event.Voted (user, _) -> create "Voted" <| JsonConvert.SerializeObject({| id = %user.Id; name = user.Name |})
+        | Story.Event.VoteRemoved user -> create "VoteRemoved" <| JsonConvert.SerializeObject({| id = %user.Id; name = user.Name |})
+        | Story.Event.StoryClosed _ -> create "StoryClosed" ""
+        | Story.Event.StoryStarted _ -> create "StoryStarted" ""
 
 
     type DomainEventHub(client: IClusterClient) =
@@ -68,7 +73,7 @@ module EventsDeliveryHub =
             (
                 id: string,
                 version: int32,
-                eventConverter: EventView<'TEvent> -> Event,
+                eventConverter: Guid -> EventView<'TEvent> -> Event,
                 [<EnumeratorCancellation>] cancellationToken: CancellationToken
             ) : System.Collections.Generic.IAsyncEnumerable<Event> =
             let guid = Guid.Parse(id)
@@ -126,7 +131,7 @@ module EventsDeliveryHub =
 
             eventsChannel.Reader.ReadAllAsync()
             |> AsyncSeq.ofAsyncEnum
-            |> AsyncSeq.map (eventConverter)
+            |> AsyncSeq.map (fun e -> eventConverter guid e)
             |> AsyncSeq.toAsyncEnum
 
 
@@ -149,18 +154,14 @@ module EventsDeliveryHub =
                 { User.Id = %(Guid.Parse(userId.Value))
                   Name = userName.Value }
 
-            cancellationToken.Register
-                (fun () ->  session.RemoveParticipant(%user.Id) |> ignore)
+            cancellationToken.Register(fun () -> session.RemoveParticipant(%user.Id) |> ignore)
             |> ignore
 
             async {
-                let! state = session.GetState() |> Async.AwaitTask
-
-                if not (Array.Exists(state.Participants, (fun u -> u.Id = %user.Id))) then
-                    do!
-                        session.AddParticipant(user)
-                        |> Async.AwaitTask
-                        |> Async.Ignore
+                do!
+                    session.AddParticipant(user)
+                    |> Async.AwaitTask
+                    |> Async.Ignore
 
                 return this.CreateSubscriptionsToEvent(id, version, convertSessionEvent, cancellationToken)
             }

@@ -7,6 +7,7 @@ import {ProvideAuth} from "./contexts/auth-context";
 import {SessionPage} from "./pages/session-page";
 import {ProvideHub} from "./contexts/hub-context";
 import {ProvideSession} from "./contexts/session-context";
+import {ProvideStory} from "./contexts/story-context";
 
 export const App = () => {
 
@@ -25,7 +26,9 @@ export const App = () => {
                         <Route path="/session/:id">
                             <ProvideHub>
                                 <ProvideSession>
+                                    <ProvideStory>
                                      <SessionPage/>
+                                    </ProvideStory>
                                 </ProvideSession>
                             </ProvideHub>
                         </Route>

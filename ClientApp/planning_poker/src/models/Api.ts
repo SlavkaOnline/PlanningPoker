@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, {CancelToken} from 'axios';
 import {Session, Story, User} from "./models";
 import {createBrowserHistory} from 'history'
 
@@ -38,17 +38,32 @@ export async function createStory(sessionId: string, title: string): Promise<Ses
         .then(r => r.data);
 }
 
-export async function getSession(id: string): Promise<Session> {
-    return axios.get<Session>(`/api/sessions/${id}`)
+export async function getSession(id: string, cancelToken?: CancelToken): Promise<Session> {
+    return axios.get<Session>(`/api/sessions/${id}`, {cancelToken})
         .then(r => r.data);
 }
 
-export async function getStory(id: string): Promise<Story> {
-    return axios.get<Story>(`/api/stories/${id}`)
+export async function getStory(id: string, cancelToken?: CancelToken): Promise<Story> {
+    return axios.get<Story>(`/api/stories/${id}`, {cancelToken})
         .then(r => r.data);
 }
 
 export async function setActiveStory(id: string, storyId: string): Promise<Session> {
     return axios.post<Session>(`/api/sessions/${id}/activestory`, {id: storyId})
+        .then(r => r.data);
+}
+
+export async function vote(id: string, card: string): Promise<Story> {
+    return axios.post<Story>(`/api/stories/${id}/vote`, {card})
+        .then(r => r.data);
+}
+
+export async function removeVote(id: string): Promise<Story> {
+    return axios.post<Story>(`/api/stories/${id}/remove_vote`)
+        .then(r => r.data);
+}
+
+export async function close(id: string): Promise<Story> {
+    return axios.post<Story>(`/api/stories/${id}/close`)
         .then(r => r.data);
 }

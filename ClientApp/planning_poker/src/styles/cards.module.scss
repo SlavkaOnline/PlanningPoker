@@ -10,12 +10,14 @@
         justify-content: space-around;
         flex-wrap: wrap;
         padding: 0 30px;
+        height: 100%;
+        align-items: center;
 
         .card {
             border: 1px solid grey;
             border-radius: 15%;
-            max-height: 300px;
-            min-height: 150px;
+            max-height: 150px;
+            min-height: 100px;
             height: 100%;
             width: 100px;
             padding: 10px;
@@ -29,14 +31,19 @@
                 align-items: center;
                 justify-content: center;
 
-                &:hover {
-                    cursor: pointer;
-                    text-decoration: underline;
-                }
+            }
 
-                &.select {
-                    background: aliceblue;
-                }
+            &.select {
+                text-decoration: underline;
+                background: lightblue;
+                transform: rotate(5deg);
+            }
+
+            &:hover {
+                cursor: pointer;
+                text-decoration: underline;
+                background: azure;
+                transform: rotate(5deg);
             }
         }
     }

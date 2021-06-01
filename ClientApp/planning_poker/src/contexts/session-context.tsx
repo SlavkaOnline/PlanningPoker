@@ -1,10 +1,19 @@
-import React, {createContext, useContext, useEffect, useReducer, useState} from "react";
-import {useAuth} from "./auth-context";
+import React, {createContext, useContext, useEffect, useReducer} from "react";
 import {Participant, Session} from "../models/models";
-import {ActiveStorySet, Event, ParticipantAdded, ParticipantRemoved, StoryAdded} from "../models/events";
-import {HubConnection, HubConnectionBuilder} from "@microsoft/signalr";
+import {
+    ActiveStorySet,
+    Event,
+    ParticipantAdded,
+    ParticipantRemoved,
+    SessionEventType,
+    StoryAdded
+} from "../models/events";
 import {getSession} from "../models/Api";
 import {useParams} from "react-router-dom";
+import axios from "axios";
+import {ISubscription} from "@microsoft/signalr";
+import {useHub} from "./hub-context";
+import {useAuth} from "./auth-context";
 
 const defaultSession: Session = {
     id: "",
@@ -18,7 +27,6 @@ const defaultSession: Session = {
 
 }
 
-
 type Init = Readonly<{
     tag: "init"
     session: Session
@@ -27,7 +35,7 @@ type Init = Readonly<{
 type ApplyEvent = Readonly<{
     tag: "applyEvent"
     userId: string
-    event: Event;
+    event: Event<SessionEventType>;
 }>
 
 
@@ -43,32 +51,42 @@ const reducer = (state: Session, action: Action) => {
                 return state;
             }
         case "applyEvent" :
-            switch (action.event.type) {
-                case "ActiveStorySet":
-                    const activeStorySet = JSON.parse(action.event.payload) as ActiveStorySet
-                    if (state.ownerId !== action.userId && state.version < action.event.order) {
-                        return {...state, activeStory: activeStorySet.id, version: action.event.order}
-                    } else {
+            if (state.version > action.event.order) {
+                return state;
+            } else {
+                switch (action.event.type) {
+                    case "ActiveStorySet":
+                        if (state.ownerId !== action.userId) {
+                            const activeStorySet = JSON.parse(action.event.payload) as ActiveStorySet
+                            return {...state, activeStory: activeStorySet.id, version: action.event.order}
+                        } else {
+                            return state;
+                        }
+                    case "StoryAdded" :
+                        if (state.ownerId !== action.userId) {
+                            const storyAdded = JSON.parse(action.event.payload) as StoryAdded
+                            return {...state, stories: [storyAdded.id, ...state.stories]}
+                        } else {
+                            return state;
+                        }
+                    case "ParticipantAdded" :
+                        const participantAdded = JSON.parse(action.event.payload) as ParticipantAdded
+                        return {
+                            ...state,
+                            participants: [({
+                                id: participantAdded.id,
+                                name: participantAdded.name
+                            } as Readonly<Participant>), ...state.participants]
+                        }
+                    case "ParticipantRemoved" :
+                        const participantRemoved = JSON.parse(action.event.payload) as ParticipantRemoved
+                        return {...state, participants: [...state.participants.filter(p => p.id != participantRemoved.id)]}
+                    case "Started":
                         return state;
-                    }
-                case "StoryAdded" :
-                    if (state.ownerId !== action.userId && state.version < action.event.order) {
-                        const storyAdded = JSON.parse(action.event.payload) as StoryAdded
-                        return {...state, stories: [storyAdded.id, ...state.stories]}
-                    } else {
-                        return state;
-                    }
-                case "ParticipantAdded" :
-                    const participantAdded = JSON.parse(action.event.payload) as ParticipantAdded
-                    return {...state, participants: [({id: participantAdded.id, name: participantAdded.name} as Readonly<Participant>), ...state.participants]}
-                case "ParticipantRemoved" :
-                    const participantRemoved = JSON.parse(action.event.payload) as ParticipantRemoved
-                    return {...state, participants: [...state.participants.filter(p => p.id != participantRemoved.id)]}
-                case "Started":
-                    return state;
 
-                default:
-                    return state;
+                    default:
+                        return state;
+                }
             }
         default:
             return state;
@@ -83,10 +101,12 @@ export const ProvideSession = ({children}: { children: any }) => {
     let {id} = useParams<{ id: string }>();
 
     useEffect(() => {
-            getSession(id)
+            let cts = axios.CancelToken.source();
+            getSession(id, cts.token)
                 .then(s => dispatch({tag: "init", session: s}));
+            return () => cts.cancel();
         }, [id]
-    )
+    );
 
     return (
         <sessionContext.Provider value={{session, dispatch}}>

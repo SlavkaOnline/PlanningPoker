@@ -1,36 +1,32 @@
 import React, {useEffect, useReducer, useState} from "react";
-import {useParams} from "react-router-dom";
-import {Session} from "../models/models";
-import {createStory, getSession, setActiveStory} from "../models/Api";
 import {Typography} from "@material-ui/core";
 import {useAuth} from "../contexts/auth-context";
 import styles from '../styles/session-page.module.scss'
 import {SessionControl} from "../components/session-control";
 import {StoriesTable} from "../components/stories-table";
 import {ISubscription} from "@microsoft/signalr";
-import {ActiveStorySet, Event} from "../models/events"
+import {ActiveStorySet, Event, SessionEventType} from "../models/events"
 import {useHub} from "../contexts/hub-context";
 import {useSession} from "../contexts/session-context";
 import {OwnerWrapper} from "../components/OwnerWrapper";
 import {UsersList} from "../components/users-list";
-import {stat} from "fs";
 import {StoryPlayground} from "../components/story-playground";
 
 
 
 export const SessionPage = () => {
 
-    let {user} = useAuth();
+    const {user} = useAuth();
     const hub = useHub();
     const {session, dispatch} = useSession()
 
     useEffect(() => {
         let subscriptions: ISubscription<any>;
-        if (session&& hub) {
+        if (session.id && hub) {
             subscriptions = hub
                 .stream('Session', session.id, session.version)
                 .subscribe({
-                    next: (e: Event) =>
+                    next: (e: Event<SessionEventType>) =>
                         dispatch({
                             tag: "applyEvent",
                             event: e,

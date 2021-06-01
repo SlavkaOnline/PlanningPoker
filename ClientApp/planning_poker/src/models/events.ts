@@ -1,4 +1,6 @@
-export type EventType =
+import {Participant} from "./models";
+
+export type SessionEventType =
     | 'ActiveStorySet'
     | 'StoryAdded'
     | 'ParticipantAdded'
@@ -6,8 +8,9 @@ export type EventType =
     | 'Started'
 
 
-export type Event = Readonly<{
-    type: EventType
+export type Event<TEvent> = Readonly<{
+    entityId: string
+    type: TEvent
     order: number
     payload: string
 }>
@@ -28,3 +31,12 @@ export type ParticipantRemoved = Readonly<{
     id: string
     name: string
 }>
+
+export type StoryEventType =
+    | 'Voted'
+    | 'VoteRemoved'
+    | 'StoryClosed'
+    | 'StoryStarted'
+
+export type Voted = Readonly<Participant>
+export type VoteRemoved = Readonly<Participant>
