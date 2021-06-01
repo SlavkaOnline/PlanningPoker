@@ -63,7 +63,7 @@ export async function removeVote(id: string): Promise<Story> {
         .then(r => r.data);
 }
 
-export async function close(id: string): Promise<Story> {
+export async function closeStory(id: string): Promise<Story> {
     return axios.post<Story>(`/api/stories/${id}/close`)
         .then(r => r.data);
 }

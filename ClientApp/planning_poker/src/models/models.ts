@@ -31,7 +31,7 @@ export type Story = Readonly<{
     result: string | null
     startedAt: string
     finishedAt: string
-    Statistics: {[key: string]: VoteResult}
+    statistics: {[key: string]: VoteResult}
 }>
 
 export type VoteResult = Readonly<{

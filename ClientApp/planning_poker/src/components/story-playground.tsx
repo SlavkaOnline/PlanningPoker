@@ -7,6 +7,8 @@ import {useSession} from "../contexts/session-context";
 import {ISubscription} from "@microsoft/signalr";
 import {StoryEventType, Event} from "../models/events";
 import {useHub} from "../contexts/hub-context";
+import {getStory} from "../models/Api";
+import {StoryResult} from "./story-result";
 
 export const StoryPlayground = () => {
 
@@ -32,6 +34,14 @@ export const StoryPlayground = () => {
         return () => subscriptions?.dispose()
     }, [story.id, hub])
 
+    useEffect(() => {
+        if (story.isClosed && !story.result) {
+            getStory(story.id)
+                .then(s => dispatch({tag: "init", story: s}))
+        }
+    }, [story.isClosed])
+
+
     return (
         !story.id || session.stories.length == 0
             ? <div>Please select the story or create a new one</div>
@@ -43,7 +53,10 @@ export const StoryPlayground = () => {
                     </Typography>
                 </div>
                 <div className={styles.playground}>
-                    <Cards/>
+                    {!story.isClosed
+                        ? <Cards/>
+                        : <StoryResult/>
+                    }
                 </div>
             </div>
     )

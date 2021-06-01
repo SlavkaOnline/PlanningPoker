@@ -2,21 +2,30 @@ import React, {useState} from "react";
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@material-ui/core";
 import styles from "../styles/session-control.module.scss"
 import {Story} from "../models/models";
-import {createStory} from "../models/Api";
+import {closeStory, createStory} from "../models/Api";
 import {useSession} from "../contexts/session-context";
+import {useStory} from "../contexts/story-context";
 
 
 export const SessionControl = () => {
 
     const [open, setOpen] = useState(false);
-    const [story, setStory] = useState("");
+    const [storyName, setStoryName] = useState("");
     const {session, dispatch} = useSession()
+    const {story, dispatch: dispatchStory} = useStory();
 
     function create() {
-        if(story) {
+        if (storyName) {
             setOpen(false);
-            createStory(session.id, story)
+            createStory(session.id, storyName)
                 .then(s => dispatch({tag: "init", session: s}));
+        }
+    }
+
+    function flipCards() {
+        if (story.id) {
+            closeStory(story.id)
+                .then(s => dispatchStory({tag: "init", story: s}));
         }
     }
 
@@ -37,11 +46,15 @@ export const SessionControl = () => {
                 >
                     Create story
                 </Button>
-                <Button
-                    className={styles.action}
-                    variant="contained" color="primary">
-                    Flip cards
-                </Button>
+                {!story.isClosed
+                    ? <Button
+                        onClick={() => flipCards()}
+                        className={styles.action}
+                        variant="contained" color="primary">
+                        Flip cards
+                    </Button>
+                    : <></>
+                }
             </div>
 
             <Dialog
@@ -55,7 +68,7 @@ export const SessionControl = () => {
                         label="Story title"
                         type="text"
                         fullWidth
-                        onChange={(e) => setStory(e.target.value)}
+                        onChange={(e) => setStoryName(e.target.value)}
                     />
                 </DialogContent>
                 <DialogActions>

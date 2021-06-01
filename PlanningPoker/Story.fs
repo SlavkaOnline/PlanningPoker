@@ -82,17 +82,17 @@ module Story =
         let stats =
             story.Votes
             |> Seq.fold
-                (fun (state: IDictionary<Card, VoteResult>) vote ->
+                (fun (state: Dictionary<Card, VoteResult>) vote ->
                     let voted = state.[vote.Value.Card]
 
                     let percent =
-                        Math.Round((voted.Percent + 1.0) / (float story.Votes.Count), 1)
+                        Math.Round((voted.Percent + 1.0) / (float story.Votes.Count) * 100.0, 1)
 
                     let voters = vote.Key :: voted.Voters
                     state.[vote.Value.Card] <- { Percent = percent; Voters = voters }
 
                     state)
-                (votes |> dict)
+                (votes |> dict |> Dictionary)
             |> Seq.map (|KeyValue|)
 
         let result =
@@ -109,8 +109,11 @@ module Story =
             if state.hasAccessToChange user then
                 match state.State with
                 | ActiveStory s ->
-                    let stats = calculateStatistics s
-                    Ok <| StoryClosed(snd stats, fst stats, dt)
+                    if s.Votes.Count > 0 then
+                        let stats = calculateStatistics s
+                        Ok <| StoryClosed(snd stats, fst stats, dt)
+                    else
+                        Error <| Errors.StoryHasntVotes
                 | ClosedStory _ -> Error <| Errors.StoryIsClosed
             else
                 Error <| Errors.UnauthorizedAccess

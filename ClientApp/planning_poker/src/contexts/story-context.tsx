@@ -22,7 +22,7 @@ const defaultStory: Story = {
     isClosed: false,
     finishedAt: "",
     startedAt: "",
-    Statistics: {}
+    statistics: {}
 }
 
 type Init = Readonly<{
@@ -54,7 +54,11 @@ const reducer = (state: Story, action: Action) => {
                 switch (action.event.type) {
                     case "Voted":
                         const voted = JSON.parse(action.event.payload) as Voted
-                        return {...state, voted: [voted, ...state.voted] as readonly Participant[]}
+                        if (state.voted.findIndex(v => v.id === voted.id) === -1) {
+                            return {...state, voted: [voted, ...state.voted] as readonly Participant[]}
+                        } else {
+                            return state;
+                        }
 
                     case "VoteRemoved" :
                         const voteRemoved = JSON.parse(action.event.payload) as VoteRemoved
@@ -76,7 +80,6 @@ const reducer = (state: Story, action: Action) => {
 export const storyContext = createContext<{story: Story, dispatch: React.Dispatch<Action>}>({story: defaultStory, dispatch: (_) => defaultStory});
 
 export const ProvideStory = ({children}: { children: any }) => {
-    const hub = useHub();
     const [story, dispatch] = useReducer(reducer, defaultStory);
 
     const {session} = useSession();
