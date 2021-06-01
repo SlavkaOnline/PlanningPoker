@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -6,9 +7,11 @@ using EventsDelivery;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -108,6 +111,22 @@ namespace WebApi
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.UseExceptionHandler(a => a.Run( async context =>
+            {
+                var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
+                var exception = exceptionHandlerPathFeature.Error;
+                var result = exception switch
+                {
+                    PlatformNotSupportedException ex => (code: HttpStatusCode.BadRequest, ex.Message),
+                    _ => (code: HttpStatusCode.InternalServerError, exception.Message)
+
+                };
+                context.Response.StatusCode = (int) result.code;
+                context.Response.HttpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase = result.Message;
+                await context.Response.CompleteAsync();
+            }));
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapHub<EventsDeliveryHub.DomainEventHub>("/events", options =>

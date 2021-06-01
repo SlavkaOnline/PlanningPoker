@@ -1,5 +1,7 @@
 namespace PlanningPoker.Domain
 
+exception  PlanningPokerDomainException of string;
+
 type Errors =
     | UnauthorizedAccess
     | StoryNotExist
@@ -15,3 +17,5 @@ type Errors =
         | ParticipantNotExist -> "Participant not found"
         | StoryIsClosed -> "It is not possible to perform an action with a closed story"
         | StoryHasntVotes -> "Story hasn't votes"
+
+    static member RaiseDomainExn err = raise(PlanningPokerDomainException <| Errors.ConvertToExnMessage err)

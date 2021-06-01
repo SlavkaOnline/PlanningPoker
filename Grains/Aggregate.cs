@@ -27,7 +27,7 @@ namespace Grains
             }
             else
             {
-                throw new InvalidOperationException(Errors.ConvertToExnMessage.Invoke(result.ErrorValue));
+                Errors.RaiseDomainExn<Errors>(result.ErrorValue);
             }
         }
     }
