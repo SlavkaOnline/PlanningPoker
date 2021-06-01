@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import styles from "../styles/cards.module.scss"
 import {removeVote, vote} from "../models/Api";
 import {useStory} from "../contexts/story-context";
@@ -26,7 +26,12 @@ const Card = (props: CardProps) => {
 export const Cards = () => {
 
     const {story, dispatch} = useStory();
-    const [selected, setSelected] = useState<string>("");
+    const [selected, setSelected] = useState<string>(story.userCard);
+
+
+    useEffect(() => {
+        setSelected(story.userCard);
+    }, [story.id]);
 
     function select(card: string){
         const oldValue = selected;

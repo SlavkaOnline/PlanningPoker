@@ -26,6 +26,7 @@ export type Story = Readonly<{
     version: number
     ownerId: string
     ownerName: string
+    userCard: string
     isClosed: boolean
     voted: readonly Participant[]
     result: string | null

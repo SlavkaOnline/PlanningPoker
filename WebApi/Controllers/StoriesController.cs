@@ -26,8 +26,9 @@ namespace WebApi.Controllers
         [Route("{id}")]
         public async Task<Views.StoryView> Get(Guid id)
         {
+            var (userId, userName) = HttpContext.User.GetUserParams();
             var story = silo.GetGrain<IStoryGrain>(id);
-            return await story.GetState();
+            return await story.GetState(new CommonTypes.User(userId, userName));
         }
 
         [HttpPost]

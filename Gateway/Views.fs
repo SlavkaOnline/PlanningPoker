@@ -5,12 +5,7 @@ open System.Collections.Generic
 open PlanningPoker.Domain
 open FSharp.UMX
 open Microsoft.FSharp.Reflection
-open PlanningPoker.Domain
-open PlanningPoker.Domain
-open PlanningPoker.Domain
-open PlanningPoker.Domain
-open PlanningPoker.Domain
-open PlanningPoker.Domain
+open PlanningPoker.Domain.CommonTypes
 
 module Views =
     let toString (x: 'a) =
@@ -69,18 +64,32 @@ module Views =
           Version: int32
           OwnerId: Guid
           OwnerName: string
+          UserCard: string
           IsClosed: bool
           Voted: UserView array
           Result: string
           Statistics: Dictionary<string, VoteResultView>
           StartedAt: DateTime
           FinishedAt: DateTime Nullable }
-        static member create (id: Guid) (version: int32) (story: StoryObj) : StoryView =
+        static member create (id: Guid) (version: int32) (story: StoryObj) (user: User) : StoryView =
             { Id = id
               Title = story.Title
               Version = version
               OwnerId = %story.Owner.Value.Id
               OwnerName = %story.Owner.Value.Name
+              UserCard =
+                  match story.State with
+                  | ActiveStory s ->
+                      s.Votes.TryFind user
+                      |> Option.map (fun v -> toString v.Card)
+                      |> Option.defaultValue ""
+                  | ClosedStory s ->
+                      s.Statistics
+                      |> Map.toSeq
+                      |> Seq.filter (fun s -> List.contains user (snd s).Voters)
+                      |> Seq.tryHead
+                      |> Option.map (fun v -> toString (fst v))
+                      |> Option.defaultValue ""
               IsClosed =
                   match story.State with
                   | ActiveStory _ -> false

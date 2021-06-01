@@ -50,30 +50,30 @@ namespace Grains
         public async Task<Views.StoryView> Start(CommonTypes.User user, string title)
         {
             await _aggregate.Exec(State.Story, Story.Command.NewStartStory(user, title, DateTime.UtcNow));
-            return Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story);
+            return Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story, user);
         }
 
         public async Task<Views.StoryView> Vote(CommonTypes.User user, Card card)
         {
             await _aggregate.Exec(State.Story, Story.Command.NewVote(user, card, DateTime.UtcNow));
-            return Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story);
+            return Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story, user);
         }
 
         public async Task<Views.StoryView> RemoveVote(CommonTypes.User user)
         {
             await _aggregate.Exec(State.Story, Story.Command.NewRemoveVote(user));
-            return Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story);
+            return Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story, user);
         }
 
         public async Task<Views.StoryView> Close(CommonTypes.User user)
         {
             await _aggregate.Exec(State.Story, Story.Command.NewCloseStory(user, DateTime.UtcNow));
-            return Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story);
+            return Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story, user);
             ;
         }
 
-        Task<Views.StoryView> IStoryGrain.GetState()
-            => Task.FromResult(Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story));
+        Task<Views.StoryView> IStoryGrain.GetState(CommonTypes.User user)
+            => Task.FromResult(Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story, user));
 
         public async Task<IReadOnlyList<Views.EventView<Story.Event>>> GetEventsAfter(int version)
         {
