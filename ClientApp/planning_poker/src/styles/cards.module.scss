@@ -1,0 +1,50 @@
+.wrapper {
+    height: 100%;
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+    box-sizing: border-box;
+
+    .cards {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        padding: 0 30px;
+        height: 100%;
+        align-items: center;
+
+        .card {
+            border: 1px solid grey;
+            border-radius: 15%;
+            max-height: 150px;
+            min-height: 100px;
+            height: 100%;
+            width: 100px;
+            padding: 10px;
+            box-sizing: border-box;
+
+            .inner {
+                height: 100%;
+                border: 1px solid grey;
+                border-radius: 15%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+
+            }
+
+            &.select {
+                text-decoration: underline;
+                background: lightblue;
+                transform: rotate(5deg);
+            }
+
+            &:hover {
+                cursor: pointer;
+                text-decoration: underline;
+                background: azure;
+                transform: rotate(5deg);
+            }
+        }
+    }
+}

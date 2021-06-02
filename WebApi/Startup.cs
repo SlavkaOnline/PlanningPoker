@@ -1,14 +1,22 @@
 using System;
+using System.Net;
+using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 using EventsDelivery;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Connections;
+using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using WebApi.Application;
 
@@ -28,25 +36,60 @@ namespace WebApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            services.AddRazorPages();
-            services.AddIdentity<ApplicationUser, IdentityRole>()
-                .AddDefaultTokenProviders();
-            services.AddSingleton<IUserStore<ApplicationUser>, UserStore>();
-            services.AddSingleton<IRoleStore<IdentityRole>, RoleStore>();
+            services.AddSingleton<JwtTokenProvider>();
 
-            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                .AddCookie(options =>
+            services.AddAuthentication(x =>
                 {
-                    options.LoginPath = "/login";
-                    options.LogoutPath = "/logout";
-                    options.ClaimsIssuer = "UserName";
-                    options.ExpireTimeSpan = TimeSpan.FromDays(30);
+                    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
+                .AddJwtBearer(x =>
+                {
+                    x.SaveToken = true;
+                    x.TokenValidationParameters = new TokenValidationParameters()
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"])),
+                        ValidateIssuer = false,
+                        ValidateAudience = false
+                    };
+                    x.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken = context.Request.Query["access_token"];
+
+                            // If the request is for our hub...
+                            var path = context.HttpContext.Request.Path;
+                            if (!string.IsNullOrEmpty(accessToken) &&
+                                (path.StartsWithSegments("/events")))
+                            {
+                                // Read the token out of the query string
+                                context.Token = accessToken;
+                            }
+                            return Task.CompletedTask;
+                        }
+                    };
                 });
 
             services.AddSignalR()
-                .AddJsonProtocol(options => {
+                .AddJsonProtocol(options =>
+                {
                     options.PayloadSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
                 });
+
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll",
+                    builder =>
+                    {
+                        builder
+                            .AllowAnyOrigin()
+                            .AllowAnyMethod()
+                            .AllowAnyHeader();
+                    });
+            });
 
             services.AddSwaggerGen(c => { c.SwaggerDoc("v1", new OpenApiInfo {Title = "WebApi", Version = "v1"}); });
         }
@@ -61,16 +104,31 @@ namespace WebApi
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "WebApi v1"));
             }
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
+            app.UseCors("AllowAll");
             app.UseRouting();
 
-           app.UseAuthentication();
-           app.UseAuthorization();
+            app.UseAuthentication();
+            app.UseAuthorization();
 
-           app.UseEndpoints(endpoints =>
+            app.UseExceptionHandler(a => a.Run( async context =>
             {
+                var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
+                var exception = exceptionHandlerPathFeature.Error;
+                var result = exception switch
+                {
+                    PlatformNotSupportedException ex => (code: HttpStatusCode.BadRequest, ex.Message),
+                    _ => (code: HttpStatusCode.InternalServerError, exception.Message)
 
+                };
+                context.Response.StatusCode = (int) result.code;
+                context.Response.HttpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase = result.Message;
+                await context.Response.CompleteAsync();
+            }));
+
+            app.UseEndpoints(endpoints =>
+            {
                 endpoints.MapHub<EventsDeliveryHub.DomainEventHub>("/events", options =>
                 {
                     options.Transports =
@@ -78,7 +136,6 @@ namespace WebApi
                         HttpTransportType.LongPolling;
                 });
 
-                endpoints.MapRazorPages();
                 endpoints.MapControllers();
             });
         }

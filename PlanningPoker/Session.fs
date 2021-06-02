@@ -1,13 +1,14 @@
 ﻿namespace PlanningPoker.Domain
-
 open CommonTypes
 open FSharp.UMX
 
 
 [<CLIMutable>]
 type SessionObj =
-    { Owner: User option
+    { Title: string
+      Owner: User option
       Participants: User list
+      ActiveStory: Guid<ObjectId> option
       Stories: Guid<ObjectId> list }
     member this.hasAccessToChange user =
         match this.Owner with
@@ -18,7 +19,9 @@ type SessionObj =
         List.contains participant this.Participants
 
     static member zero =
-        { Owner = None
+        { Title = ""
+          Owner = None
+          ActiveStory = None
           Participants = []
           Stories = [] }
 
@@ -27,16 +30,18 @@ type SessionObj =
 module Session =
 
     type Command =
-        | SetOwner of user: User
+        | Start of title: string * user: User
         | AddStory of user: User * storyId: Guid<ObjectId>
         | AddParticipant of participant: User
         | RemoveParticipant of id: Guid<UserId>
+        | SetActiveStory of user: User * id: Guid<ObjectId>
 
     type Event =
-        | OwnerSet of user: User
+        | Started of title: string * user: User
         | StoryAdded of story: Guid<ObjectId>
         | ParticipantAdded of participant: User
         | ParticipantRemoved of participant: User
+        | ActiveStorySet of id: Guid<ObjectId>
 
     let addParticipant participant session =
         { session with
@@ -54,7 +59,7 @@ module Session =
 
     let producer (state: SessionObj) command =
         match command with
-        | SetOwner user -> Ok <| OwnerSet(user)
+        | Start (title, user) -> Ok <| Started(title, user)
         | AddStory (user, id) ->
             if state.hasAccessToChange user then
                 Ok <| StoryAdded id
@@ -72,9 +77,22 @@ module Session =
             | Some p -> Ok <| ParticipantRemoved p
             | None -> Error <| Errors.ParticipantNotExist
 
+        | SetActiveStory (user, id) ->
+            if state.hasAccessToChange user then
+                if state.Stories |> List.contains id then
+                    Ok <| ActiveStorySet id
+                else
+                    Error <| Errors.StoryNotExist
+            else
+                Error <| Errors.UnauthorizedAccess
+
     let reducer (state: SessionObj) event =
         match event with
-        | OwnerSet user -> { state with Owner = Some user }
+        | Started (title, user) ->
+            { state with
+                  Title = title
+                  Owner = Some user }
         | StoryAdded story -> addStory story state
         | ParticipantAdded user -> addParticipant user state
         | ParticipantRemoved user -> removeParticipant user state
+        | ActiveStorySet id -> { state with ActiveStory = Some id }

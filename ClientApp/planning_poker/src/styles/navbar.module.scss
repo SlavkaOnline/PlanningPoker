@@ -1,0 +1,37 @@
+@import "index";
+
+.navbar {
+    background-color: rgba(27, 84, 134, .92);
+    color: white;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+
+    .title {
+        margin-left: 10px;
+    }
+
+    .login {
+        margin-left: auto;
+    }
+
+    .nameLoguot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .name {
+            margin-right: 20px;
+            padding-bottom: 5px;
+        }
+    }
+
+    .link {
+        color: inherit;
+        @include simple_link;
+    }
+}

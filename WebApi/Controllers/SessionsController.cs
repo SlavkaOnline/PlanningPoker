@@ -20,12 +20,9 @@ namespace WebApi.Controllers
 	public class SessionsController : ControllerBase
 	{
 		private readonly IClusterClient silo;
-        private readonly UserManager<ApplicationUser> _userManager;
-
-        public SessionsController(IClusterClient silo, UserManager<ApplicationUser> userManager)
+        public SessionsController(IClusterClient silo)
         {
             this.silo = silo;
-            _userManager = userManager;
         }
 
         [HttpGet]
@@ -45,40 +42,48 @@ namespace WebApi.Controllers
         }
 
 		[HttpPost]
-		public async Task<Views.SessionView> Create()
+		public async Task<Views.SessionView> Create(Requests.CreateSession request)
         {
-            var user = await  _userManager.GetUserAsync(HttpContext.User);
-			var id = Guid.NewGuid();
-			var session = silo.GetGrain<ISessionGrain>(id);
-			return await session.SetOwner(new CommonTypes.User(Guid.Parse(user.Id), user.UserName));
+            var (userId, userName) = HttpContext.User.GetUserParams();
+            var id = Guid.NewGuid();
+            var session = silo.GetGrain<ISessionGrain>(id);
+			return await session.Start(request.Title, new CommonTypes.User(userId, userName));
         }
 
 		[HttpPost]
 		[Route("{id}/stories")]
 		public async Task<Views.SessionView> AddStory(Guid id, Requests.CreateStory request)
 		{
-            var user = await  _userManager.GetUserAsync(HttpContext.User);
+            var (userId, userName) = HttpContext.User.GetUserParams();
             var session = silo.GetGrain<ISessionGrain>(id);
-            return await session.AddStory(new CommonTypes.User(Guid.Parse(user.Id), user.UserName), request.Title);
+            return await session.AddStory(new CommonTypes.User(userId, userName), request.Title);
         }
 
         [HttpPost]
         [Route("{id}/join")]
         public async Task<Views.SessionView> Join(Guid id)
         {
-            var user = await  _userManager.GetUserAsync(HttpContext.User);
+            var (userId, userName) = HttpContext.User.GetUserParams();
             var session = silo.GetGrain<ISessionGrain>(id);
-            return await session.AddParticipant(new CommonTypes.User(Guid.Parse(user.Id), user.UserName));
+            return await session.AddParticipant(new CommonTypes.User(userId, userName));
         }
 
         [HttpPost]
         [Route("{id}/leave")]
         public async Task<Views.SessionView> Leave(Guid id)
         {
-            var user = await  _userManager.GetUserAsync(HttpContext.User);
+            var (userId, _) = HttpContext.User.GetUserParams();
             var session = silo.GetGrain<ISessionGrain>(id);
-            return await session.RemoveParticipant(Guid.Parse(user.Id));
+            return await session.RemoveParticipant(userId);
         }
 
+        [HttpPost]
+        [Route("{id}/activestory")]
+        public async Task<Views.SessionView> SetActiveStory(Guid id, Requests.SetActiveStory request)
+        {
+            var (userId, userName) = HttpContext.User.GetUserParams();
+            var session = silo.GetGrain<ISessionGrain>(id);
+            return await session.SetActiveStory(new CommonTypes.User(userId, userName), Guid.Parse(request.Id));
+        }
 	}
 }

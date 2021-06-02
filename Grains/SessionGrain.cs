@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Gateway;
 using GrainInterfaces;
 using Orleans;
-using Orleans.Concurrency;
 using Orleans.EventSourcing;
 using Orleans.Providers;
 using Orleans.Streams;
@@ -40,7 +38,8 @@ namespace Grains
         public override Task OnActivateAsync()
         {
             _domainEventStream =
-                GetStreamProvider("SMS").GetStream<Views.EventView<Session.Event>>(this.GetPrimaryKey(), "DomainEvents");
+                GetStreamProvider("SMS")
+                    .GetStream<Views.EventView<Session.Event>>(this.GetPrimaryKey(), "DomainEvents");
             return base.OnActivateAsync();
         }
 
@@ -51,9 +50,9 @@ namespace Grains
             await _domainEventStream.OnNextAsync(new Views.EventView<Session.Event>(Version, e));
         }
 
-        public async Task<Views.SessionView> SetOwner(CommonTypes.User user)
+        public async Task<Views.SessionView> Start(string title, CommonTypes.User user)
         {
-            await _aggregate.Exec(State.Session, Session.Command.NewSetOwner(user));
+            await _aggregate.Exec(State.Session, Session.Command.NewStart(title, user));
             return Views.SessionView.create(this.GetPrimaryKey(), Version, State.Session);
         }
 
@@ -63,6 +62,12 @@ namespace Grains
             var story = GrainFactory.GetGrain<IStoryGrain>(id);
             await story.Start(State.Session.Owner.Value, title);
             await _aggregate.Exec(State.Session, Session.Command.NewAddStory(user, id));
+            return Views.SessionView.create(this.GetPrimaryKey(), Version, State.Session);
+        }
+
+        public async Task<Views.SessionView> SetActiveStory(CommonTypes.User user, Guid id)
+        {
+            await _aggregate.Exec(State.Session, Session.Command.NewSetActiveStory(user, id));
             return Views.SessionView.create(this.GetPrimaryKey(), Version, State.Session);
         }
 
@@ -83,8 +88,9 @@ namespace Grains
 
         public async Task<IReadOnlyList<Views.EventView<Session.Event>>> GetEventsAfter(int version)
         {
-            var versions = await RetrieveConfirmedEvents(version, Version);
-            return versions.Select((v, order) => new Views.EventView<Session.Event>(order, v)).ToArray();
+            var events = await RetrieveConfirmedEvents(version, Version);
+            return events.Select((v, order) =>
+                new Views.EventView<Session.Event>(version > 0 ? order + version : order, v)).ToArray();
         }
     }
 }

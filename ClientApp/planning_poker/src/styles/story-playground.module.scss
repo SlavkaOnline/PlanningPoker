@@ -1,0 +1,18 @@
+.wrapper {
+    height: 100%;
+    display: flex;
+    flex-flow: column;
+    overflow: hidden;
+    justify-content: start;
+    box-sizing: border-box;
+    padding: 10px;
+
+
+    .title {
+        margin-bottom: 10px;
+    }
+
+    .playground {
+        height: 100%;
+    }
+}

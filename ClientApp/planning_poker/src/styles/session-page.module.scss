@@ -1,0 +1,59 @@
+$grey: rgba(128, 128, 128, 0.32);
+
+.wrapper {
+    height: 100%;
+    width: 100%;
+    max-width: 1280px;
+    margin: auto;
+    padding: 40px 0;
+    display: flex;
+    flex-flow: column;
+    overflow: hidden;
+    box-sizing: border-box;
+
+    .title {
+        height: 50px;
+    }
+
+    .workplace {
+        height: 100%;
+        display: flex;
+        justify-content: space-between;
+        .left {
+            padding: 10px;
+            width: 100%;
+            display: flex;
+            flex-flow: column;
+            overflow: hidden;
+            border-right: 1px solid $grey;
+
+            .playground {
+                flex-grow: 7;
+                height: 100%;
+            }
+
+            .stories {
+                height: 400px;
+                overflow: hidden;
+            }
+
+        }
+
+        .right {
+            padding: 10px;
+            width: 400px;
+            display: flex;
+            flex-flow: column;
+            overflow: hidden;
+
+            .control {
+                flex-grow: 1;
+            }
+
+            .users {
+                flex-grow: 7;
+            }
+        }
+
+    }
+}
