@@ -1,3 +1,5 @@
+$grey: rgba(128, 128, 128, 0.32);
+
 .wrapper {
     height: 100%;
     width: 100%;
@@ -14,27 +16,23 @@
     }
 
     .workplace {
-        border: 1px solid black;
         height: 100%;
         display: flex;
         justify-content: space-between;
-
         .left {
             padding: 10px;
-            border: 1px solid black;
             width: 100%;
             display: flex;
             flex-flow: column;
             overflow: hidden;
+            border-right: 1px solid $grey;
 
             .playground {
                 flex-grow: 7;
-                border: 1px solid black;
                 height: 100%;
             }
 
             .stories {
-                border: 1px solid black;
                 height: 400px;
                 overflow: hidden;
             }
@@ -43,7 +41,6 @@
 
         .right {
             padding: 10px;
-            border: 1px solid black;
             width: 400px;
             display: flex;
             flex-flow: column;
@@ -51,12 +48,10 @@
 
             .control {
                 flex-grow: 1;
-                border: 1px solid black;
             }
 
             .users {
                 flex-grow: 7;
-                border: 1px solid black;
             }
         }
 

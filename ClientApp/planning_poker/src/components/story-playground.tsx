@@ -1,11 +1,11 @@
 import React, {useEffect} from "react";
 import {Typography} from "@material-ui/core";
 import styles from "../styles/story-playground.module.scss"
-import {Cards} from "./Cards";
+import {Cards} from "./cards";
 import {useStory} from "../contexts/story-context";
 import {useSession} from "../contexts/session-context";
 import {ISubscription} from "@microsoft/signalr";
-import {StoryEventType, Event} from "../models/events";
+import {Event, StoryEventType} from "../models/events";
 import {useHub} from "../contexts/hub-context";
 import {getStory} from "../models/Api";
 import {StoryResult} from "./story-result";

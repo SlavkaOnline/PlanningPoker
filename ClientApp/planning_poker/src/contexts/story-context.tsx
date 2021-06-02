@@ -56,21 +56,21 @@ const reducer = (state: Story, action: Action) => {
                     case "Voted":
                         const voted = JSON.parse(action.event.payload) as Voted
                         if (state.voted.findIndex(v => v.id === voted.id) === -1) {
-                            return {...state, voted: [voted, ...state.voted] as readonly Participant[]}
+                            return {...state, version: action.event.order, voted: [voted, ...state.voted] as readonly Participant[]}
                         } else {
-                            return state;
+                            return {...state, version: action.event.order};
                         }
 
                     case "VoteRemoved" :
                         const voteRemoved = JSON.parse(action.event.payload) as VoteRemoved
-                        return {...state, voted: [...state.voted.filter(v => v.id !== voteRemoved.id)]}
+                        return {...state, version: action.event.order, voted: [...state.voted.filter(v => v.id !== voteRemoved.id)]}
 
                     case "StoryClosed" :
-                        return {...state, isClosed: true}
+                        return {...state, version: action.event.order,isClosed: true}
                     case "StoryStarted" :
-                        return state;
+                        return {...state, version: action.event.order};
                     default:
-                        return state;
+                        return {...state, version: action.event.order};
                 }
             }
         default:

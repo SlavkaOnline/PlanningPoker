@@ -5,10 +5,10 @@ import styles from '../styles/session-page.module.scss'
 import {SessionControl} from "../components/session-control";
 import {StoriesTable} from "../components/stories-table";
 import {ISubscription} from "@microsoft/signalr";
-import {ActiveStorySet, Event, SessionEventType} from "../models/events"
+import {Event, SessionEventType} from "../models/events"
 import {useHub} from "../contexts/hub-context";
 import {useSession} from "../contexts/session-context";
-import {OwnerWrapper} from "../components/OwnerWrapper";
+import {OwnerWrapper} from "../components/owner-wrapper";
 import {UsersList} from "../components/users-list";
 import {StoryPlayground} from "../components/story-playground";
 
@@ -52,12 +52,18 @@ export const SessionPage = () => {
                         <StoryPlayground/>
                     </div>
                     <div className={styles.stories}>
+                        <Typography variant="h6">
+                            Stories
+                        </Typography>
                         <StoriesTable />
                     </div>
                 </div>
                 <div className={styles.right}>
                     <OwnerWrapper component={<SessionControl/>}/>
                     <div className={styles.users}>
+                        <Typography variant="h6">
+                            Users
+                        </Typography>
                         <UsersList/>
                     </div>
                 </div>

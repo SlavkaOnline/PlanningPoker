@@ -1,9 +1,9 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {getStory, setActiveStory} from "../models/Api";
 import {Story} from "../models/models";
 import styles from "../styles/stories-table.module.scss";
 import {Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from "@material-ui/core";
-import {OwnerWrapper} from "./OwnerWrapper";
+import {OwnerWrapper} from "./owner-wrapper";
 import {useSession} from "../contexts/session-context";
 import {useStory} from "../contexts/story-context";
 
@@ -50,7 +50,7 @@ export const StoriesTable = () => {
                 </TableHead>
                 <TableBody>
                     {stories.map((story) => (
-                        <TableRow key={story.id}>
+                        <TableRow className={styles.row} key={story.id}>
                             <TableCell component="th" scope="row">
                                 {story.title}
                             </TableCell>

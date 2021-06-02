@@ -58,14 +58,14 @@ const reducer = (state: Session, action: Action) => {
                     case "ActiveStorySet":
                         if (state.ownerId !== action.userId) {
                             const activeStorySet = JSON.parse(action.event.payload) as ActiveStorySet
-                            return {...state, activeStory: activeStorySet.id, version: action.event.order}
+                            return {...state, version: action.event.order, activeStory: activeStorySet.id}
                         } else {
                             return state;
                         }
                     case "StoryAdded" :
                         if (state.ownerId !== action.userId) {
                             const storyAdded = JSON.parse(action.event.payload) as StoryAdded
-                            return {...state, stories: [storyAdded.id, ...state.stories]}
+                            return {...state, version: action.event.order, stories: [storyAdded.id, ...state.stories]}
                         } else {
                             return state;
                         }
@@ -73,6 +73,7 @@ const reducer = (state: Session, action: Action) => {
                         const participantAdded = JSON.parse(action.event.payload) as ParticipantAdded
                         return {
                             ...state,
+                            version: action.event.order,
                             participants: [({
                                 id: participantAdded.id,
                                 name: participantAdded.name
@@ -80,12 +81,12 @@ const reducer = (state: Session, action: Action) => {
                         }
                     case "ParticipantRemoved" :
                         const participantRemoved = JSON.parse(action.event.payload) as ParticipantRemoved
-                        return {...state, participants: [...state.participants.filter(p => p.id != participantRemoved.id)]}
+                        return {...state, version: action.event.order, participants: [...state.participants.filter(p => p.id != participantRemoved.id)]}
                     case "Started":
-                        return state;
+                        return {...state, version: action.event.order};
 
                     default:
-                        return state;
+                        return {...state, version: action.event.order};
                 }
             }
         default:

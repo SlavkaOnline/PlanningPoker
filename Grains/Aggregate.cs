@@ -8,14 +8,14 @@ namespace Grains
     internal class Aggregate<TState, TCommand, TEvent>
     {
 		private readonly Func<TState, TCommand, FSharpResult<TEvent, Errors>> _producer;
-		private readonly Func<TEvent, Task> _commiter;
+		private readonly Func<TEvent, Task> _committer;
 
         public Aggregate(
             Func<TState, TCommand, FSharpResult<TEvent, Errors>> producer,
-            Func<TEvent, Task> commiter)
+            Func<TEvent, Task> committer)
         {
 			_producer = producer;
-			_commiter = commiter;
+            _committer = committer;
         }
 
         public async Task Exec(TState state, TCommand command)
@@ -23,7 +23,7 @@ namespace Grains
             var result = _producer(state, command);
             if (result.IsOk)
             {
-                await _commiter(result.ResultValue);
+                await _committer(result.ResultValue);
             }
             else
             {

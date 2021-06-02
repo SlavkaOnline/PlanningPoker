@@ -36,7 +36,8 @@ namespace Grains
 
         public override Task OnActivateAsync()
         {
-            _domainEventStream = GetStreamProvider("SMS").GetStream<Views.EventView<Story.Event>>(this.GetPrimaryKey(), "DomainEvents");
+            _domainEventStream = GetStreamProvider("SMS")
+                .GetStream<Views.EventView<Story.Event>>(this.GetPrimaryKey(), "DomainEvents");
             return base.OnActivateAsync();
         }
 
@@ -78,7 +79,9 @@ namespace Grains
         public async Task<IReadOnlyList<Views.EventView<Story.Event>>> GetEventsAfter(int version)
         {
             var versions = await RetrieveConfirmedEvents(version, Version);
-            return versions.Select((v, order) => new Views.EventView<Story.Event>(order, v)).ToArray();
+            return versions
+                .Select((v, order) => new Views.EventView<Story.Event>(version > 0 ? order + version : order, v))
+                .ToArray();
         }
     }
 }

@@ -33,14 +33,7 @@ export function useAuth() {
 }
 
 function useProvideAuth() {
-    const [user, setUser] = useState<User | null>(null);
-
-    useEffect(() => {
-        const localUser = localStorage.getItem('user');
-        if (localUser) {
-            setUser(JSON.parse(localUser));
-        }
-    }, [])
+    const [user, setUser] = useState<User | null>(localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') || "") : null);
 
     const signin = async (name: string) => {
         const user = await login(name);

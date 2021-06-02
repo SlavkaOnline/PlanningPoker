@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Gateway;
 using GrainInterfaces;
 using Orleans;
-using Orleans.Concurrency;
 using Orleans.EventSourcing;
 using Orleans.Providers;
 using Orleans.Streams;
@@ -92,7 +90,7 @@ namespace Grains
         {
             var events = await RetrieveConfirmedEvents(version, Version);
             return events.Select((v, order) =>
-                new Views.EventView<Session.Event>(version > 0 ? order + version: order, v)).ToArray();
+                new Views.EventView<Session.Event>(version > 0 ? order + version : order, v)).ToArray();
         }
     }
 }
