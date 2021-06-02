@@ -4,6 +4,9 @@ open System
 open System.Collections.Generic
 
 open CommonTypes
+open PlanningPoker.Domain
+open PlanningPoker.Domain
+open PlanningPoker.Domain
 
 type Card =
     | XXS
@@ -73,34 +76,32 @@ module Story =
               Votes = story.Votes.Remove user }
 
     let calculateStatistics (story: ActiveStory) =
-        let votes =
-            story.Votes
-            |> Seq.map (fun kv -> kv.Value.Card)
-            |> Seq.distinct
-            |> Seq.map (fun c -> (c, { Percent = 0.0; Voters = [] }))
 
-        let stats =
-            story.Votes
-            |> Seq.fold
-                (fun (state: Dictionary<Card, VoteResult>) vote ->
-                    let voted = state.[vote.Value.Card]
+        if (story.Votes.Count = 0) then
+            Map.ofArray [|Card.Question, {Percent = 100.0; Voters = []}|], Card.Question
+        else
+            let votes =
+                story.Votes
+                |> Seq.map (fun kv -> kv.Value.Card)
+                |> Seq.distinct
+                |> Seq.map (fun c -> (c, { Percent = 0.0; Voters = [] }))
 
-                    let percent =
-                        Math.Round((voted.Percent + 1.0) / (float story.Votes.Count) * 100.0, 1)
+            let stats =
+                story.Votes
+                |> Seq.groupBy(fun v -> v.Value.Card)
+                |> Seq.map(fun (card, items) -> (card, items |> Seq.map (fun i -> i.Key)))
+                |> Seq.map(fun (card, users) ->
+                    (card, {
+                    Percent = Math.Round( (Seq.length users |> float) / (story.Votes.Count |> float) * 100.0, 1)
+                    Voters = List.ofSeq users
+                }))
 
-                    let voters = vote.Key :: voted.Voters
-                    state.[vote.Value.Card] <- { Percent = percent; Voters = voters }
+            let result =
+                stats
+                |> Seq.sortByDescending (fun v -> (snd v).Percent)
+                |> Seq.head
 
-                    state)
-                (votes |> dict |> Dictionary)
-            |> Seq.map (|KeyValue|)
-
-        let result =
-            stats
-            |> Seq.sortByDescending (fun v -> (snd v).Percent)
-            |> Seq.head
-
-        (stats |> Map.ofSeq, fst result)
+            (stats |> Map.ofSeq, fst result)
 
     let producer (state: StoryObj) command =
         match command with
