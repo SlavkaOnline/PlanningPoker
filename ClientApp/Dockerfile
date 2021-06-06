@@ -6,6 +6,6 @@ WORKDIR /app/planning_poker
 RUN yarn install && yarn lint && yarn build
 
 FROM nginx:latest
-COPY ./Docker/Nginx/nginx.conf /etc/nginx/nginx.conf
-COPY --from=builder /app/planning_poker/build /usr/share/nginx/html
+COPY ./nginx.conf /etc/nginx/nginx.conf
+COPY --from=builder /app/build /usr/share/nginx/html
 EXPOSE 80

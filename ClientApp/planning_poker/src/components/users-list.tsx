@@ -2,7 +2,7 @@ import React from 'react';
 import { useSession } from '../contexts/session-context';
 import { useStory } from '../contexts/story-context';
 import { Typography } from '@material-ui/core';
-import styles from '../styles/users-list.module.scss'
+import styles from '../styles/users-list.module.scss';
 
 export const UsersList = () => {
     const { session } = useSession();
@@ -13,7 +13,7 @@ export const UsersList = () => {
     }
 
     return (
-        <div className={styles.wrapper} >
+        <div className={styles.wrapper}>
             <Typography variant="h6">Users</Typography>
             <div className={styles.list}>
                 {session.participants.map((p) => (
