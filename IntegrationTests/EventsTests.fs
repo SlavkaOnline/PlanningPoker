@@ -125,7 +125,7 @@ type EventsTests(server: RealServerFixture) =
 
             do! connection.StopAsync() |> Async.AwaitTask
 
-            do! Async.Sleep(100)
+            do! Async.Sleep(1000)
 
             let! finallySession =
                 Helper.requestGet<SessionView> apiClient user.Token $"Sessions/%s{session.Id.ToString()}"
@@ -183,7 +183,7 @@ type EventsTests(server: RealServerFixture) =
                     user.Token
                     $"Sessions/%s{session.Id.ToString()}/activestory"
 
-            do! Async.Sleep(100)
+            do! Async.Sleep(1000)
 
             test <@ subscription.Count = 5 @>
         }

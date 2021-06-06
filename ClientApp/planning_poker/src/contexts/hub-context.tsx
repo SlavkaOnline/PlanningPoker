@@ -14,6 +14,7 @@ export const ProvideHub = ({ children }: { children: any }) => {
             const hub = new HubConnectionBuilder()
                 .withUrl('/events', { accessTokenFactory: () => user?.token || '' })
                 .withAutomaticReconnect()
+                .configureLogging("error")
                 .build();
             hub.start().then(() => setHub(hub));
         }
