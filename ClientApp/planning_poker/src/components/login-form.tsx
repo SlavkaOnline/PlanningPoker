@@ -1,27 +1,24 @@
-import React, {useState} from "react";
-import {Button, TextField} from "@material-ui/core";
+import React, { useState } from 'react';
+import { Button, TextField } from '@material-ui/core';
 
-import styles from "../styles/login-form.module.scss"
-import { useAuth } from "../contexts/auth-context";
-import { useHistory, useLocation } from "react-router-dom";
+import styles from '../styles/login-form.module.scss';
+import { useAuth } from '../contexts/auth-context';
+import { useHistory, useLocation } from 'react-router-dom';
 
 export const LoginForm = () => {
-
-    const [userName, setUserName ] = useState("");
+    const [userName, setUserName] = useState('');
     const auth = useAuth();
     const history = useHistory();
     const location = useLocation<{ from: { pathname: string } }>();
 
     async function login() {
         await auth.signin(userName);
-        let { from } = location.state || { from: { pathname: "/" } };
+        const { from } = location.state || { from: { pathname: '/' } };
         history.replace(from);
     }
 
     return (
-        <form
-            className={styles.form}
-            noValidate autoComplete="off">
+        <form className={styles.form} noValidate autoComplete="off">
             <div>
                 <TextField
                     className={styles.username}
@@ -38,5 +35,5 @@ export const LoginForm = () => {
                 </Button>
             </div>
         </form>
-    )
-}
+    );
+};

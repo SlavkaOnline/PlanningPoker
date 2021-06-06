@@ -1,0 +1,10 @@
+.wrapper {
+    height: 100%;
+    display: flex;
+    flex-flow: column;
+
+    .list {
+        height: 100%;
+        overflow: auto;
+    }
+}

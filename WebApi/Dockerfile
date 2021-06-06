@@ -1,13 +1,12 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:5.0 AS base
 WORKDIR /app
 EXPOSE 80
-EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /src
-COPY ["WebApi/WebApi.csproj", "WebApi/"]
-RUN dotnet restore "WebApi/WebApi.csproj"
 COPY . .
+RUN dotnet restore PlanningPoker.sln
+
 WORKDIR "/src/WebApi"
 RUN dotnet build "WebApi.csproj" -c Release -o /app/build
 
@@ -17,4 +16,5 @@ RUN dotnet publish "WebApi.csproj" -c Release -o /app/publish
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+ENV ASPNETCORE_URSL=http://+:5000
 ENTRYPOINT ["dotnet", "WebApi.dll"]

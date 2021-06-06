@@ -1,31 +1,32 @@
-import React, {useState} from "react";
-import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@material-ui/core";
-import styles from "../styles/session-control.module.scss"
-import {Story} from "../models/models";
-import {closeStory, createStory} from "../models/Api";
-import {useSession} from "../contexts/session-context";
-import {useStory} from "../contexts/story-context";
-
+import React, { useState } from 'react';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@material-ui/core';
+import styles from '../styles/session-control.module.scss';
+import { clearStory, closeStory, createStory } from '../models/Api';
+import { useSession } from '../contexts/session-context';
+import { useStory } from '../contexts/story-context';
 
 export const SessionControl = () => {
-
     const [open, setOpen] = useState(false);
-    const [storyName, setStoryName] = useState("");
-    const {session, dispatch} = useSession()
-    const {story, dispatch: dispatchStory} = useStory();
+    const [storyName, setStoryName] = useState('');
+    const { session, dispatch } = useSession();
+    const { story, dispatch: dispatchStory } = useStory();
 
     function create() {
         if (storyName) {
             setOpen(false);
-            createStory(session.id, storyName)
-                .then(s => dispatch({tag: "init", session: s}));
+            createStory(session.id, storyName).then((s) => dispatch({ tag: 'init', session: s }));
         }
     }
 
     function flipCards() {
         if (story.id) {
-            closeStory(story.id)
-                .then(s => dispatchStory({tag: "init", story: s}));
+            closeStory(story.id).then((s) => dispatchStory({ tag: 'init', story: s }));
+        }
+    }
+
+    function clear() {
+        if (story.id) {
+            clearStory(story.id).then((s) => dispatchStory({ tag: 'init', story: s }));
         }
     }
 
@@ -39,34 +40,39 @@ export const SessionControl = () => {
                 defaultValue={window.location.href}
             />
             <div className={styles.actions}>
-                <Button
-                    className={styles.action}
-                    variant="contained" color="primary"
-                    onClick={() => setOpen(true)}
-                >
+                <Button className={styles.action} variant="contained" color="primary" onClick={() => setOpen(true)}>
                     Create story
                 </Button>
-                {!story.isClosed
-                    ? <Button
-                        onClick={() => flipCards()}
-                        className={styles.action}
-                        variant="contained" color="primary">
-                        Flip cards
+                {!story.isClosed ? (
+                    story.voted.length ? (
+                        <Button
+                            onClick={() => flipCards()}
+                            className={styles.action}
+                            variant="contained"
+                            color="primary"
+                        >
+                            Flip cards
+                        </Button>
+                    ) : (
+                        <></>
+                    )
+                ) : (
+                    <Button onClick={() => clear()} className={styles.action} variant="contained" color="primary">
+                        Clear story
                     </Button>
-                    : <></>
-                }
+                )}
             </div>
 
-            <Dialog
-                open={open} aria-labelledby="form-dialog-title">
+            <Dialog open={open} aria-labelledby="form-dialog-title">
                 <DialogTitle id="form-dialog-title"> Create New Story</DialogTitle>
-                <DialogContent>
+                <DialogContent className={styles.dialog}>
                     <TextField
                         autoFocus
                         margin="dense"
                         id="name"
                         label="Story title"
                         type="text"
+                        variant="outlined"
                         fullWidth
                         onChange={(e) => setStoryName(e.target.value)}
                     />
@@ -81,5 +87,5 @@ export const SessionControl = () => {
                 </DialogActions>
             </Dialog>
         </div>
-    )
-}
+    );
+};

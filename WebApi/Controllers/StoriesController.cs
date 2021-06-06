@@ -36,7 +36,7 @@ namespace WebApi.Controllers
         public async Task<Views.StoryView> Vote(Guid id, Requests.Vote request)
         {
             var (userId, userName) = HttpContext.User.GetUserParams();
-            var card = Views.fromString<Card>(request.Card.ToUpper());
+            var card = Views.fromString<Card>(request.Card);
             var story = silo.GetGrain<IStoryGrain>(id);
             return await story.Vote(new CommonTypes.User(userId, userName), card.Value);
         }
@@ -52,11 +52,20 @@ namespace WebApi.Controllers
 
         [HttpPost]
         [Route("{id}/close")]
-        public async Task<Views.StoryView> CloseStory(Guid id)
+        public async Task<Views.StoryView> Close(Guid id)
         {
             var (userId, userName) = HttpContext.User.GetUserParams();
             var story = silo.GetGrain<IStoryGrain>(id);
             return await story.Close(new CommonTypes.User(userId, userName));
+        }
+
+        [HttpPost]
+        [Route("{id}/clear")]
+        public async Task<Views.StoryView> ClearStory(Guid id)
+        {
+            var (userId, userName) = HttpContext.User.GetUserParams();
+            var story = silo.GetGrain<IStoryGrain>(id);
+            return await story.Clear(new CommonTypes.User(userId, userName));
         }
     }
 }

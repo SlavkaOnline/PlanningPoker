@@ -1,42 +1,33 @@
-import {Participant} from "./models";
+import { Participant } from './models';
 
-export type SessionEventType =
-    | 'ActiveStorySet'
-    | 'StoryAdded'
-    | 'ParticipantAdded'
-    | 'ParticipantRemoved'
-    | 'Started'
-
+export type SessionEventType = 'ActiveStorySet' | 'StoryAdded' | 'ParticipantAdded' | 'ParticipantRemoved' | 'Started';
 
 export type Event<TEvent> = Readonly<{
-    entityId: string
-    type: TEvent
-    order: number
-    payload: string
-}>
+    entityId: string;
+    type: TEvent;
+    order: number;
+    payload: string;
+}>;
 
 export type ActiveStorySet = Readonly<{
-    id: string
-}>
+    id: string;
+}>;
 export type StoryAdded = Readonly<{
-    id: string
-}>
+    id: string;
+}>;
 
 export type ParticipantAdded = Readonly<{
-    id: string
-    name: string
-}>
+    id: string;
+    name: string;
+}>;
 
 export type ParticipantRemoved = Readonly<{
-    id: string
-    name: string
-}>
+    id: string;
+    name: string;
+}>;
 
-export type StoryEventType =
-    | 'Voted'
-    | 'VoteRemoved'
-    | 'StoryClosed'
-    | 'StoryStarted'
+export type StoryEventType = 'Voted' | 'VoteRemoved' | 'StoryClosed' | 'StoryStarted' | 'Cleared';
 
-export type Voted = Readonly<Participant>
-export type VoteRemoved = Readonly<Participant>
+export type Voted = Readonly<Participant>;
+export type VoteRemoved = Readonly<Participant>;
+export type Cleared = Readonly<{ startedAt: string }>;

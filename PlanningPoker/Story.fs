@@ -1,11 +1,8 @@
 namespace PlanningPoker.Domain
 
 open System
-open System.Collections.Generic
 
 open CommonTypes
-open PlanningPoker.Domain
-open PlanningPoker.Domain
 open PlanningPoker.Domain
 
 type Card =
@@ -59,12 +56,14 @@ module Story =
         | CloseStory of user: User * finishedAt: DateTime
         | Vote of user: User * Card: Card * VotedAt: DateTime
         | RemoveVote of user: User
+        | Clear of user: User * startedAt: DateTime
 
     type Event =
         | StoryStarted of user: User * title: string * startedAt: DateTime
         | StoryClosed of result: Card * statistics: Map<Card, VoteResult> * finishedAt: DateTime
         | Voted of user: User * vote: Vote
         | VoteRemoved of user: User
+        | Cleared of startedAt: DateTime
 
 
     let makeVote user vote (story: ActiveStory) =
@@ -130,6 +129,14 @@ module Story =
             | ActiveStory _ -> Ok <| VoteRemoved(user)
             | ClosedStory _ -> Error <| Errors.StoryIsClosed
 
+        | Clear (user, dt) ->
+                            if state.hasAccessToChange user then
+                                match state.State with
+                                | ClosedStory _ -> Ok <| Cleared dt
+                                | ActiveStory _ -> Error <| Errors.StoryIsNotClosed
+                            else
+                                Error <| Errors.UnauthorizedAccess
+
     let reducer (state: StoryObj) event =
         match event with
         | StoryStarted (user, title, dt) ->
@@ -149,11 +156,16 @@ module Story =
             | ClosedStory _ -> state
             | ActiveStory s ->
                 { state with
-                      State = ActiveStory(makeVote user vote s) }
+                      State = ActiveStory <| makeVote user vote s }
 
         | VoteRemoved user ->
             match state.State with
             | ClosedStory _ -> state
             | ActiveStory s ->
                 { state with
-                      State = ActiveStory(removeVote user s) }
+                      State = ActiveStory <| removeVote user s }
+
+        | Cleared dt ->
+            match state.State with
+            | ClosedStory _ -> {state with State = StoryState.createActive; StartedAt = dt }
+            | ActiveStory _ -> state

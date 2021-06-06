@@ -13,5 +13,6 @@ namespace GrainInterfaces
         Task<Views.StoryView> Vote(CommonTypes.User user, Card card);
         Task<Views.StoryView> RemoveVote(CommonTypes.User user);
         Task<Views.StoryView> Close(CommonTypes.User user);
+        Task<Views.StoryView> Clear(CommonTypes.User user);
     }
 }

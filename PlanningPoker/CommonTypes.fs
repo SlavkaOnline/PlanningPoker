@@ -5,8 +5,10 @@ module CommonTypes =
     open System
     open FSharp.UMX
 
-    [<Measure>] type UserId
+    [<Measure>]
+    type UserId
 
-    [<Measure>] type ObjectId 
+    [<Measure>]
+    type ObjectId
 
     type User = { Id: Guid<UserId>; Name: string }

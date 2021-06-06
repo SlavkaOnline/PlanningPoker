@@ -1,8 +1,14 @@
-.table {
-    overflow-y: auto;
+.wrapper {
     height: 100%;
+    display: flex;
+    flex-flow: column;
+    .table {
+        overflow-y: auto;
+        height: 100%;
 
-    .row {
-        height: 50px;
+        .row {
+            height: 50px;
+        }
     }
 }
+

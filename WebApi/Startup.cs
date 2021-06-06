@@ -18,6 +18,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using PlanningPoker.Domain;
 using WebApi.Application;
 
 
@@ -116,14 +117,14 @@ namespace WebApi
             {
                 var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
                 var exception = exceptionHandlerPathFeature.Error;
-                var result = exception switch
+                var (code, message) = exception switch
                 {
-                    PlatformNotSupportedException ex => (code: HttpStatusCode.BadRequest, ex.Message),
+                    PlanningPokerDomainException ex => (code: HttpStatusCode.BadRequest, ex.Data0),
                     _ => (code: HttpStatusCode.InternalServerError, exception.Message)
 
                 };
-                context.Response.StatusCode = (int) result.code;
-                context.Response.HttpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase = result.Message;
+                context.Response.StatusCode = (int) code;
+                context.Response.HttpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase = message;
                 await context.Response.CompleteAsync();
             }));
 
@@ -131,9 +132,7 @@ namespace WebApi
             {
                 endpoints.MapHub<EventsDeliveryHub.DomainEventHub>("/events", options =>
                 {
-                    options.Transports =
-                        HttpTransportType.WebSockets |
-                        HttpTransportType.LongPolling;
+                    options.Transports = HttpTransportType.WebSockets;
                 });
 
                 endpoints.MapControllers();

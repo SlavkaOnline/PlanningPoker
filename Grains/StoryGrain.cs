@@ -70,7 +70,12 @@ namespace Grains
         {
             await _aggregate.Exec(State.Story, Story.Command.NewCloseStory(user, DateTime.UtcNow));
             return Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story, user);
-            ;
+        }
+
+        public async Task<Views.StoryView> Clear(CommonTypes.User user)
+        {
+            await _aggregate.Exec(State.Story, Story.Command.NewClear(user, DateTime.UtcNow));
+            return Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story, user);
         }
 
         Task<Views.StoryView> IStoryGrain.GetState(CommonTypes.User user)

@@ -14,7 +14,7 @@ module Views =
 
     let fromString<'a> (s: string) =
         match FSharpType.GetUnionCases typeof<'a>
-              |> Array.filter (fun case -> case.Name = s) with
+              |> Array.filter (fun case -> String.Equals(case.Name, s, StringComparison.OrdinalIgnoreCase)) with
         | [| case |] -> Some(FSharpValue.MakeUnion(case, [||]) :?> 'a)
         | _ -> None
 

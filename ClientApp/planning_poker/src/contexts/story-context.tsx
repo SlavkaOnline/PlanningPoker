@@ -1,108 +1,120 @@
-import React, {createContext, useContext, useEffect, useReducer} from "react";
-import {Participant, Story} from "../models/models";
-import {
-    Event,
- SessionEventType,
-    StoryEventType, Voted, VoteRemoved
-} from "../models/events";
-import axios from "axios";
-import {getStory} from "../models/Api";
-import {useSession} from "./session-context";
-import {useHub} from "./hub-context";
-import {ISubscription} from "@microsoft/signalr";
+import React, { createContext, useContext, useEffect, useReducer } from 'react';
+import { Participant, Story } from '../models/models';
+import { Cleared, Event, StoryEventType, Voted, VoteRemoved } from '../models/events';
+import axios from 'axios';
+import { getStory } from '../models/Api';
+import { useSession } from './session-context';
 
 const defaultStory: Story = {
-    id: "",
-    title: "",
+    id: '',
+    title: '',
     version: -1,
-    ownerId: "",
-    ownerName: "",
-    userCard: "",
-    result: "",
+    ownerId: '',
+    ownerName: '',
+    userCard: '',
+    result: '',
     voted: [],
     isClosed: false,
-    finishedAt: "",
-    startedAt: "",
-    statistics: {}
-}
+    finishedAt: '',
+    startedAt: '',
+    statistics: {},
+};
 
 type Init = Readonly<{
-    tag: "init"
-    story: Story
-}>
+    tag: 'init';
+    story: Story;
+}>;
 
 type ApplyEvent = Readonly<{
-    tag: "applyEvent"
+    tag: 'applyEvent';
     event: Event<StoryEventType>;
-}>
+}>;
 
-
-type Action = | Init | ApplyEvent
+type Action = Init | ApplyEvent;
 
 const reducer = (state: Story, action: Action) => {
-
     switch (action.tag) {
-        case "init":
+        case 'init':
             if (action.story.id !== state.id || action.story.version > state.version) {
                 return action.story;
             } else {
                 return state;
             }
-        case "applyEvent" :
+        case 'applyEvent':
             if (state.version > action.event.order) {
                 return state;
             } else {
                 switch (action.event.type) {
-                    case "Voted":
-                        const voted = JSON.parse(action.event.payload) as Voted
-                        if (state.voted.findIndex(v => v.id === voted.id) === -1) {
-                            return {...state, version: action.event.order, voted: [voted, ...state.voted] as readonly Participant[]}
+                    case 'Voted': {
+                        const voted = JSON.parse(action.event.payload) as Voted;
+                        if (state.voted.findIndex((v) => v.id === voted.id) === -1) {
+                            return {
+                                ...state,
+                                version: action.event.order,
+                                voted: [voted, ...state.voted] as readonly Participant[],
+                            };
                         } else {
-                            return {...state, version: action.event.order};
+                            return { ...state, version: action.event.order };
                         }
+                    }
 
-                    case "VoteRemoved" :
-                        const voteRemoved = JSON.parse(action.event.payload) as VoteRemoved
-                        return {...state, version: action.event.order, voted: [...state.voted.filter(v => v.id !== voteRemoved.id)]}
+                    case 'VoteRemoved': {
+                        const voteRemoved = JSON.parse(action.event.payload) as VoteRemoved;
+                        return {
+                            ...state,
+                            version: action.event.order,
+                            voted: [...state.voted.filter((v) => v.id !== voteRemoved.id)],
+                        };
+                    }
 
-                    case "StoryClosed" :
-                        return {...state, version: action.event.order,isClosed: true}
-                    case "StoryStarted" :
-                        return {...state, version: action.event.order};
+                    case 'StoryClosed':
+                        return { ...state, isClosed: true };
+                    case 'StoryStarted':
+                        return { ...state, version: action.event.order };
+                    case 'Cleared': {
+                        const cleared = JSON.parse(action.event.payload) as Cleared;
+                        return {
+                            ...state,
+                            version: action.event.order,
+                            isClosed: false,
+                            statistics: {},
+                            result: null,
+                            startedAt: cleared.startedAt,
+                            userCard: '',
+                        };
+                    }
+
                     default:
-                        return {...state, version: action.event.order};
+                        return { ...state, version: action.event.order };
                 }
             }
         default:
             return state;
     }
-}
+};
 
-export const storyContext = createContext<{story: Story, dispatch: React.Dispatch<Action>}>({story: defaultStory, dispatch: (_) => defaultStory});
+export const storyContext = createContext<{ story: Story; dispatch: React.Dispatch<Action> }>({
+    story: defaultStory,
+    dispatch: (_) => defaultStory,
+});
 
-export const ProvideStory = ({children}: { children: any }) => {
+export const ProvideStory = ({ children }: { children: any }) => {
     const [story, dispatch] = useReducer(reducer, defaultStory);
 
-    const {session} = useSession();
+    const { session } = useSession();
 
     useEffect(() => {
-            if (session.activeStory) {
-                let cts = axios.CancelToken.source();
-                getStory(session.activeStory, cts.token)
-                    .then(s => dispatch({tag: "init", story: s}));
-                return () => cts.cancel();
-            } else {
-                dispatch({tag: "init", story: defaultStory})
-            }
-        }, [session.activeStory]
-    );
+        if (session.activeStory) {
+            const cts = axios.CancelToken.source();
+            getStory(session.activeStory, cts.token).then((s) => dispatch({ tag: 'init', story: s }));
+            return () => cts.cancel();
+        } else {
+            dispatch({ tag: 'init', story: defaultStory });
+        }
+    }, [session.activeStory]);
 
-    return (
-        <storyContext.Provider value={{story, dispatch}}>
-            {children}
-        </storyContext.Provider>
-    );
-}
+    return <storyContext.Provider value={{ story, dispatch }}>{children}</storyContext.Provider>;
+};
 
 export function useStory() {
     return useContext(storyContext);

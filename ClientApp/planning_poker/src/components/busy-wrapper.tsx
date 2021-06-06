@@ -1,43 +1,36 @@
-﻿import React, {useEffect, useRef, useState} from 'react'
-import {CircularProgress} from "@material-ui/core";
-import styles from '../styles/busy-wrapper.module.scss'
+﻿import React, { useEffect, useRef, useState } from 'react';
+import { CircularProgress } from '@material-ui/core';
+import styles from '../styles/busy-wrapper.module.scss';
 
 export type BusyWrapperProps = Readonly<{
-    component: React.ElementRef<any>
-}>
+    component: React.ElementRef<any>;
+}>;
 
 export const BusyWrapper = (props: BusyWrapperProps) => {
-    const [isBusy, setBusy] = useState(false)
+    const [isBusy, setBusy] = useState(false);
 
-    const refComponent = useRef<any>(props.component)
+    const refComponent = useRef<any>(props.component);
 
     useEffect(() => {
-            if (refComponent.current) {
-                (refComponent.current as HTMLElement).onclick = function () {
-                    setBusy(true);
-                };
-            }
-            return;
+        if (refComponent.current) {
+            (refComponent.current as HTMLElement).onclick = function () {
+                setBusy(true);
+            };
         }
-        , [props])
+        return;
+    }, [props]);
 
     function renderComponent() {
         if (isBusy) {
             return (
                 <div className={styles.busy}>
-                    <CircularProgress/>
-                </div>)
+                    <CircularProgress />
+                </div>
+            );
         } else {
-            return (
-                <div ref={refComponent}>
-                    props.Component
-                </div>)
+            return <div ref={refComponent}>props.Component</div>;
         }
-
     }
 
-
-    return (
-        renderComponent()
-    )
-}
+    return renderComponent();
+};

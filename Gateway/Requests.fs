@@ -7,21 +7,13 @@ module Requests =
 
 
     [<CLIMutable>]
-    type CreateSession = {
-        Title: string
-    }
+    type CreateSession = { Title: string }
 
     [<CLIMutable>]
-    type CreateStory = {
-        Title: string
-    }
+    type CreateStory = { Title: string }
 
     [<CLIMutable>]
-    type Vote = {
-        Card: string;
-    }
+    type Vote = { Card: string }
 
     [<CLIMutable>]
-    type SetActiveStory = {
-        Id: string
-    }
+    type SetActiveStory = { Id: string }

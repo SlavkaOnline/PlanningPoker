@@ -8,6 +8,7 @@ type Errors =
     | ParticipantAlreadyExist
     | ParticipantNotExist
     | StoryIsClosed
+    | StoryIsNotClosed
     | StoryHasntVotes
     static member ConvertToExnMessage =
         function
@@ -17,5 +18,6 @@ type Errors =
         | ParticipantNotExist -> "Participant not found"
         | StoryIsClosed -> "It is not possible to perform an action with a closed story"
         | StoryHasntVotes -> "Story hasn't votes"
+        | StoryIsNotClosed -> "Cannot clear not closed story"
 
     static member RaiseDomainExn err = raise(PlanningPokerDomainException <| Errors.ConvertToExnMessage err)

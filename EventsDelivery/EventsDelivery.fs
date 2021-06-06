@@ -59,10 +59,17 @@ module EventsDeliveryHub =
         let create = createEvent entityId domainEvent.Order
 
         match domainEvent.Payload with
-        | Story.Event.Voted (user, _) -> create "Voted" <| JsonConvert.SerializeObject({| id = %user.Id; name = user.Name |})
-        | Story.Event.VoteRemoved user -> create "VoteRemoved" <| JsonConvert.SerializeObject({| id = %user.Id; name = user.Name |})
+        | Story.Event.Voted (user, _) ->
+            create "Voted"
+            <| JsonConvert.SerializeObject({| id = %user.Id; name = user.Name |})
+        | Story.Event.VoteRemoved user ->
+            create "VoteRemoved"
+            <| JsonConvert.SerializeObject({| id = %user.Id; name = user.Name |})
         | Story.Event.StoryClosed _ -> create "StoryClosed" ""
         | Story.Event.StoryStarted _ -> create "StoryStarted" ""
+        | Story.Event.Cleared dt ->
+            create "Cleared"
+            <| JsonConvert.SerializeObject({| startedAt = dt.ToString() |})
 
 
     type DomainEventHub(client: IClusterClient) =

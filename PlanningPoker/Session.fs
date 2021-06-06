@@ -1,4 +1,5 @@
 ﻿namespace PlanningPoker.Domain
+
 open CommonTypes
 open FSharp.UMX
 
