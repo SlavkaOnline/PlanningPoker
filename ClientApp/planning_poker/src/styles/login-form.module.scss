@@ -10,8 +10,13 @@
         width: 100%;
         margin-top: 30px;
 
-        button {
-            width: 100%;
+        .button {
+            width: 100% !important;
+            margin-top: 10px;
+            
+            &:first-child {
+                margin-top: 0;
+            }
         }
     }
 }

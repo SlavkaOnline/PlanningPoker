@@ -44,7 +44,8 @@ module EventsDeliveryHub =
             create "ParticipantAdded"
             <| JsonConvert.SerializeObject(
                 {| id = %participant.Id
-                   name = participant.Name |}
+                   name = participant.Name
+                   picture = participant.Picture |> Option.defaultValue "" |}
             )
         | Session.Event.ParticipantRemoved participant ->
             create "ParticipantRemoved"
@@ -157,9 +158,13 @@ module EventsDeliveryHub =
             let userName =
                 Seq.find (fun (c: Claim) -> c.Type = ClaimTypes.GivenName) this.Context.User.Claims
 
+            let picture =
+                Seq.tryFind (fun (c: Claim) -> c.Type = "picture") this.Context.User.Claims
+
             let user =
                 { User.Id = %(Guid.Parse(userId.Value))
-                  Name = userName.Value }
+                  Name = userName.Value
+                  Picture = picture |> Option.map (fun c -> c.Value) }
 
             cancellationToken.Register(fun () -> session.RemoveParticipant(%user.Id) |> ignore)
             |> ignore

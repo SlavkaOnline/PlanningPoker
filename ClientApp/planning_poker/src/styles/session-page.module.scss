@@ -19,6 +19,7 @@ $grey: rgba(128, 128, 128, 0.32);
         height: 100%;
         display: flex;
         justify-content: space-between;
+        overflow: hidden;
         .left {
             padding: 10px;
             width: 100%;

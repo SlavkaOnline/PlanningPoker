@@ -16,15 +16,9 @@ export type StoryAdded = Readonly<{
     id: string;
 }>;
 
-export type ParticipantAdded = Readonly<{
-    id: string;
-    name: string;
-}>;
+export type ParticipantAdded = Readonly<Participant>;
 
-export type ParticipantRemoved = Readonly<{
-    id: string;
-    name: string;
-}>;
+export type ParticipantRemoved = Readonly<Participant>;
 
 export type StoryEventType = 'Voted' | 'VoteRemoved' | 'StoryClosed' | 'StoryStarted' | 'Cleared';
 

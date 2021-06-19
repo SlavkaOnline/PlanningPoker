@@ -4,6 +4,7 @@ import { Button, TextField } from '@material-ui/core';
 import styles from '../styles/login-form.module.scss';
 import { useAuth } from '../contexts/auth-context';
 import { useHistory, useLocation } from 'react-router-dom';
+import GoogleButton from 'react-google-button';
 
 export const LoginForm = () => {
     const [userName, setUserName] = useState('');
@@ -15,6 +16,11 @@ export const LoginForm = () => {
         await auth.signin(userName);
         const { from } = location.state || { from: { pathname: '/' } };
         history.replace(from);
+    }
+
+    function loginGoogle() {
+        localStorage.setItem('redirect', JSON.stringify(location.state || { from: { pathname: '/' } }));
+        auth.signinGoogle();
     }
 
     return (
@@ -30,9 +36,21 @@ export const LoginForm = () => {
                 />
             </div>
             <div className={styles.login}>
-                <Button variant="contained" color="primary" onClick={() => login()}>
+                <Button
+                    type={'submit'}
+                    className={styles.button}
+                    variant="contained"
+                    color="primary"
+                    onClick={() => login()}
+                >
                     Login
                 </Button>
+                <GoogleButton
+                    className={styles.button}
+                    onClick={() => {
+                        loginGoogle();
+                    }}
+                />
             </div>
         </form>
     );

@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import styles from '../styles/navbar.module.scss';
 import { useAuth } from '../contexts/auth-context';
 import { User } from '../models/models';
-import { Button } from '@material-ui/core';
+import { Avatar, Button } from '@material-ui/core';
 
 export const Navbar = () => {
     const { user, signout } = useAuth();
@@ -24,6 +24,7 @@ export const Navbar = () => {
         } else {
             return (
                 <div className={styles.nameLoguot}>
+                    <Avatar src={user.picture || ''} />
                     <div className={styles.name}>{user.name}</div>
                     <Typography>
                         <Button component={Link} className={styles.link} to="/" onClick={() => signout()}>

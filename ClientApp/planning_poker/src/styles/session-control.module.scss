@@ -17,4 +17,21 @@
         width: 400px;
     }
 
+    .link {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        .field {
+            width: 100%;
+        }
+
+        .copy {
+            margin-left: 5px;
+            &:hover {
+                cursor: pointer;
+            }
+        }
+    }
+
 }

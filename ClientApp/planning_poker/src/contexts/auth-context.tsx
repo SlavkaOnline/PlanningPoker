@@ -1,11 +1,13 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { login } from '../models/Api';
+import React, { createContext, useContext, useState } from 'react';
+import { login, loginGoogle } from '../models/Api';
 import { User } from '../models/models';
 
 type AuthState = Readonly<{
     user: User | null;
     signin: (name: string) => void;
+    signinGoogle: () => void;
     signout: () => void;
+    updateUser: (user: User) => void;
 }>;
 
 const authPropsDefault: AuthState = {
@@ -13,7 +15,13 @@ const authPropsDefault: AuthState = {
     signin: (name: string) => {
         return;
     },
+    signinGoogle: () => {
+        return;
+    },
     signout: () => {
+        return;
+    },
+    updateUser: (user: User) => {
         return;
     },
 };
@@ -40,14 +48,25 @@ function useProvideAuth() {
         setUser(user);
     };
 
+    const signinGoogle = async () => {
+        await loginGoogle();
+    };
+
     const signout = () => {
         localStorage.removeItem('user');
         setUser(null);
     };
 
+    const updateUser = (user: User) => {
+        localStorage.setItem('user', JSON.stringify(user));
+        setUser(user);
+    };
+
     return {
         user,
         signin,
+        signinGoogle,
         signout,
+        updateUser,
     };
 }

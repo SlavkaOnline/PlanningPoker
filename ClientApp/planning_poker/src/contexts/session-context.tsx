@@ -11,9 +11,6 @@ import {
 import { getSession } from '../models/Api';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { ISubscription } from '@microsoft/signalr';
-import { useHub } from './hub-context';
-import { useAuth } from './auth-context';
 
 const defaultSession: Session = {
     id: '',
@@ -75,13 +72,7 @@ const reducer = (state: Session, action: Action) => {
                         return {
                             ...state,
                             version: action.event.order,
-                            participants: [
-                                {
-                                    id: participantAdded.id,
-                                    name: participantAdded.name,
-                                } as Readonly<Participant>,
-                                ...state.participants,
-                            ],
+                            participants: [participantAdded, ...state.participants],
                         };
                     }
                     case 'ParticipantRemoved': {

@@ -4,6 +4,9 @@ import { createBrowserHistory } from 'history';
 
 const history = createBrowserHistory();
 
+axios.defaults.maxRedirects = 0;
+axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+
 axios.interceptors.request.use(
     (request) => {
         const localUser = localStorage.getItem('user');
@@ -17,8 +20,14 @@ axios.interceptors.request.use(
 );
 
 axios.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        return response;
+    },
     (error) => {
+        if (error.response?.status === 302) {
+            window.location = error.response.headers.location;
+        }
+
         if (error.response?.status === 401) {
             history.push('/login');
         }
@@ -28,6 +37,21 @@ axios.interceptors.response.use(
 
 export async function login(name: string): Promise<User> {
     return axios.post<User>('/api/login', { name }).then((r) => r.data);
+}
+
+export async function loginGoogle(): Promise<void> {
+    return fetch(`/api/login/google-login?returnUrl=${window.location}`, { method: 'GET', redirect: 'manual' })
+        .then((r) => {
+            if (r.url) {
+                window.location.href = r.url;
+            }
+        })
+        .catch((err) => {
+            if (err.status == 302) {
+                console.log(err.headers.location);
+            }
+            throw err;
+        });
 }
 
 export async function createSession(title: string): Promise<Session> {

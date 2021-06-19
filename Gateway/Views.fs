@@ -19,13 +19,11 @@ module Views =
         | _ -> None
 
 
-    type ParticipantView = { Id: Guid; Name: string }
-
-    type UserView = { Id: Guid; Name: string }
+    type ParticipantView = { Id: Guid; Name: string; Picture: string }
 
     type VoteResultView =
         { Percent: float
-          Voters: UserView array }
+          Voters: ParticipantView array }
 
     type SessionView =
         { Id: Guid
@@ -50,8 +48,10 @@ module Views =
                   session.Participants
                   |> List.map
                       (fun p ->
-                          { ParticipantView.Id = (%p.Id)
-                            Name = p.Name })
+                          { Id = (%p.Id)
+                            Name = p.Name
+                            Picture = p.Picture |> Option.defaultValue ""
+                            })
                   |> List.toArray
               Stories =
                   session.Stories
@@ -66,7 +66,7 @@ module Views =
           OwnerName: string
           UserCard: string
           IsClosed: bool
-          Voted: UserView array
+          Voted: ParticipantView array
           Result: string
           Statistics: Dictionary<string, VoteResultView>
           StartedAt: DateTime
@@ -104,7 +104,11 @@ module Views =
                       s.Votes
                       |> Map.toSeq
                       |> Seq.map (fst)
-                      |> Seq.map (fun v -> { UserView.Id = %v.Id; Name = v.Name })
+                      |> Seq.map
+                          (fun v ->
+                              { Id = %v.Id
+                                Name = v.Name
+                                Picture = v.Picture |> Option.defaultValue "" })
                       |> Seq.toArray
                   | ClosedStory s ->
                       seq {
@@ -112,7 +116,9 @@ module Views =
                               let results = snd st
 
                               for v in results.Voters do
-                                  { UserView.Id = %v.Id; Name = v.Name }
+                                  { Id = %v.Id
+                                    Name = v.Name
+                                    Picture = v.Picture |> Option.defaultValue "" }
                       }
                       |> Array.ofSeq
 
@@ -128,7 +134,11 @@ module Views =
                                { VoteResultView.Percent = (snd s).Percent
                                  Voters =
                                      (snd s).Voters
-                                     |> List.map (fun v -> { UserView.Id = %v.Id; Name = v.Name })
+                                     |> List.map
+                                         (fun v ->
+                                             { Id = %v.Id
+                                               Name = v.Name
+                                               Picture = v.Picture |> Option.defaultValue "" })
                                      |> Array.ofList }))
                       |> dict
                       |> Dictionary

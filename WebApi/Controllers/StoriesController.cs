@@ -26,46 +26,41 @@ namespace WebApi.Controllers
         [Route("{id}")]
         public async Task<Views.StoryView> Get(Guid id)
         {
-            var (userId, userName) = HttpContext.User.GetUserParams();
             var story = silo.GetGrain<IStoryGrain>(id);
-            return await story.GetState(new CommonTypes.User(userId, userName));
+            return await story.GetState(HttpContext.User.GetDomainUser());
         }
 
         [HttpPost]
         [Route("{id}/vote")]
         public async Task<Views.StoryView> Vote(Guid id, Requests.Vote request)
         {
-            var (userId, userName) = HttpContext.User.GetUserParams();
             var card = Views.fromString<Card>(request.Card);
             var story = silo.GetGrain<IStoryGrain>(id);
-            return await story.Vote(new CommonTypes.User(userId, userName), card.Value);
+            return await story.Vote(HttpContext.User.GetDomainUser(), card.Value);
         }
 
         [HttpPost]
         [Route("{id}/remove_vote")]
         public async Task<Views.StoryView> RemoveVote(Guid id)
         {
-            var (userId, userName) = HttpContext.User.GetUserParams();
             var story = silo.GetGrain<IStoryGrain>(id);
-            return await story.RemoveVote(new CommonTypes.User(userId, userName));
+            return await story.RemoveVote(HttpContext.User.GetDomainUser());
         }
 
         [HttpPost]
         [Route("{id}/close")]
         public async Task<Views.StoryView> Close(Guid id)
         {
-            var (userId, userName) = HttpContext.User.GetUserParams();
             var story = silo.GetGrain<IStoryGrain>(id);
-            return await story.Close(new CommonTypes.User(userId, userName));
+            return await story.Close(HttpContext.User.GetDomainUser());
         }
 
         [HttpPost]
         [Route("{id}/clear")]
         public async Task<Views.StoryView> ClearStory(Guid id)
         {
-            var (userId, userName) = HttpContext.User.GetUserParams();
             var story = silo.GetGrain<IStoryGrain>(id);
-            return await story.Clear(new CommonTypes.User(userId, userName));
+            return await story.Clear(HttpContext.User.GetDomainUser());
         }
     }
 }

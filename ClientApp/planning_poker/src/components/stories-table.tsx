@@ -63,7 +63,13 @@ export const StoriesTable = () => {
                                     {story.title}
                                 </TableCell>
                                 <TableCell align="right">
-                                    {story.isClosed ? 'Finished' : story.voted.length > 0 ? 'In work' : 'Not started'}
+                                    {story.isClosed
+                                        ? 'Finished'
+                                        : story.id === session.activeStory
+                                        ? 'Selected'
+                                        : story.voted.length === 0
+                                        ? 'Not started'
+                                        : 'In progress'}
                                 </TableCell>
                                 <TableCell align="right">{story.result ? story.result : ''}</TableCell>
                                 <TableCell align="right">

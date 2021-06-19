@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSession } from '../contexts/session-context';
 import { useStory } from '../contexts/story-context';
-import { Typography } from '@material-ui/core';
+import { Avatar, Typography } from '@material-ui/core';
 import styles from '../styles/users-list.module.scss';
 
 export const UsersList = () => {
@@ -17,8 +17,11 @@ export const UsersList = () => {
             <Typography variant="h6">Users</Typography>
             <div className={styles.list}>
                 {session.participants.map((p) => (
-                    <div key={p.id}>
-                        {p.name} &nbsp; {checkVote(p.id) ? ' - Voted' : ''}
+                    <div className={styles.item} key={p.id}>
+                        <Avatar src={p.picture} />
+                        <div className={styles.name + '  ' + (checkVote(p.id) ? styles.voted : styles.novoted)}>
+                            {p.name}
+                        </div>
                     </div>
                 ))}
             </div>

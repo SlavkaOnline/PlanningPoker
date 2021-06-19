@@ -2,11 +2,13 @@ export type User = Readonly<{
     id: string;
     name: string;
     token: string;
+    picture: string | null;
 }>;
 
 export type Participant = Readonly<{
     id: string;
     name: string;
+    picture: string;
 }>;
 
 export type Session = Readonly<{

@@ -6,5 +6,24 @@
     .list {
         height: 100%;
         overflow: auto;
+
+        .item {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin: 10px 0;
+
+            .name {
+                margin-left: 10px;
+                font-size: 18px;
+
+                &.voted {
+                    color: green;
+                }
+                &.novoted {
+                    color: darkred;
+                }
+            }
+        }
     }
 }

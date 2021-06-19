@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@material-ui/core';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Tooltip } from '@material-ui/core';
 import styles from '../styles/session-control.module.scss';
 import { clearStory, closeStory, createStory } from '../models/Api';
 import { useSession } from '../contexts/session-context';
 import { useStory } from '../contexts/story-context';
+import FileCopySharpIcon from '@material-ui/icons/FileCopySharp';
 
 export const SessionControl = () => {
     const [open, setOpen] = useState(false);
@@ -32,13 +33,24 @@ export const SessionControl = () => {
 
     return (
         <div className={styles.wrapper}>
-            <TextField
-                className={styles.link}
-                disabled
-                label="Share link"
-                variant="outlined"
-                defaultValue={window.location.href}
-            />
+            <div className={styles.link}>
+                <TextField
+                    className={styles.field}
+                    disabled
+                    label="Share link"
+                    variant="outlined"
+                    defaultValue={window.location.href}
+                />
+                <Tooltip title={'Copy to clipboard'}>
+                    <FileCopySharpIcon
+                        className={styles.copy}
+                        color="primary"
+                        onClick={() => {
+                            navigator.clipboard.writeText(window.location.href);
+                        }}
+                    />
+                </Tooltip>
+            </div>
             <div className={styles.actions}>
                 <Button className={styles.action} variant="contained" color="primary" onClick={() => setOpen(true)}>
                     Create story

@@ -19,9 +19,14 @@ namespace WebApi.Application
             _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
         }
 
-        public string CreateToken(Guid id, string userName)
+        public string CreateToken(Guid id, string userName, string picture)
         {
-            var claims = new List<Claim> {new (JwtRegisteredClaimNames.NameId, id.ToString()), new (JwtRegisteredClaimNames.GivenName, userName) };
+            var claims = new List<Claim>
+            {
+                new(JwtRegisteredClaimNames.NameId, id.ToString()),
+                new(JwtRegisteredClaimNames.GivenName, userName),
+                new ("picture", picture)
+            };
 
             var credentials = new SigningCredentials(_key, SecurityAlgorithms.HmacSha512Signature);
 

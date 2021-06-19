@@ -4,11 +4,15 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using EventsDelivery;
+using Google.Apis.Auth.AspNetCore3;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Http.Features;
@@ -17,6 +21,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using PlanningPoker.Domain;
@@ -43,7 +48,7 @@ namespace WebApi
             services.AddAuthentication(x =>
                 {
                     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                    x.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
                 })
                 .AddJwtBearer(x =>
                 {
@@ -72,7 +77,24 @@ namespace WebApi
                             return Task.CompletedTask;
                         }
                     };
-                });
+                })
+                .AddCookie()
+                .AddOpenIdConnect(GoogleDefaults.AuthenticationScheme,
+                    GoogleDefaults.DisplayName,
+                    options =>
+                    {
+                        options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                        options.Authority =  "https://accounts.google.com";
+                        options.ClientId = Configuration["Google:ClientId"];
+                        options.ClientSecret = Configuration["Google:ClientSecret"];
+                        options.CallbackPath = "/signin-oidc";
+                        options.ResponseType = OpenIdConnectResponseType.CodeIdToken;
+                        options.GetClaimsFromUserInfoEndpoint = true;
+                        options.SaveTokens = true;
+                        options.CorrelationCookie.SameSite = SameSiteMode.Unspecified;
+                        options.NonceCookie.SameSite = SameSiteMode.Unspecified;
+                        options.Scope.Add("email");
+                    });
 
             services.AddSignalR()
                 .AddJsonProtocol(options =>
@@ -109,13 +131,12 @@ namespace WebApi
                 ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
             });
             //app.UseHttpsRedirection();
-
             app.UseCors("AllowAll");
             app.UseRouting();
 
+            app.UseCookiePolicy();
             app.UseAuthentication();
             app.UseAuthorization();
-
             app.UseExceptionHandler(a => a.Run( async context =>
             {
                 var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
