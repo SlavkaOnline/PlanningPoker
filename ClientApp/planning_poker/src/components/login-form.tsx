@@ -36,13 +36,7 @@ export const LoginForm = () => {
                 />
             </div>
             <div className={styles.login}>
-                <Button
-                    type={'submit'}
-                    className={styles.button}
-                    variant="contained"
-                    color="primary"
-                    onClick={() => login()}
-                >
+                <Button className={styles.button} variant="contained" color="primary" onClick={() => login()}>
                     Login
                 </Button>
                 <GoogleButton
