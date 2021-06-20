@@ -32,7 +32,8 @@ namespace WebApi.Controllers
             {
                 Id = id.ToString(),
                 Name = request.Name,
-                Token = token
+                Token = token,
+                Picture = ""
             };
         }
 

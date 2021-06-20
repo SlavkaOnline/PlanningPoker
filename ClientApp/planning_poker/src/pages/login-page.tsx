@@ -20,7 +20,6 @@ export const LoginPage = () => {
 
         if (accessToken && !user) {
             const decodedHeader = jwt_decode(accessToken) as any;
-            console.log(decodedHeader);
             updateUser({
                 name: decodedHeader.given_name,
                 id: decodedHeader.nameid,
@@ -33,7 +32,7 @@ export const LoginPage = () => {
             localStorage.removeItem('redirect');
             history.replace(from);
         }
-    }, [query]);
+    }, []);
 
     return (
         <div className={styles.wrapper}>
