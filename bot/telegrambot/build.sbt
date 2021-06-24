@@ -3,7 +3,12 @@ libraryDependencies ++= Seq(
   "com.bot4s" %% "telegram-core" % "5.0.0",
   "com.microsoft.signalr" % "signalr" % "5.0.0",
   "com.typesafe.akka" %% "akka-stream" % "2.5.32",
-  "org.typelevel" %% "cats-core" % "2.3.0"
+  "org.typelevel" %% "cats-core" % "2.3.0",
+  "org.http4s" %% "http4s-blaze-client" % "0.21.24",
+  "org.http4s" %% "http4s-dsl" % "0.21.24",
+  "org.http4s" %% "http4s-circe" % "0.21.24",
+  "io.circe" %% "circe-generic" % "0.14.1",
+  "io.circe" %% "circe-literal" % "0.14.1"
 )
 
 

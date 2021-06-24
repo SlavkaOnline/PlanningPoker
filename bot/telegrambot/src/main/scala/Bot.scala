@@ -1,3 +1,4 @@
+import cats.effect.IO
 import cats.instances.future._
 import cats.syntax.functor._
 import com.bot4s.telegram.api.RequestHandler
@@ -7,7 +8,7 @@ import com.bot4s.telegram.future.{Polling, TelegramBot}
 import sttp.client3.okhttp.OkHttpFutureBackend
 
 import scala.util.Try
-import scala.concurrent.Future
+import scala.concurrent.{Future, Promise}
 import com.microsoft.signalr.HubConnectionBuilder
 import io.reactivex.Single
 
@@ -24,7 +25,7 @@ class Bot(val token: String) extends TelegramBot
         withArgs(args => {
             val session = args.head
             val token = args(1)
-            val hub = HubConnectionBuilder.create("http://planningpocker.azurewebsites.net/events")
+            val hub = HubConnectionBuilder.create("https://planningpocker.azurewebsites.net/events")
                 .withAccessTokenProvider(Single.defer( () => Single.just(token)))
                 .build()
             hub.start().blockingAwait()
@@ -47,5 +48,16 @@ class Bot(val token: String) extends TelegramBot
         }
         )
     }
+
+    onCommand("login")( implicit msg => {
+        PlanningPokerProvider.login("Slava")
+          .map(user => user.token)
+          .unsafeRunAsync {
+              case Right(token) => reply(token).void
+              case Left(_) => reply("fail").void
+          }
+
+        Promise.successful().future
+    });
 
 }
