@@ -2,7 +2,7 @@ import axios, { CancelToken } from 'axios';
 import { Session, Story, User } from './models';
 import { createBrowserHistory } from 'history';
 
-const history = createBrowserHistory();
+const history = createBrowserHistory({ forceRefresh: true });
 
 axios.defaults.maxRedirects = 0;
 axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
@@ -29,6 +29,7 @@ axios.interceptors.response.use(
         }
 
         if (error.response?.status === 401) {
+            localStorage.removeItem('user');
             history.push('/login');
         }
         return Promise.reject(error);

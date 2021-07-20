@@ -24,6 +24,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Newtonsoft.Json;
 using PlanningPoker.Domain;
 using WebApi.Application;
 
@@ -75,6 +76,14 @@ namespace WebApi
                                 context.Token = accessToken;
                             }
                             return Task.CompletedTask;
+                        },
+                        OnAuthenticationFailed = async context =>
+                        {
+                            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                            context.Response.ContentType = "application/json; charset=utf-8";
+                            const string message = "An error occurred processing your authentication.";
+                            var result = JsonConvert.SerializeObject(new { message });
+                            await context.Response.WriteAsync(result);
                         }
                     };
                 })
