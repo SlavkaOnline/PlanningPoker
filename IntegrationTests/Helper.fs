@@ -22,6 +22,7 @@ module Helper =
             request.Content <- new StringContent(JsonConvert.SerializeObject(user), Encoding.UTF8, "application/json")
 
             let! response = client.SendAsync(request) |> Async.AwaitTask
+            response.EnsureSuccessStatusCode() |> ignore
 
             let! content =
                 response.Content.ReadAsStringAsync()
@@ -44,7 +45,7 @@ module Helper =
             request.Headers.Authorization <- AuthenticationHeaderValue("Bearer", token)
 
             let! response = client.SendAsync(request) |> Async.AwaitTask
-
+            response.EnsureSuccessStatusCode() |> ignore
             let! content =
                 response.Content.ReadAsStringAsync()
                 |> Async.AwaitTask
@@ -60,6 +61,7 @@ module Helper =
             request.Headers.Authorization <- AuthenticationHeaderValue("Bearer", token)
 
             let! response = client.SendAsync(request) |> Async.AwaitTask
+            response.EnsureSuccessStatusCode() |> ignore
 
             let! content =
                 response.Content.ReadAsStringAsync()
