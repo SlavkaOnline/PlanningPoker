@@ -52,7 +52,6 @@ export const StoriesTable = () => {
                             <TableCell>Name</TableCell>
                             <TableCell align="right">Status</TableCell>
                             <TableCell align="right">Result</TableCell>
-                            <TableCell align="right">Votes&nbsp;count</TableCell>
                             <OwnerWrapper component={<TableCell align="right">Actions &nbsp;</TableCell>} />
                         </TableRow>
                     </TableHead>
@@ -72,9 +71,6 @@ export const StoriesTable = () => {
                                         : 'In progress'}
                                 </TableCell>
                                 <TableCell align="right">{story.result ? story.result : ''}</TableCell>
-                                <TableCell align="right">
-                                    {story.voted.length}/{session.participants.length}
-                                </TableCell>
                                 <OwnerWrapper
                                     component={
                                         <TableCell align="right">
