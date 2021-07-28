@@ -3,6 +3,16 @@
     display: flex;
     flex-flow: column;
 
+    .panel {
+        padding: 5px 0;
+        display: flex;
+        justify-content: start;
+        
+        .numbers {
+            margin-left: 15px;
+        }
+    }
+    
     .list {
         height: 100%;
         overflow: auto;

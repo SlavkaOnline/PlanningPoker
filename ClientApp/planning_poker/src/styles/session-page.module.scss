@@ -54,6 +54,8 @@ $grey: rgba(128, 128, 128, 0.32);
 
             .users {
                 flex-grow: 7;
+                height: 100%;
+                overflow: hidden;
             }
         }
 
