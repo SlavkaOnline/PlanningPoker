@@ -41,3 +41,27 @@ export type VoteResult = Readonly<{
     percent: number;
     voters: readonly Participant[];
 }>;
+
+export type Redirect = Readonly<{
+    from: {
+        pathname: string;
+    };
+}>;
+
+const redirectKey = 'redirect';
+
+export function saveRedirect(redirect: Redirect): void {
+    localStorage.setItem(redirectKey, JSON.stringify(redirect || { from: { pathname: '/' } }));
+}
+
+export function receiveRedirect(): Redirect {
+    const redirect = JSON.parse(
+        localStorage.getItem(redirectKey) || JSON.stringify({ from: { pathname: '/' } }),
+    ) as Redirect;
+
+    return redirect;
+}
+
+export function removeRedirect(): void {
+    localStorage.removeItem(redirectKey);
+}

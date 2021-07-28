@@ -4,7 +4,10 @@ import styles from '../styles/login-page.module.scss';
 import { useHistory, useLocation } from 'react-router-dom';
 import jwt_decode from 'jwt-decode';
 import { useAuth } from '../contexts/auth-context';
-import { User } from '../models/models';
+import { receiveRedirect, removeRedirect, User } from '../models/models';
+import { createBrowserHistory } from 'history';
+
+const history = createBrowserHistory({ forceRefresh: true });
 
 function useQuery() {
     return new URLSearchParams(useLocation().search);
@@ -13,7 +16,6 @@ function useQuery() {
 export const LoginPage = () => {
     const query = useQuery();
     const { user, updateUser } = useAuth();
-    const history = useHistory();
 
     useEffect(() => {
         const accessToken = query.get('access_token');
@@ -26,11 +28,9 @@ export const LoginPage = () => {
                 token: accessToken,
                 picture: decodedHeader.picture,
             } as User);
-            const { from } = JSON.parse(
-                localStorage.getItem('redirect') || JSON.stringify({ from: { pathname: '/' } }),
-            ) as { from: { pathname: string } };
-            localStorage.removeItem('redirect');
-            history.replace(from);
+            const { from } = receiveRedirect();
+            removeRedirect();
+            history.push(from);
         }
     }, []);
 

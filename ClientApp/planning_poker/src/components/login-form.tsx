@@ -3,23 +3,30 @@ import { Button, TextField } from '@material-ui/core';
 
 import styles from '../styles/login-form.module.scss';
 import { useAuth } from '../contexts/auth-context';
-import { useHistory, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import GoogleButton from 'react-google-button';
+import { receiveRedirect, removeRedirect, saveRedirect } from '../models/models';
+import { createBrowserHistory } from 'history';
+
+const history = createBrowserHistory({ forceRefresh: true });
 
 export const LoginForm = () => {
     const [userName, setUserName] = useState('');
     const auth = useAuth();
-    const history = useHistory();
     const location = useLocation<{ from: { pathname: string } }>();
 
     async function login() {
         await auth.signin(userName);
-        const { from } = location.state || { from: { pathname: '/' } };
-        history.replace(from);
+        const { from } = location.state || receiveRedirect();
+        removeRedirect();
+        history.push(from);
     }
 
     function loginGoogle() {
-        localStorage.setItem('redirect', JSON.stringify(location.state || { from: { pathname: '/' } }));
+        const { from } = receiveRedirect();
+        if (from.pathname === '/') {
+            saveRedirect(location.state);
+        }
         auth.signinGoogle();
     }
 

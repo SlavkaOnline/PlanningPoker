@@ -1,5 +1,5 @@
 import axios, { CancelToken } from 'axios';
-import { Session, Story, User } from './models';
+import { receiveRedirect, saveRedirect, Session, Story, User } from './models';
 import { createBrowserHistory } from 'history';
 
 const history = createBrowserHistory({ forceRefresh: true });
@@ -30,6 +30,10 @@ axios.interceptors.response.use(
 
         if (error.response?.status === 401) {
             localStorage.removeItem('user');
+            const { from } = receiveRedirect();
+            if (from.pathname === '/') {
+                saveRedirect({ from: { pathname: history.location.pathname } });
+            }
             history.push('/login');
         }
         return Promise.reject(error);
