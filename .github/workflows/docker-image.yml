@@ -25,7 +25,7 @@ jobs:
       uses: docker/build-push-action@v2
       with:
           context: ./
-          file: ./WebApi/Dockerfile
+          file: WebApi/Dockerfile
           push: true
           tags: slavkaonline/planningpoker_api:latest
     -  
@@ -36,8 +36,8 @@ jobs:
       id: docker_build_client
       uses: docker/build-push-action@v2
       with:
-          context: ./ClientApp
-          file: ./ClientApp/Dockerfile
+          context: ClientApp
+          file: ClientApp/Dockerfile
           push: true
           tags: slavkaonline/planningpoker_client:latest
    
