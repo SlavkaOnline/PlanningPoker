@@ -8,8 +8,7 @@ on:
 
 defaults:
   run:
-    shell: bash
-    working-directory: ./PlanningPoker
+    working-directory: .
 
 jobs:
 
@@ -36,8 +35,8 @@ jobs:
       id: docker_build_api
       uses: docker/build-push-action@v2
       with:
-          context: ./PlanningPoker
-          file: ./PlanningPoker/WebApi/Dockerfile
+          context: .
+          file: ./WebApi/Dockerfile
           push: true
           tags: slavkaonline/planningpoker_api:latest
     -  
@@ -48,8 +47,8 @@ jobs:
       id: docker_build_client
       uses: docker/build-push-action@v2
       with:
-          context: ./PlanningPoker/ClientApp
-          file: ./PlanningPoker/ClientApp/Dockerfile
+          context: ./ClientApp
+          file: ./ClientApp/Dockerfile
           push: true
           tags: slavkaonline/planningpoker_client:latest
    
