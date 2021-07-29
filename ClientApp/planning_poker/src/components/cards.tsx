@@ -3,8 +3,6 @@ import styles from '../styles/cards.module.scss';
 import { removeVote, vote } from '../models/Api';
 import { useStory } from '../contexts/story-context';
 
-const cardsTypes = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'Question'];
-
 type CardProps = Readonly<{
     isSelect: boolean;
     type: string;
@@ -19,7 +17,7 @@ const Card = (props: CardProps) => {
     );
 };
 
-export const Cards = () => {
+export const Cards = (props: { cardsTypes: readonly string[] }) => {
     const { story, dispatch } = useStory();
     const [selected, setSelected] = useState<string>(story.userCard);
 
@@ -39,7 +37,7 @@ export const Cards = () => {
     return (
         <div className={styles.wrapper}>
             <div className={styles.cards}>
-                {cardsTypes.map((c) => (
+                {props.cardsTypes.map((c) => (
                     <Card onSelect={() => select(c)} key={c} isSelect={selected === c} type={c} />
                 ))}
             </div>

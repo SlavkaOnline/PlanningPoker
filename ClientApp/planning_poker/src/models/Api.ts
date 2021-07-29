@@ -1,5 +1,5 @@
 import axios, { CancelToken } from 'axios';
-import { receiveRedirect, saveRedirect, Session, Story, User } from './models';
+import { Cards, receiveRedirect, saveRedirect, Session, Story, User } from './models';
 import { createBrowserHistory } from 'history';
 
 const history = createBrowserHistory({ forceRefresh: true });
@@ -63,8 +63,16 @@ export async function createSession(title: string): Promise<Session> {
     return axios.post<Session>('/api/sessions', { title }).then((r) => r.data);
 }
 
-export async function createStory(sessionId: string, title: string): Promise<Session> {
-    return axios.post<Session>(`/api/sessions/${sessionId}/stories`, { title }).then((r) => r.data);
+export async function createStory(
+    sessionId: string,
+    title: string,
+    cardsId: string | null,
+    isCustom: boolean,
+    customCards: readonly string[],
+): Promise<Session> {
+    return axios
+        .post<Session>(`/api/sessions/${sessionId}/stories`, { title, cardsId, isCustom, customCards })
+        .then((r) => r.data);
 }
 
 export async function getSession(id: string, cancelToken?: CancelToken): Promise<Session> {
@@ -93,4 +101,8 @@ export async function closeStory(id: string): Promise<Story> {
 
 export async function clearStory(id: string): Promise<Story> {
     return axios.post<Story>(`/api/stories/${id}/clear`).then((r) => r.data);
+}
+
+export async function getCards(): Promise<readonly Cards[]> {
+    return axios.get<readonly Cards[]>(`/api/Sessions/cards_types`).then((r) => r.data);
 }

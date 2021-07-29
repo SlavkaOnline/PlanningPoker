@@ -12,6 +12,7 @@ const defaultStory: Story = {
     ownerId: '',
     ownerName: '',
     userCard: '',
+    cards: [],
     result: '',
     voted: [],
     isClosed: false,

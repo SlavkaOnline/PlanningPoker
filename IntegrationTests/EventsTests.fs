@@ -170,7 +170,10 @@ type EventsTests(server: RealServerFixture) =
             let! sessionWithStory =
                 Helper.requestPost<_, SessionView>
                     apiClient
-                    { CreateStory.Title = "Story 1" }
+                    { CreateStory.Title = "Story 1"
+                      CardsId = Guid.NewGuid().ToString()
+                      IsCustom = true
+                      CustomCards = [|"1"; "2"|] }
                     user.Token
                     $"Sessions/%s{session.Id.ToString()}/stories"
 

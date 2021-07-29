@@ -8,22 +8,17 @@ open Microsoft.FSharp.Reflection
 open PlanningPoker.Domain.CommonTypes
 
 module Views =
-    let toString (x: 'a) =
-        match FSharpValue.GetUnionFields(x, typeof<'a>) with
-        | case, _ -> case.Name
 
-    let fromString<'a> (s: string) =
-        match FSharpType.GetUnionCases typeof<'a>
-              |> Array.filter (fun case -> String.Equals(case.Name, s, StringComparison.OrdinalIgnoreCase)) with
-        | [| case |] -> Some(FSharpValue.MakeUnion(case, [||]) :?> 'a)
-        | _ -> None
-
-
-    type ParticipantView = { Id: Guid; Name: string; Picture: string }
+    type ParticipantView =
+        { Id: Guid
+          Name: string
+          Picture: string }
 
     type VoteResultView =
         { Percent: float
           Voters: ParticipantView array }
+
+    type CardsType = { Id: string; Caption: string }
 
     type SessionView =
         { Id: Guid
@@ -50,8 +45,7 @@ module Views =
                       (fun p ->
                           { Id = (%p.Id)
                             Name = p.Name
-                            Picture = p.Picture |> Option.defaultValue ""
-                            })
+                            Picture = p.Picture |> Option.defaultValue "" })
                   |> List.toArray
               Stories =
                   session.Stories
@@ -65,6 +59,7 @@ module Views =
           OwnerId: Guid
           OwnerName: string
           UserCard: string
+          Cards: string array
           IsClosed: bool
           Voted: ParticipantView array
           Result: string
@@ -81,15 +76,16 @@ module Views =
                   match story.State with
                   | ActiveStory s ->
                       s.Votes.TryFind user
-                      |> Option.map (fun v -> toString v.Card)
+                      |> Option.map (fun v -> %v.Card)
                       |> Option.defaultValue ""
                   | ClosedStory s ->
                       s.Statistics
                       |> Map.toSeq
                       |> Seq.filter (fun s -> List.contains user (snd s).Voters)
                       |> Seq.tryHead
-                      |> Option.map (fun v -> toString (fst v))
+                      |> Option.map (fun v -> %(fst v))
                       |> Option.defaultValue ""
+              Cards = story.Cards |> Array.map UMX.untag
               IsClosed =
                   match story.State with
                   | ActiveStory _ -> false
@@ -97,7 +93,7 @@ module Views =
               Result =
                   match story.State with
                   | ActiveStory _ -> Unchecked.defaultof<_>
-                  | ClosedStory s -> toString s.Result
+                  | ClosedStory s -> %s.Result
               Voted =
                   match story.State with
                   | ActiveStory s ->
@@ -130,7 +126,7 @@ module Views =
                       |> Map.toSeq
                       |> Seq.map
                           (fun s ->
-                              (toString (fst s),
+                              (%(fst s),
                                { VoteResultView.Percent = (snd s).Percent
                                  Voters =
                                      (snd s).Voters
