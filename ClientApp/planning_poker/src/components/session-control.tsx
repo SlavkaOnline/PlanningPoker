@@ -21,14 +21,20 @@ import { useStory } from '../contexts/story-context';
 import { useForm } from 'react-hook-form';
 import FileCopySharpIcon from '@material-ui/icons/FileCopySharp';
 import { Cards } from '../models/models';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
 
 type StoryBuilder = Readonly<{
-    name: string;
+    title: string;
     cardsId: string | null;
     isCustom: boolean;
     customCards: string;
     persistCustom: boolean;
 }>;
+
+const schema = yup.object().shape({
+    title: yup.string().required(),
+});
 
 export const SessionControl = () => {
     const [open, setOpen] = useState(false);
@@ -39,7 +45,9 @@ export const SessionControl = () => {
         getValues,
         setValue,
         formState: { errors },
-    } = useForm();
+    } = useForm({
+        resolver: yupResolver(schema),
+    });
     const { session, dispatch } = useSession();
     const { story, dispatch: dispatchStory } = useStory();
     const [cards, setCards] = useState<readonly Cards[]>([]);
@@ -52,7 +60,7 @@ export const SessionControl = () => {
         setOpen(false);
         createStory(
             session.id,
-            storyBuilder.name,
+            storyBuilder.title,
             storyBuilder.cardsId,
             !storyBuilder.cardsId,
             storyBuilder.customCards?.split(',').filter((v) => v) || [],
@@ -118,41 +126,54 @@ export const SessionControl = () => {
                 )}
             </div>
 
-            <Dialog open={open} aria-labelledby="form-dialog-title">
+            <Dialog className={styles.dialog} open={open} aria-labelledby="form-dialog-title">
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <DialogTitle id="form-dialog-title"> Create New Story</DialogTitle>
                     <DialogContent className={styles.dialog}>
-                        <TextField
-                            {...register('name')}
-                            autoFocus
-                            margin="dense"
-                            id="name"
-                            label="Story title"
-                            type="text"
-                            variant="outlined"
-                            fullWidth
-                        />
-                        <FormControl component="fieldset">
-                            <FormLabel component="legend">Cards type</FormLabel>
-                            <RadioGroup aria-label="Cards type" {...register('cardsId')}>
-                                {cards.map((c) => (
-                                    <FormControlLabel key={c.id} value={c.id} control={<Radio />} label={c.caption} />
-                                ))}
-                                <FormControlLabel value={''} control={<Radio />} label="Custom" />
-                            </RadioGroup>
-                            <TextField
-                                multiline
-                                fullWidth
-                                rows={2}
-                                defaultValue={getValues('persistCustom') || ''}
-                                variant="outlined"
-                                {...register('customCards')}
-                            />
+                        <FormControl fullWidth={true}>
+                            <FormControl component="fieldset">
+                                <TextField
+                                    {...register('title', { required: true })}
+                                    autoFocus
+                                    margin="dense"
+                                    id="name"
+                                    label="Story title"
+                                    type="text"
+                                    variant="outlined"
+                                    fullWidth={true}
+                                />
+                                <p className={styles.error}> {errors.title?.message} </p>
+                            </FormControl>
+                            <FormControl component="fieldset">
+                                <FormLabel component="legend">Cards type</FormLabel>
+                                <RadioGroup aria-label="Cards type" {...register('cardsId')}>
+                                    {cards.map((c) => (
+                                        <FormControlLabel
+                                            key={c.id}
+                                            value={c.id}
+                                            control={<Radio />}
+                                            label={c.caption}
+                                        />
+                                    ))}
+                                    <FormControlLabel value={''} control={<Radio />} label="Custom" />
+                                </RadioGroup>
+                                <TextField
+                                    multiline
+                                    fullWidth
+                                    rows={2}
+                                    defaultValue={getValues('persistCustom') || ''}
+                                    variant="outlined"
+                                    {...register('customCards')}
+                                />
+                            </FormControl>
                         </FormControl>
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={() => setOpen(false)} color="primary">
                             Cancel
+                        </Button>
+                        <Button type={'submit'} color="primary">
+                            Create and Add
                         </Button>
                         <Button type={'submit'} color="primary">
                             Create
