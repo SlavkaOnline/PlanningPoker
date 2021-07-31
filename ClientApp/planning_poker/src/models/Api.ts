@@ -67,11 +67,10 @@ export async function createStory(
     sessionId: string,
     title: string,
     cardsId: string | null,
-    isCustom: boolean,
     customCards: readonly string[],
 ): Promise<Session> {
     return axios
-        .post<Session>(`/api/sessions/${sessionId}/stories`, { title, cardsId, isCustom, customCards })
+        .post<Session>(`/api/sessions/${sessionId}/stories`, { title, cardsId, customCards })
         .then((r) => r.data);
 }
 

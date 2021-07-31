@@ -13,7 +13,6 @@ module Requests =
     type CreateStory = {
         Title: string
         CardsId: string
-        IsCustom: bool
         CustomCards: string array
     }
 

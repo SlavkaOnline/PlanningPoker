@@ -58,10 +58,10 @@ namespace WebApi.Controllers
 		[Route("{id}/stories")]
 		public async Task<Views.SessionView> AddStory(Guid id, Requests.CreateStory request)
 		{
-			var cards = request.IsCustom
+			var cards = string.IsNullOrEmpty(request.CardsId)
 				? request.CustomCards
 				: _cardsTypeProvider.GetCardsByTypeId(request.CardsId);
-         
+
 			var session = _silo.GetGrain<ISessionGrain>(id);
             return await session.AddStory(HttpContext.User.GetDomainUser(), request.Title, cards);
         }
