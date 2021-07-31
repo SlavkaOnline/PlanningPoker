@@ -28,4 +28,3 @@ module StoryTests =
         | Error e -> e = Errors.CardsHasNotValues
         | Ok _-> false
 
-
