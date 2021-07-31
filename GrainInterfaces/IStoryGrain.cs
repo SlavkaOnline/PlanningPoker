@@ -9,8 +9,8 @@ namespace GrainInterfaces
 	public interface IStoryGrain : IDomainGrain<Story.Event>
 	{
 		Task<Views.StoryView> GetState(CommonTypes.User user);
-		Task<Views.StoryView> Start(CommonTypes.User user, string title);
-        Task<Views.StoryView> Vote(CommonTypes.User user, Card card);
+		Task<Views.StoryView> Start(CommonTypes.User user, string title, string[] cards);
+        Task<Views.StoryView> Vote(CommonTypes.User user, string card);
         Task<Views.StoryView> RemoveVote(CommonTypes.User user);
         Task<Views.StoryView> Close(CommonTypes.User user);
         Task<Views.StoryView> Clear(CommonTypes.User user);

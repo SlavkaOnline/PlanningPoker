@@ -2,7 +2,6 @@ namespace PlanningPoker.Domain
 
 module CommonTypes =
 
-    open System
     open FSharp.UMX
 
     [<Measure>]

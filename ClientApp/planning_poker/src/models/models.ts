@@ -29,6 +29,7 @@ export type Story = Readonly<{
     ownerId: string;
     ownerName: string;
     userCard: string;
+    cards: readonly string[];
     isClosed: boolean;
     voted: readonly Participant[];
     result: string | null;
@@ -46,6 +47,11 @@ export type Redirect = Readonly<{
     from: {
         pathname: string;
     };
+}>;
+
+export type Cards = Readonly<{
+    id: string;
+    caption: string;
 }>;
 
 const redirectKey = 'redirect';

@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Gateway;
 using GrainInterfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Orleans;
 using PlanningPoker.Domain;
@@ -9,7 +10,7 @@ using WebApi.Application;
 
 namespace WebApi.Controllers
 {
-
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class StoriesController : ControllerBase
@@ -34,9 +35,8 @@ namespace WebApi.Controllers
         [Route("{id}/vote")]
         public async Task<Views.StoryView> Vote(Guid id, Requests.Vote request)
         {
-            var card = Views.fromString<Card>(request.Card);
             var story = silo.GetGrain<IStoryGrain>(id);
-            return await story.Vote(HttpContext.User.GetDomainUser(), card.Value);
+            return await story.Vote(HttpContext.User.GetDomainUser(), request.Card);
         }
 
         [HttpPost]

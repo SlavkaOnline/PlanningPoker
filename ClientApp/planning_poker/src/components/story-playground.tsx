@@ -44,7 +44,9 @@ export const StoryPlayground = () => {
             <div className={styles.title}>
                 <Typography variant="h5">{story.title}</Typography>
             </div>
-            <div className={styles.playground}>{!story.isClosed ? <Cards /> : <StoryResult />}</div>
+            <div className={styles.playground}>
+                {!story.isClosed ? <Cards cardsTypes={story.cards} /> : <StoryResult />}
+            </div>
         </div>
     );
 };

@@ -56,11 +56,11 @@ namespace Grains
             return Views.SessionView.create(this.GetPrimaryKey(), Version, State.Session);
         }
 
-        public async Task<Views.SessionView> AddStory(CommonTypes.User user, string title)
+        public async Task<Views.SessionView> AddStory(CommonTypes.User user, string title, string[] cards)
         {
             var id = Guid.NewGuid();
             var story = GrainFactory.GetGrain<IStoryGrain>(id);
-            await story.Start(State.Session.Owner.Value, title);
+            await story.Start(State.Session.Owner.Value, title, cards);
             await _aggregate.Exec(State.Session, Session.Command.NewAddStory(user, id));
             return Views.SessionView.create(this.GetPrimaryKey(), Version, State.Session);
         }

@@ -10,7 +10,11 @@ module Requests =
     type CreateSession = { Title: string }
 
     [<CLIMutable>]
-    type CreateStory = { Title: string }
+    type CreateStory = {
+        Title: string
+        CardsId: string
+        CustomCards: string array
+    }
 
     [<CLIMutable>]
     type Vote = { Card: string }

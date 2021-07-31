@@ -13,10 +13,6 @@
             width: 100%;
         }
     }
-    .dialog {
-        width: 400px;
-    }
-
     .link {
         display: flex;
         align-items: center;
@@ -33,5 +29,14 @@
             }
         }
     }
+}
 
+.dialog {
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 500px;
+}
+
+.error {
+    color: red;
 }

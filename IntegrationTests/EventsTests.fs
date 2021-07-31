@@ -52,6 +52,7 @@ type EventsTests(server: RealServerFixture) =
 
     let url = "http://localhost:5050"
     do server.Start(url)
+    let cardsId = "66920B8F-3962-46FE-A2C1-434134B7F0FD"
 
     [<Fact>]
     let ``The participant was added when SignalR connection has been the establishment`` () =
@@ -170,7 +171,9 @@ type EventsTests(server: RealServerFixture) =
             let! sessionWithStory =
                 Helper.requestPost<_, SessionView>
                     apiClient
-                    { CreateStory.Title = "Story 1" }
+                    { CreateStory.Title = "Story 1"
+                      CardsId = cardsId
+                      CustomCards = [|"1"; "2"|] }
                     user.Token
                     $"Sessions/%s{session.Id.ToString()}/stories"
 

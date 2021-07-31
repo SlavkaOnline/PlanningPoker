@@ -48,13 +48,13 @@ namespace Grains
             await _domainEventStream.OnNextAsync(new Views.EventView<Story.Event>(Version, e));
         }
 
-        public async Task<Views.StoryView> Start(CommonTypes.User user, string title)
+        public async Task<Views.StoryView> Start(CommonTypes.User user, string title, string[] cards)
         {
-            await _aggregate.Exec(State.Story, Story.Command.NewStartStory(user, title, DateTime.UtcNow));
+            await _aggregate.Exec(State.Story, Story.Command.NewStartStory(user, title, cards, DateTime.UtcNow));
             return Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story, user);
         }
 
-        public async Task<Views.StoryView> Vote(CommonTypes.User user, Card card)
+        public async Task<Views.StoryView> Vote(CommonTypes.User user, string card)
         {
             await _aggregate.Exec(State.Story, Story.Command.NewVote(user, card, DateTime.UtcNow));
             return Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story, user);
