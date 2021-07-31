@@ -2,7 +2,6 @@ namespace PlanningPoker.Domain
 
 open System
 
-open System.Collections.Generic
 open CommonTypes
 open PlanningPoker.Domain
 open FSharp.UMX
@@ -131,7 +130,7 @@ module Story =
                 |> Array.groupBy id
                 |> Array.map snd
                 |> Array.map (fun v -> v.Length)
-                |> Array.exists (fun v -> v > 2)
+                |> Array.exists (fun v -> v > 1)
 
             if not hasDuplicates then
                 Ok cards

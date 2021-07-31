@@ -36,6 +36,7 @@ axios.interceptors.response.use(
             }
             history.push('/login');
         }
+        alert(error.response.statusText);
         return Promise.reject(error);
     },
 );
