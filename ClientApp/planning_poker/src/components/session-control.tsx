@@ -48,7 +48,7 @@ export const SessionControl = () => {
             title: { predicate: (title: string) => !title, message: 'Title is required' },
             customCards: {
                 predicate: (cards: readonly string[]) => cards.length < 2,
-                message: 'Cards count should be better then 1',
+                message: 'Cards count should be greater than one',
             },
         },
         isModified: false,
@@ -217,7 +217,11 @@ export const SessionControl = () => {
                                         label="Custom (ex: simple-dimple, pop-it)"
                                     />
                                 </RadioGroup>
-                                <CustomCardsInput onCardsInput={inputCards} onFocus={setCustomCardsId} />
+                                <CustomCardsInput
+                                    onCardsInput={inputCards}
+                                    onFocus={setCustomCardsId}
+                                    initValue={storyForm.customCards}
+                                />
                                 <p className={styles.error}> {storyForm.errors?.customCards} </p>
                             </FormControl>
                         </FormControl>

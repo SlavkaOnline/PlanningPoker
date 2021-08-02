@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { TextField } from '@material-ui/core';
 
 type CustomCardsInputProps = Readonly<{
+    initValue: readonly string[];
     onCardsInput: (value: readonly string[]) => void;
     onFocus: () => void;
 }>;
 
 export const CustomCardsInput = (props: CustomCardsInputProps) => {
-    const [str, setStr] = useState('');
+    const [str, setStr] = useState(props.initValue.join(', '));
 
     useEffect(() => {
         if (str.length) {
