@@ -1,6 +1,9 @@
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Orleans;
 using Telegram.Bot;
 using WebApi.Application;
 
@@ -8,25 +11,24 @@ namespace WebApi.Infra
 {
     public class BotHostedService : IHostedService
     {
-        private readonly PokerTelegramBot _bot;
+        private readonly PlanningTelegramBot.Bot _botOld;
 
-        public BotHostedService(PokerTelegramBot bot)
+        public BotHostedService(IConfiguration configuration, IClusterClient siloClient, ILoggerFactory loggerFactory)
         {
-            _bot = bot;
+            _botOld = new PlanningTelegramBot.Bot(configuration["Bot:Token"], siloClient, loggerFactory);
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            Task.Run(() =>
+            Task.Run(async () =>
             {
-                _bot.Start(cancellationToken);
+               await _botOld.Start(cancellationToken);
             }, cancellationToken);
             return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            _bot.Dispose();
             return Task.CompletedTask;
         }
     }
