@@ -113,7 +113,7 @@ type Bot(
                         | _ -> ()
 
                         match update.PollAnswer with
-                        | :? PollAnswer as pollAnswer -> logger.LogInformation("User sen answer to {Poll}", pollAnswer)
+                        | :? PollAnswer as pollAnswer -> logger.LogInformation("User send answer to {@Poll}", pollAnswer)
                         | _ -> ()
 
                         return! Task.CompletedTask
@@ -128,7 +128,7 @@ type Bot(
                                new IUpdateHandler with
                                        member _.HandleUpdate(botClient, update, ctx) = updateHandler botClient update ctx
                                        member _.HandleError(botClient, update, ctx) = Task.CompletedTask
-                                       member _.AllowedUpdates = [| UpdateType.Message; UpdateType.CallbackQuery |]
+                                       member _.AllowedUpdates = [| UpdateType.Message; UpdateType.PollAnswer |]
                                },
                             cancellationToken
                            )

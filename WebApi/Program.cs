@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Orleans.Hosting;
 using Orleans;
+using Serilog;
 
 namespace WebApi
 {
@@ -10,12 +11,20 @@ namespace WebApi
 	{
 		public static void Main(string[] args)
 		{
-			CreateHostBuilder(args).Build().Run();
+			CreateHostBuilder(args)
+				.Build().Run();
 		}
 
 		public static IHostBuilder CreateHostBuilder(string[] args) =>
 			Host.CreateDefaultBuilder(args)
-				.ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); })
+				.ConfigureWebHostDefaults(webBuilder =>
+				{
+					webBuilder
+						.UseStartup<Startup>();
+				})
+				.UseSerilog((context, configuration) => configuration
+					.ReadFrom.Configuration(context.Configuration)
+					.Enrich.FromLogContext())
 				.UseOrleans(siloBuilder =>
 				{
 					siloBuilder
@@ -28,7 +37,7 @@ namespace WebApi
 				})
 				.ConfigureLogging(logging =>
 				  {
-
+						
 				  })
 				.ConfigureServices(services =>
 				  {
