@@ -1,8 +1,11 @@
 ﻿module PlanningTelegramBot
 
 open System
+open System.Collections.Generic
 open System.Threading
+open System.Threading.Channels
 open System.Threading.Tasks
+open FSharp.Control
 open FSharp.UMX
 open Gateway.Views
 open GrainInterfaces
@@ -13,8 +16,7 @@ open PlanningPoker.Domain
 open Telegram.Bot
 open Telegram.Bot.Extensions.Polling
 open Telegram.Bot.Types
-open Telegram.Bot.Types
-open Telegram.Bot.Types
+open Orleans.Streams.PubSub
 open Telegram.Bot.Types.Enums
 open FSharp.UMX
 open CommonTypes
@@ -41,6 +43,122 @@ module internal Command =
     [<Literal>]
     let connect = "CONNECT"
 
+
+[<RequireQualifiedAccess>]
+module internal UserAgent =
+
+    type Agent = {
+        TelegramChatId: int64
+        User: User
+        PollStoryMap: Dictionary<string, Guid>
+        SessionSubscription: StreamSubscriptionHandle<EventView<Session.Event>> option
+        StorySubscription: (StreamSubscriptionHandle<EventView<Story.Event>> * CancellationTokenSource) option
+    }
+
+    type Command =
+        | ConnectToSession of Guid
+        | ConnectToStory of Guid
+        | ViewStory of Guid
+        | Disconnect
+
+    let create chatId user (botClient: ITelegramBotClient) (siloClient: IClusterClient) =
+        let agent = {
+            TelegramChatId = chatId
+            User = user
+            PollStoryMap = Dictionary<string, Guid>()
+            SessionSubscription = None
+            StorySubscription = None
+        }
+
+        let connectToStory state storyId = task {
+                 let storyGrain = siloClient.GetGrain<IStoryGrain> storyId
+                 let! story = storyGrain.GetState state.User
+
+                 if story.IsClosed then
+                     return state
+
+                 else
+                     let! msg = botClient.SendPollAsync((ChatId chatId), $"Current story %s{story.Title}", story.Cards, false, PollType.Regular, allowSendingWithoutReply = true)
+                     state.PollStoryMap.Add(msg.Poll.Id, storyId)
+
+                     let bufferChannel = Channel.CreateUnbounded<EventView<Story.Event>>()
+                     let eventsChannel = Channel.CreateUnbounded<EventView<Story.Event>>()
+
+                     let cts = new CancellationTokenSource()
+                     let token = cts.Token
+
+
+                     let! sub = siloClient
+                                    .GetStreamProvider("SMS")
+                                    .GetStream<EventView<Story.Event>>(storyId, "DomainEvents")
+                                    .SubscribeAsync(fun event token -> bufferChannel.Writer.WriteAsync(event).AsTask())
+
+                     let! events = storyGrain.GetEventsAfter(story.Version)
+                     let lastVersion =
+                        if events.Count > 0 then
+                            events.Item(events.Count - 1).Order
+                        else
+                            0
+                     for e in events do
+                        do! eventsChannel.Writer.WriteAsync(e).AsTask()
+
+
+                     Async.Start (bufferChannel.Reader.ReadAllAsync(token)
+                                 |> AsyncSeq.ofAsyncEnum
+                                 |> AsyncSeq.append (eventsChannel.Reader.ReadAllAsync(token)
+                                                     |> AsyncSeq.ofAsyncEnum
+                                                     |> AsyncSeq.filter(fun e -> e.Order > lastVersion))
+                                 |> AsyncSeq.iterAsync(fun e -> async {
+                                        match e.Payload with
+                                        | Story.StoryClosed (result, _, _) ->
+                                                do! botClient.DeleteMessageAsync((ChatId chatId), msg.MessageId) |> Async.AwaitTask
+                                                let! _ = botClient.SendTextMessageAsync((ChatId chatId), $"The result of story %s{story.Title} is %s{%result}") |> Async.AwaitTask
+                                                cts.Cancel()
+                                                return ()
+                                        | _ -> return ()
+                                      }
+                                     ), token)
+                     return { state with StorySubscription = Some(sub, cts )}
+            }
+
+        let eventHandler state (event: Session.Event) (inbox: MailboxProcessor<Command>): Task = upcast task {
+                              match event with
+                              | Session.Event.ActiveStorySet e ->
+                                     let! _ = inbox.Post <| ConnectToStory %e
+                                     return! Task.CompletedTask
+                              | _ -> return!  Task.CompletedTask
+            }
+
+        let connectToSession state sessionId (inbox: MailboxProcessor<Command>) = task {
+                let! sub = siloClient
+                               .GetStreamProvider("SMS")
+                               .GetStream<EventView<Session.Event>>(sessionId, "DomainEvents")
+                               .SubscribeAsync(fun event token -> eventHandler state event.Payload inbox)
+
+                return {state with SessionSubscription = Some sub}
+        }
+
+        MailboxProcessor<Command>.Start(fun inbox ->
+
+            let rec messageLoop state = async {
+                match! inbox.Receive() with
+                | ConnectToSession id ->
+                        let sessionGrain = siloClient.GetGrain<ISessionGrain> id
+                        let! s = sessionGrain.AddParticipant state.User |> Async.AwaitTask
+
+                        if not (s.ActiveStory = Unchecked.defaultof<string>)
+
+                        then
+                            let! st = connectToStory state (Guid.Parse s.ActiveStory) |> Async.AwaitTask
+                            return! connectToSession st id inbox |> Async.AwaitTask
+                        else
+                           return! connectToSession state id inbox |> Async.AwaitTask
+                | _ -> return state
+            }
+            messageLoop agent
+           )
+
+
 type Bot(
     token: string,
     siloClient: IClusterClient,
@@ -58,33 +176,7 @@ type Bot(
                 let participant = {Id = %Guid.NewGuid()
                                    Name = userName
                                    Picture = None}
-                let sessionGrain = siloClient.GetGrain<ISessionGrain> guid
-                let! s = sessionGrain.AddParticipant participant
-                if not (s.ActiveStory = Unchecked.defaultof<string>)
-                then
-                             let storyGrain = siloClient.GetGrain<IStoryGrain>(Guid.Parse s.ActiveStory)
-                             let! story = storyGrain.GetState participant
-                             let! _ = botClient.SendPollAsync((ChatId chatId), $"Current story %s{story.Title}", story.Cards, false, PollType.Regular, allowSendingWithoutReply = true)
-                             return ()
-                else
-                    return ()
 
-                let eventHandler (event: Session.Event): Task = upcast task {
-                      match event with
-                      | Session.Event.ActiveStorySet e ->
-                             let storyGrain = siloClient.GetGrain<IStoryGrain>(UMX.untag e)
-                             let! story = storyGrain.GetState participant
-                             let! poll = botClient.SendPollAsync((ChatId chatId), $"Current story %s{story.Title}", story.Cards, false, PollType.Regular, allowSendingWithoutReply = true)
-                             return! Task.CompletedTask
-                      | _ -> return!  Task.CompletedTask
-                }
-
-
-                siloClient
-                    .GetStreamProvider("SMS")
-                    .GetStream<EventView<Session.Event>>(guid, "DomainEvents")
-                    .SubscribeAsync(fun event token -> eventHandler event.Payload)
-                    |> ignore
 
                 return Ok s
         }
