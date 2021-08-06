@@ -15,7 +15,7 @@ type Cards = Card array
 
 type Vote = { Card: Card; VotedAt: DateTime }
 
-type VoteResult = { Percent: float; Voters: User list }
+type VoteResult = { Percent: float; Voters: User array }
 
 type ActiveStory = { Votes: Map<User, Vote> }
 
@@ -75,7 +75,7 @@ module Story =
 
     let calculateStatistics (story: ActiveStory) =
         if (story.Votes.Count = 0) then
-            Map.ofArray [| % "", { Percent = 100.0; Voters = [] } |], % ""
+            Map.ofArray [| % "", { Percent = 100.0; Voters = [||] } |], % ""
         else
             let stats =
                 story.Votes
@@ -91,7 +91,7 @@ module Story =
                                    * 100.0,
                                    1
                                )
-                           Voters = List.ofSeq users }))
+                           Voters = Array.ofSeq users }))
 
             let result =
                 stats

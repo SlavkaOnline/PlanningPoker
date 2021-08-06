@@ -81,7 +81,7 @@ module Views =
                   | ClosedStory s ->
                       s.Statistics
                       |> Map.toSeq
-                      |> Seq.filter (fun s -> List.contains user (snd s).Voters)
+                      |> Seq.filter (fun s -> Array.contains user (snd s).Voters)
                       |> Seq.tryHead
                       |> Option.map (fun v -> %(fst v))
                       |> Option.defaultValue ""
@@ -130,12 +130,12 @@ module Views =
                                { VoteResultView.Percent = (snd s).Percent
                                  Voters =
                                      (snd s).Voters
-                                     |> List.map
+                                     |> Array.map
                                          (fun v ->
                                              { Id = %v.Id
                                                Name = v.Name
                                                Picture = v.Picture |> Option.defaultValue "" })
-                                     |> Array.ofList }))
+                                     }))
                       |> dict
                       |> Dictionary
 
