@@ -82,6 +82,7 @@ const reducer = (state: Story, action: Action) => {
                             result: null,
                             startedAt: cleared.startedAt,
                             userCard: '',
+                            voted: [],
                         };
                     }
 
