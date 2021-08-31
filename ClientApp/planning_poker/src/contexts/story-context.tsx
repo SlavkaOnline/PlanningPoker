@@ -71,7 +71,7 @@ const reducer = (state: Story, action: Action) => {
                     case 'StoryClosed':
                         return { ...state, isClosed: true };
                     case 'StoryStarted':
-                        return { ...state, version: action.event.order };
+                        return { ...state, voted: [], statistics: {}, version: action.event.order };
                     case 'Cleared': {
                         const cleared = JSON.parse(action.event.payload) as Cleared;
                         return {
