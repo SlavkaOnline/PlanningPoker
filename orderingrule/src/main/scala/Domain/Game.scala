@@ -25,16 +25,16 @@ case class Game(owner: UUID, columnCount: Int, cards: HashMap[UUID,Card], active
 
     }
 
-    def skip()
+   // def skip()
 }
 
 object Game {
 
-    private def validatePlayers(players: Array[UUID]) =  if (players.length < 2 ) Left  ("Not enough players to start the game, min 2") else Right(players)
-    private def validateColumnCount(columnCount: Int) = if (columnCount < 2 ) Left  ("Not enough columns to start the game, min 2") else Right(columnCount)
-    private def validateCards(cards: Array[String]) = if (cards.length < 2 ) Left  ("Not enough cards to start the game, min 2") else Right(cards)
+    private def validatePlayers(players: Array[UUID]) =  if (players.length < 2 ) Left  (Validation.NotEnoughPlayers) else Right(players)
+    private def validateColumnCount(columnCount: Int) = if (columnCount < 2 ) Left  (Validation.NotEnoughColumns) else Right(columnCount)
+    private def validateCards(cards: Array[String]) = if (cards.length < 2 ) Left  (Validation.NotEnoughCards) else Right(cards)
 
-    def create(owner: UUID,  players: Array[UUID], columnCount: Int, nameCards: Array[String]): Either[String, Game] = {
+    def create(owner: UUID,  players: Array[UUID], columnCount: Int, nameCards: Array[String]): Either[Validation, Game] = {
         val rand = new Random(columnCount)
         for {
             players <- validatePlayers(players)
