@@ -1,0 +1,12 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=76c2a81e_002D9dc1_002D4753_002Db3ed_002D1fe9fb6ab27e/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Array cards has duplicates" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;Or&gt;&#xD;
+    &lt;ProjectFile&gt;8DBDCC09-31C9-43BB-9B48-E90E811370CA/f:StoryTests.fs&lt;/ProjectFile&gt;&#xD;
+    &lt;Project Location="F:\Projects\MyProjects\PlanningPoker\PlanningPoker\IntegrationTests" Presentation="&amp;lt;IntegrationTests&amp;gt;" /&gt;&#xD;
+  &lt;/Or&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=ad7e908b_002Da479_002D4a09_002Db223_002Ddfb4d47373a9/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="StoryTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::8DBDCC09-31C9-43BB-9B48-E90E811370CA::net5.0::Tests.StoryTests&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
