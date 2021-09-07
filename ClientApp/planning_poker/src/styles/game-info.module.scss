@@ -1,0 +1,21 @@
+.wrapper {
+
+    .action {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        span {
+            padding-left: 10px;
+        }
+        .creator {
+            width: 100%;
+            max-width: 900px;
+        }
+    }
+
+    .logo {
+        width: 500px;
+        height: auto;
+        float: right;
+    }
+}

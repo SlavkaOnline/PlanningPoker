@@ -15,10 +15,10 @@ export const SessionCreator = () => {
     }
 
     return (
-        <form className={styles.form} noValidate autoComplete="off">
-            <div>
+        <form className={styles.form} autoComplete="off">
+            <div className={styles.title}>
                 <TextField
-                    className={styles.username}
+                    className={styles.field}
                     id="outlined-basic"
                     label="Title"
                     variant="outlined"
@@ -27,8 +27,13 @@ export const SessionCreator = () => {
                 />
             </div>
             <div className={styles.create}>
-                <Button variant="contained" color="primary" onClick={() => create()}>
-                    Create new session
+                <Button
+                    variant="contained"
+                    color="default"
+                    disabled={title.trim().length === 0}
+                    onClick={() => create()}
+                >
+                    Create
                 </Button>
             </div>
         </form>

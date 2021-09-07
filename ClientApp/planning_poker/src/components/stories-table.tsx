@@ -78,7 +78,7 @@ export const StoriesTable = () => {
                                                 <Button
                                                     onClick={() => selectStory(story.id)}
                                                     variant="contained"
-                                                    color="primary"
+                                                    color="default"
                                                 >
                                                     Select
                                                 </Button>

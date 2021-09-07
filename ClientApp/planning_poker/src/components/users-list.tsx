@@ -3,7 +3,7 @@ import { useSession } from '../contexts/session-context';
 import { useStory } from '../contexts/story-context';
 import { Avatar, Typography } from '@material-ui/core';
 import styles from '../styles/users-list.module.scss';
-import { Participant } from '../models/models';
+import StarIcon from '@material-ui/icons/Star';
 
 export const UsersList = () => {
     const { session } = useSession();
@@ -28,6 +28,7 @@ export const UsersList = () => {
                         <Avatar src={p.picture} />
                         <div className={styles.name + '  ' + (checkVote(p.id) ? styles.voted : styles.novoted)}>
                             {p.name}
+                            {p.id === session.ownerId ? <StarIcon className={styles.star} /> : <></>}
                         </div>
                     </div>
                 ))}
