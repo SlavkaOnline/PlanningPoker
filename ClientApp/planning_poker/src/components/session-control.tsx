@@ -151,7 +151,7 @@ export const SessionControl = () => {
                 <Tooltip title={'Copy to clipboard'}>
                     <FileCopySharpIcon
                         className={styles.copy}
-                        color="primary"
+                        color="action"
                         onClick={() => {
                             navigator.clipboard.writeText(window.location.href);
                         }}
@@ -159,7 +159,7 @@ export const SessionControl = () => {
                 </Tooltip>
             </div>
             <div className={styles.actions}>
-                <Button className={styles.action} variant="contained" color="primary" onClick={() => setOpen(true)}>
+                <Button className={styles.action} variant="contained" color="default" onClick={() => setOpen(true)}>
                     Create story
                 </Button>
                 {!story.isClosed ? (
@@ -168,7 +168,7 @@ export const SessionControl = () => {
                             onClick={() => flipCards()}
                             className={styles.action}
                             variant="contained"
-                            color="primary"
+                            color="default"
                         >
                             Flip cards
                         </Button>
@@ -176,7 +176,7 @@ export const SessionControl = () => {
                         <></>
                     )
                 ) : (
-                    <Button onClick={() => clear()} className={styles.action} variant="contained" color="primary">
+                    <Button onClick={() => clear()} className={styles.action} variant="contained" color="default">
                         Clear story
                     </Button>
                 )}
@@ -227,13 +227,13 @@ export const SessionControl = () => {
                         </FormControl>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={cancel} color="primary">
+                        <Button onClick={cancel} color="default">
                             Cancel
                         </Button>
-                        <Button disabled={!storyForm.isModified} onClick={createAndAdd} color="primary">
+                        <Button disabled={!storyForm.isModified} onClick={createAndAdd} color="default">
                             Create and Add
                         </Button>
-                        <Button disabled={!storyForm.isModified} onClick={create} color="primary">
+                        <Button disabled={!storyForm.isModified} onClick={create} color="default">
                             Create
                         </Button>
                     </DialogActions>

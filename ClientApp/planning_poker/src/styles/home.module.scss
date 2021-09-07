@@ -1,6 +1,8 @@
 .wrapper {
+    height: 100%;
     padding: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    overflow: auto;
+    .game {
+        margin: 20px 0;
+    }
 }

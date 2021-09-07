@@ -38,14 +38,10 @@ export const Navbar = () => {
 
     return (
         <div className={styles.navbar}>
-            <IconButton edge="start" color="inherit" aria-label="menu">
-                <MenuIcon />
-            </IconButton>
             <div className={styles.title}>
                 <Typography variant="h6">
                     <Link className={styles.link} to="/">
-                        {' '}
-                        Planning poker{' '}
+                        Agile games
                     </Link>
                 </Typography>
             </div>
