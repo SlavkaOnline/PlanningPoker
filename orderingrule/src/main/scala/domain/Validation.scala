@@ -43,3 +43,7 @@ case object CardIsNotExists extends Validation {
 case object IncorrectCardMoving extends Validation {
     def errorMessage = "The card cannot be moved"
 }
+
+case object InvalidStoryName extends Validation {
+    def errorMessage = "Invalid story name"
+}
