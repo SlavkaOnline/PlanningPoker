@@ -5,31 +5,48 @@ import { Cards } from './cards';
 import { useStory } from '../contexts/story-context';
 import { useSession } from '../contexts/session-context';
 import { ISubscription } from '@microsoft/signalr';
-import { Event, StoryEventType } from '../models/events';
+import { Event, StoryEventType, Voted } from '../models/events';
 import { useHub } from '../contexts/hub-context';
 import { getStory } from '../models/Api';
 import { StoryResult } from './story-result';
+import { useSnackbar } from 'notistack';
 
 export const StoryPlayground = () => {
     const hub = useHub();
     const { session } = useSession();
     const { story, dispatch } = useStory();
+    const { enqueueSnackbar } = useSnackbar();
 
     useEffect(() => {
         let subscriptions: ISubscription<any>;
         if (story.id && hub) {
             subscriptions = hub.stream('Story', story.id, story.version).subscribe({
-                next: (e: Event<StoryEventType>) =>
+                next: (e: Event<StoryEventType>) => {
                     dispatch({
                         tag: 'applyEvent',
                         event: e,
-                    }),
+                    });
+                    handleEvent(e);
+                },
                 complete: () => console.log('complete'),
                 error: (e: any) => console.log(e),
             });
         }
         return () => subscriptions?.dispose();
     }, [story.id, hub]);
+
+    function handleEvent(e: Event<StoryEventType>): void {
+        if (e.type === 'Voted') {
+            const payload = JSON.parse(e.payload) as Voted;
+            enqueueSnackbar(`${payload.name} voted`, { variant: 'success' });
+        }
+        if (e.type === 'StoryClosed') {
+            enqueueSnackbar(`Story closed`, { variant: 'info' });
+        }
+        if (e.type === 'Cleared') {
+            enqueueSnackbar(`Story cleared`, { variant: 'warning' });
+        }
+    }
 
     useEffect(() => {
         if (story.isClosed && !story.result) {

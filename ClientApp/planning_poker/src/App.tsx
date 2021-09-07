@@ -9,8 +9,10 @@ import { ProvideHub } from './contexts/hub-context';
 import { ProvideSession } from './contexts/session-context';
 import { ProvideStory } from './contexts/story-context';
 import { PrivateRoute } from './components/private-route';
+import { SnackbarOrigin, SnackbarProvider } from 'notistack';
 
 export const App = () => {
+    const snackBarAnchor: SnackbarOrigin = { horizontal: 'right', vertical: 'bottom' };
     return (
         <>
             <ProvideAuth>
@@ -24,13 +26,15 @@ export const App = () => {
                             <LoginPage />
                         </Route>
                         <PrivateRoute path="/session/:id">
-                            <ProvideHub>
-                                <ProvideSession>
-                                    <ProvideStory>
-                                        <SessionPage />
-                                    </ProvideStory>
-                                </ProvideSession>
-                            </ProvideHub>
+                            <SnackbarProvider maxSnack={5} autoHideDuration={2000} anchorOrigin={snackBarAnchor}>
+                                <ProvideHub>
+                                    <ProvideSession>
+                                        <ProvideStory>
+                                            <SessionPage />
+                                        </ProvideStory>
+                                    </ProvideSession>
+                                </ProvideHub>
+                            </SnackbarProvider>
                         </PrivateRoute>
                     </Switch>
                 </Router>
