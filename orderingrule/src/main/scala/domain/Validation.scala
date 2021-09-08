@@ -47,3 +47,7 @@ case object IncorrectCardMoving extends Validation {
 case object InvalidStoryName extends Validation {
     def errorMessage = "Invalid story name"
 }
+
+case object UnauthorizedAccess extends Validation {
+    def errorMessage = "Unauthorized Access"
+}

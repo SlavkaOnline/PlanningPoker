@@ -11,7 +11,10 @@ libraryDependencies ++= Seq(
     "org.typelevel" %% "cats-core" % "2.3.0",
     "com.typesafe.akka" %% "akka-actor-typed" % AkkaVersion,
     "com.typesafe.akka" %% "akka-stream" % AkkaVersion,
-    "com.typesafe.akka" %% "akka-http" % AkkaHttpVersion
+    "com.typesafe.akka" %% "akka-persistence-typed" % AkkaVersion,
+    "com.typesafe.akka" %% "akka-persistence-testkit" % AkkaVersion % Test,
+    "com.typesafe.akka" %% "akka-http" % AkkaHttpVersion,
+    "com.typesafe.akka" %% "akka-http-spray-json" % AkkaHttpVersion
 )
 
 
