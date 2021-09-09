@@ -159,24 +159,19 @@ export const SessionControl = () => {
                 </Tooltip>
             </div>
             <div className={styles.actions}>
-                <Button className={styles.action} variant="contained" color="default" onClick={() => setOpen(true)}>
+                <Button className={styles.action} variant="text" color="default" onClick={() => setOpen(true)}>
                     Create story
                 </Button>
                 {!story.isClosed ? (
                     story.voted.length ? (
-                        <Button
-                            onClick={() => flipCards()}
-                            className={styles.action}
-                            variant="contained"
-                            color="default"
-                        >
+                        <Button onClick={() => flipCards()} className={styles.action} variant="text" color="default">
                             Flip cards
                         </Button>
                     ) : (
                         <></>
                     )
                 ) : (
-                    <Button onClick={() => clear()} className={styles.action} variant="contained" color="default">
+                    <Button onClick={() => clear()} className={styles.action} variant="text" color="default">
                         Clear story
                     </Button>
                 )}

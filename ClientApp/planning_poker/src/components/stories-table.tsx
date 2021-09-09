@@ -41,75 +41,31 @@ export const StoriesTable = () => {
         }
     }
 
+    function getIconAndStyle(story: Story) {
+        return story.isClosed
+            ? [styles.done, <DoneIcon key={null} className={styles.progress} />]
+            : story.id === session.activeStory
+            ? [styles.current, <PlayArrowIcon key={null} className={styles.progress} />]
+            : story.voted.length === 0
+            ? [styles.none, <StopIcon key={null} className={styles.progress} />]
+            : [styles.pause, <PauseIcon key={null} className={styles.progress} />];
+    }
+
     return (
         <div className={styles.wrapper}>
             <Typography variant="h6">Stories</Typography>
+            <div className={styles.border} />
             <div className={styles.table}>
-                {stories.map((story, i) => (
-                    <div key={story.id} className={styles.row} onClick={() => selectStory(story.id)}>
-                        <div className={styles.progress}>
-                            {story.isClosed ? (
-                                <DoneIcon />
-                            ) : story.id === session.activeStory ? (
-                                <PlayArrowIcon />
-                            ) : story.voted.length === 0 ? (
-                                <StopIcon />
-                            ) : (
-                                <PauseIcon />
-                            )}
+                {stories.map((story) => {
+                    const [style, icon] = getIconAndStyle(story);
+                    return (
+                        <div key={story.id} className={styles.row + ' ' + style} onClick={() => selectStory(story.id)}>
+                            {icon}
+                            <div className={styles.name}> {story.title} </div>
                         </div>
-                        <div className={styles.name}> {story.title} </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
-            {/*<TableContainer component={Paper} className={styles.table}>*/}
-            {/*    <Table size="small" aria-label="a dense table" stickyHeader>*/}
-            {/*        <TableHead>*/}
-            {/*            <TableRow>*/}
-            {/*                <TableCell>Name</TableCell>*/}
-            {/*                <TableCell align="right">Status</TableCell>*/}
-            {/*                <TableCell align="right">Result</TableCell>*/}
-            {/*                <OwnerWrapper component={<TableCell align="right">Actions &nbsp;</TableCell>} />*/}
-            {/*            </TableRow>*/}
-            {/*        </TableHead>*/}
-            {/*        <TableBody>*/}
-            {/*            {stories.map((story) => (*/}
-            {/*                <TableRow className={styles.row} key={story.id}>*/}
-            {/*                    <TableCell component="th" scope="row">*/}
-            {/*                        {story.title}*/}
-            {/*                    </TableCell>*/}
-            {/*                    <TableCell align="right">*/}
-            {/*                        {story.isClosed*/}
-            {/*                            ? 'Finished'*/}
-            {/*                            : story.id === session.activeStory*/}
-            {/*                            ? 'Selected'*/}
-            {/*                            : story.voted.length === 0*/}
-            {/*                            ? 'Not started'*/}
-            {/*                            : 'In progress'}*/}
-            {/*                    </TableCell>*/}
-            {/*                    <TableCell align="right">{story.result ? story.result : ''}</TableCell>*/}
-            {/*                    <OwnerWrapper*/}
-            {/*                        component={*/}
-            {/*                            <TableCell align="right">*/}
-            {/*                                {story.id !== session.activeStory ? (*/}
-            {/*                                    <Button*/}
-            {/*                                        onClick={() => selectStory(story.id)}*/}
-            {/*                                        variant="contained"*/}
-            {/*                                        color="default"*/}
-            {/*                                    >*/}
-            {/*                                        Select*/}
-            {/*                                    </Button>*/}
-            {/*                                ) : (*/}
-            {/*                                    <></>*/}
-            {/*                                )}*/}
-            {/*                            </TableCell>*/}
-            {/*                        }*/}
-            {/*                    />*/}
-            {/*                </TableRow>*/}
-            {/*            ))}*/}
-            {/*        </TableBody>*/}
-            {/*    </Table>*/}
-            {/*</TableContainer>*/}
         </div>
     );
 };

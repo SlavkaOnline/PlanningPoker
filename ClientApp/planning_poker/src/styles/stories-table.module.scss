@@ -1,7 +1,13 @@
+$grey: rgba(128, 128, 128, 0.32);
+
 .wrapper {
     height: 100%;
     display: flex;
     flex-flow: column;
+    .border {
+        border-bottom: 1px solid $grey;
+        margin-bottom: 10px;
+    }
     .table {
         overflow-y: auto;
         height: 100%;
@@ -15,8 +21,25 @@
                 background: rgba(177, 180, 180, 0.2);
             }
 
+            &.current {
+                background: rgba(220, 225, 225, 0.2);
+                color: blue;
+            }
+
+            &.pause {
+                color: grey;
+            }
+
+            &.done {
+                color: green;
+            }
+
+            &.none {
+                color: black;
+            }
 
             .progress {
+                display: block;
                 width: 20px;
             }
             .name {
