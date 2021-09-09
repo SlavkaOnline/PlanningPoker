@@ -1,8 +1,9 @@
 package application
 
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import spray.json._
+import java.util.UUID
 
 object Requests  {
     final case class CreateSession(name: String)
+    final case class AddStory(name: String)
+    final case class RemoveStory(id: UUID)
 }

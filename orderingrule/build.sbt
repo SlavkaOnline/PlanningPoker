@@ -14,7 +14,7 @@ libraryDependencies ++= Seq(
     "com.typesafe.akka" %% "akka-persistence-typed" % AkkaVersion,
     "com.typesafe.akka" %% "akka-persistence-testkit" % AkkaVersion % Test,
     "com.typesafe.akka" %% "akka-http" % AkkaHttpVersion,
-    "com.typesafe.akka" %% "akka-http-spray-json" % AkkaHttpVersion
+    "com.fasterxml.jackson.module" % "jackson-module-scala_2.13" % "2.12.5"
 )
 
 
