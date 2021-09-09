@@ -41,11 +41,11 @@ $grey: rgba(128, 128, 128, 0.32);
         }
 
         .right {
-            padding: 10px;
             width: 400px;
             display: flex;
             flex-flow: column;
             overflow: hidden;
+            padding: 0 10px 10px;
 
             .control {
                 flex-grow: 1;

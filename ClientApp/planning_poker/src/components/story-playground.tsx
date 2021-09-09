@@ -10,6 +10,9 @@ import { useHub } from '../contexts/hub-context';
 import { getStory } from '../models/Api';
 import { StoryResult } from './story-result';
 import { useSnackbar } from 'notistack';
+import { OwnerWrapper } from './owner-wrapper';
+import { StoryControl } from './story-control';
+import { clipText } from '../models/utils';
 
 export const StoryPlayground = () => {
     const hub = useHub();
@@ -59,7 +62,8 @@ export const StoryPlayground = () => {
     ) : (
         <div className={styles.wrapper}>
             <div className={styles.title}>
-                <Typography variant="h5">{story.title}</Typography>
+                <Typography variant="h5">{clipText(story.title, 60)}</Typography>
+                <OwnerWrapper component={StoryControl()} />
             </div>
             <div className={styles.playground}>
                 {!story.isClosed ? <Cards cardsTypes={story.cards} /> : <StoryResult />}
