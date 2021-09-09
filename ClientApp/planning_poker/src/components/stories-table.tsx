@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getStory, setActiveStory } from '../models/Api';
 import { Story } from '../models/models';
 import styles from '../styles/stories-table.module.scss';
-import { Tooltip, Typography } from '@material-ui/core';
+import { Button, Tooltip, Typography } from '@material-ui/core';
 import { OwnerWrapper } from './owner-wrapper';
 import { useSession } from '../contexts/session-context';
 import { useStory } from '../contexts/story-context';
@@ -12,6 +12,8 @@ import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import PauseIcon from '@material-ui/icons/Pause';
 import DoneIcon from '@material-ui/icons/Done';
 import { useAuth } from '../contexts/auth-context';
+import { StoryCreator } from './story-creator';
+import { clipText } from '../models/utils';
 
 export const StoriesTable = () => {
     const { session, dispatch } = useSession();
@@ -53,15 +55,17 @@ export const StoriesTable = () => {
 
     return (
         <div className={styles.wrapper}>
-            <Typography variant="h6">Stories</Typography>
-            <div className={styles.border} />
+            <div className={styles.header}>
+                <Typography variant="h6">Stories</Typography>
+                <OwnerWrapper component={StoryCreator()} />
+            </div>
             <div className={styles.table}>
                 {stories.map((story) => {
                     const [style, icon] = getIconAndStyle(story);
                     return (
                         <div key={story.id} className={styles.row + ' ' + style} onClick={() => selectStory(story.id)}>
                             {icon}
-                            <div className={styles.name}> {story.title} </div>
+                            <div className={styles.name}> {clipText(story.title, 70)} </div>
                         </div>
                     );
                 })}

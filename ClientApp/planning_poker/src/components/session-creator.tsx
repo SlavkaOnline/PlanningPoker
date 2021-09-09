@@ -28,7 +28,7 @@ export const SessionCreator = () => {
             </div>
             <div className={styles.create}>
                 <Button
-                    variant="contained"
+                    variant="outlined"
                     color="default"
                     disabled={title.trim().length === 0}
                     onClick={() => create()}

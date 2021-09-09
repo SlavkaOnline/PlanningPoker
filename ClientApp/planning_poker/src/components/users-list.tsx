@@ -15,11 +15,13 @@ export const UsersList = () => {
 
     return (
         <div className={styles.wrapper}>
-            <Typography variant="h6">Users</Typography>
-            <div className={styles.panel}>
-                <div>votes/users</div>
-                <div className={styles.numbers}>
-                    {story.voted.length}/{session.participants.length}
+            <div className={styles.title}>
+                <Typography variant="h6">Users</Typography>
+                <div className={styles.panel}>
+                    <div>votes/users</div>
+                    <div className={styles.numbers}>
+                        {story.voted.length}/{session.participants.length}
+                    </div>
                 </div>
             </div>
             <div className={styles.list}>
