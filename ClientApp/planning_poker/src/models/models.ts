@@ -11,6 +11,11 @@ export type Participant = Readonly<{
     picture: string;
 }>;
 
+export type VotedParticipant = Readonly<{
+    name: string;
+    duration: string;
+}>;
+
 export type Session = Readonly<{
     id: string;
     title: string;
@@ -31,7 +36,7 @@ export type Story = Readonly<{
     userCard: string;
     cards: readonly string[];
     isClosed: boolean;
-    voted: readonly Participant[];
+    voted: readonly string[];
     result: string | null;
     startedAt: string;
     finishedAt: string;
@@ -40,7 +45,7 @@ export type Story = Readonly<{
 
 export type VoteResult = Readonly<{
     percent: number;
-    voters: readonly Participant[];
+    voters: readonly VotedParticipant[];
 }>;
 
 export type Redirect = Readonly<{

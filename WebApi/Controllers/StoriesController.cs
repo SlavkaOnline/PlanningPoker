@@ -39,8 +39,8 @@ namespace WebApi.Controllers
             return await story.Vote(HttpContext.User.GetDomainUser(), request.Card);
         }
 
-        [HttpPost]
-        [Route("{id}/remove_vote")]
+        [HttpDelete]
+        [Route("{id}/vote")]
         public async Task<Views.StoryView> RemoveVote(Guid id)
         {
             var story = silo.GetGrain<IStoryGrain>(id);
@@ -56,11 +56,11 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        [Route("{id}/clear")]
-        public async Task<Views.StoryView> ClearStory(Guid id)
+        [Route("{id}/cleared")]
+        public async Task<Views.StoryView> Clear(Guid id)
         {
             var story = silo.GetGrain<IStoryGrain>(id);
-            return await story.Clear(HttpContext.User.GetDomainUser());
+            return await story.Clear(HttpContext.User.GetDomainUser(), DateTime.UtcNow);
         }
     }
 }

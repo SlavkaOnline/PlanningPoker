@@ -92,7 +92,7 @@ export async function vote(id: string, card: string): Promise<Story> {
 }
 
 export async function removeVote(id: string): Promise<Story> {
-    return axios.post<Story>(`/api/stories/${id}/remove_vote`).then((r) => r.data);
+    return axios.delete<Story>(`/api/stories/${id}/vote`).then((r) => r.data);
 }
 
 export async function closeStory(id: string): Promise<Story> {
@@ -100,7 +100,7 @@ export async function closeStory(id: string): Promise<Story> {
 }
 
 export async function clearStory(id: string): Promise<Story> {
-    return axios.post<Story>(`/api/stories/${id}/clear`).then((r) => r.data);
+    return axios.post<Story>(`/api/stories/${id}/cleared`).then((r) => r.data);
 }
 
 export async function getCards(): Promise<readonly Cards[]> {

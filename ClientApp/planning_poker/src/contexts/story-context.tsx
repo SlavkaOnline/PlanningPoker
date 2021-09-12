@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useReducer } from 'react';
 import { Participant, Story } from '../models/models';
-import { Cleared, Event, StoryEventType, Voted, VoteRemoved } from '../models/events';
+import { ActiveSet, Cleared, Event, StoryEventType, Voted, VoteRemoved } from '../models/events';
 import axios from 'axios';
 import { getStory } from '../models/Api';
 import { useSession } from './session-context';
@@ -33,7 +33,7 @@ type ApplyEvent = Readonly<{
 
 type Action = Init | ApplyEvent;
 
-const reducer = (state: Story, action: Action) => {
+const reducer = (state: Story, action: Action): Story => {
     switch (action.tag) {
         case 'init':
             if (action.story.id !== state.id || action.story.version > state.version) {
@@ -48,11 +48,11 @@ const reducer = (state: Story, action: Action) => {
                 switch (action.event.type) {
                     case 'Voted': {
                         const voted = JSON.parse(action.event.payload) as Voted;
-                        if (state.voted.findIndex((v) => v.id === voted.id) === -1) {
+                        if (state.voted.findIndex((id) => id === voted.id) === -1) {
                             return {
                                 ...state,
                                 version: action.event.order,
-                                voted: [voted, ...state.voted] as readonly Participant[],
+                                voted: [voted.id, ...state.voted] as readonly string[],
                             };
                         } else {
                             return { ...state, version: action.event.order };
@@ -64,7 +64,7 @@ const reducer = (state: Story, action: Action) => {
                         return {
                             ...state,
                             version: action.event.order,
-                            voted: [...state.voted.filter((v) => v.id !== voteRemoved.id)],
+                            voted: [...state.voted.filter((id) => id !== voteRemoved.id)],
                         };
                     }
 
@@ -85,7 +85,14 @@ const reducer = (state: Story, action: Action) => {
                             voted: [],
                         };
                     }
-
+                    case 'ActiveSet': {
+                        const activeSet = JSON.parse(action.event.payload) as ActiveSet;
+                        return {
+                            ...state,
+                            version: action.event.order,
+                            startedAt: activeSet.startedAt,
+                        };
+                    }
                     default:
                         return { ...state, version: action.event.order };
                 }

@@ -48,9 +48,21 @@ namespace Grains
             await _domainEventStream.OnNextAsync(new Views.EventView<Story.Event>(Version, e));
         }
 
-        public async Task<Views.StoryView> Start(CommonTypes.User user, string title, string[] cards)
+        public async Task<Views.StoryView> Configure(CommonTypes.User user, string title, string[] cards)
         {
-            await _aggregate.Exec(State.Story, Story.Command.NewStartStory(user, title, cards, DateTime.UtcNow));
+            await _aggregate.Exec(State.Story, Story.Command.NewConfigure(user, title, cards));
+            return Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story, user);
+        }
+
+        public async Task<Views.StoryView> SetActive(CommonTypes.User user, DateTime startedAt)
+        {
+            await _aggregate.Exec(State.Story, Story.Command.NewSetActive(user, startedAt));
+            return Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story, user);
+        }
+
+        public async Task<Views.StoryView> Clear(CommonTypes.User user, DateTime startedAt)
+        {
+            await _aggregate.Exec(State.Story, Story.Command.NewClear(user, startedAt));
             return Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story, user);
         }
 
@@ -72,9 +84,9 @@ namespace Grains
             return Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story, user);
         }
 
-        public async Task<Views.StoryView> Clear(CommonTypes.User user)
+        public async Task<Views.StoryView> Pause(CommonTypes.User user, DateTime timeStamp)
         {
-            await _aggregate.Exec(State.Story, Story.Command.NewClear(user, DateTime.UtcNow));
+            await _aggregate.Exec(State.Story, Story.Command.NewPause(user, timeStamp));
             return Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story, user);
         }
 

@@ -10,7 +10,7 @@ export const UsersList = () => {
     const { story } = useStory();
 
     function checkVote(userId: string) {
-        return story.voted.findIndex((v) => v.id == userId) > -1;
+        return story.voted.includes(userId);
     }
 
     return (

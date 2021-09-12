@@ -10,7 +10,7 @@ module PropertyTests =
     [<Property>]
     let ``Sum of elements of statistics equal 100`` (story: ActiveStory) =
         let sum =
-            fst (Story.calculateStatistics story)
+            fst (Story.calculateStatistics story (Started <| DateTime.UtcNow.AddMinutes(10.0)))
             |> Map.toSeq
             |> Seq.map snd
             |> Seq.map (fun r -> r.Percent)
@@ -21,7 +21,7 @@ module PropertyTests =
 
     [<Property>]
     let ``The result card of statistics has max percent`` (story: ActiveStory) =
-        let stats, card = Story.calculateStatistics story
+        let stats, card = Story.calculateStatistics story (Started <| DateTime.UtcNow.AddMinutes(10.0))
         let maxVote =
             stats
             |> Map.toSeq

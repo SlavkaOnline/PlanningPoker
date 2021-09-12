@@ -6,6 +6,7 @@
 
     <ItemGroup>
         <Compile Include="CommonTypes.fs" />
+        <Compile Include="Extensions.fs" />
         <Compile Include="Errors.fs" />
         <Compile Include="Session.fs" />
         <Compile Include="Story.fs" />

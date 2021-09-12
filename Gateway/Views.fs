@@ -4,7 +4,6 @@ open System
 open System.Collections.Generic
 open PlanningPoker.Domain
 open FSharp.UMX
-open Microsoft.FSharp.Reflection
 open PlanningPoker.Domain.CommonTypes
 
 module Views =
@@ -14,9 +13,15 @@ module Views =
           Name: string
           Picture: string }
 
+    type VotedParticipantView =
+        {
+            Name: string
+            Duration: String
+        }
+
     type VoteResultView =
         { Percent: float
-          Voters: ParticipantView array }
+          Voters: VotedParticipantView array }
 
     type CardsType = { Id: string; Caption: string }
 
@@ -61,10 +66,10 @@ module Views =
           UserCard: string
           Cards: string array
           IsClosed: bool
-          Voted: ParticipantView array
+          Voted: Guid array
           Result: string
           Statistics: Dictionary<string, VoteResultView>
-          StartedAt: DateTime
+          StartedAt: DateTime Nullable
           FinishedAt: DateTime Nullable }
         static member create (id: Guid) (version: int32) (story: StoryObj) (user: User) : StoryView =
             { Id = id
@@ -81,46 +86,41 @@ module Views =
                   | ClosedStory s ->
                       s.Statistics
                       |> Map.toSeq
-                      |> Seq.filter (fun s -> List.contains user (snd s).Voters)
+                      |> Seq.filter (fun s -> Array.contains user ((snd s).Voters |> Array.map(fun v -> v.User)))
                       |> Seq.tryHead
                       |> Option.map (fun v -> %(fst v))
                       |> Option.defaultValue ""
+
               Cards = story.Cards |> Array.map UMX.untag
               IsClosed =
                   match story.State with
-                  | ActiveStory _ -> false
                   | ClosedStory _ -> true
+                  |  _ -> false
               Result =
                   match story.State with
-                  | ActiveStory _ -> Unchecked.defaultof<_>
                   | ClosedStory s -> %s.Result
+                  |  _ -> Unchecked.defaultof<_>
               Voted =
                   match story.State with
                   | ActiveStory s ->
                       s.Votes
                       |> Map.toSeq
                       |> Seq.map (fst)
-                      |> Seq.map
-                          (fun v ->
-                              { Id = %v.Id
-                                Name = v.Name
-                                Picture = v.Picture |> Option.defaultValue "" })
+                      |> Seq.map(fun v -> %v.Id)
                       |> Seq.toArray
                   | ClosedStory s ->
                       seq {
                           for st in s.Statistics |> Map.toSeq do
                               let results = snd st
 
-                              for v in results.Voters do
-                                  { Id = %v.Id
-                                    Name = v.Name
-                                    Picture = v.Picture |> Option.defaultValue "" }
+                              for v in results.Voters ->
+                                  %v.User.Id
+
                       }
                       |> Array.ofSeq
 
               Statistics =
                   match story.State with
-                  | ActiveStory s -> Dictionary()
                   | ClosedStory s ->
                       s.Statistics
                       |> Map.toSeq
@@ -130,21 +130,24 @@ module Views =
                                { VoteResultView.Percent = (snd s).Percent
                                  Voters =
                                      (snd s).Voters
-                                     |> List.map
+                                     |> Array.map
                                          (fun v ->
-                                             { Id = %v.Id
-                                               Name = v.Name
-                                               Picture = v.Picture |> Option.defaultValue "" })
-                                     |> Array.ofList }))
+                                             { Name = v.User.Name
+                                               Duration = v.Duration.ToString(@"hh\:mm\:ss") })
+                                     }))
                       |> dict
                       |> Dictionary
+                  | _ -> Dictionary()
 
-              StartedAt = story.StartedAt
+              StartedAt =
+                  match story.StartedAt with
+                  | Started dt -> Nullable dt
+                  | _ -> Unchecked.defaultof<DateTime Nullable>
 
               FinishedAt =
                   match story.State with
-                  | ActiveStory _ -> Unchecked.defaultof<DateTime Nullable>
                   | ClosedStory s -> Nullable s.FinishedAt
+                  | _ -> Unchecked.defaultof<DateTime Nullable>
 
             }
 

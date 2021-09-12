@@ -29,7 +29,7 @@ export const StoryResult = () => {
             <div className={styles.tables}>
                 {Object.keys(story.statistics).map((card) => (
                     <div key={card}>
-                        {card} - {story.statistics[card].voters.map((v) => v.name).join(', ')}
+                        {card} - {story.statistics[card].voters.map((v) => `${v.name} (${v.duration}) `).join(', ')}
                     </div>
                 ))}
             </div>

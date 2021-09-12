@@ -14,8 +14,12 @@
         justify-content: space-between;
     }
 
+    .time {
+        height: 15px;
+        text-align: right;
+    }
+
     .playground {
         height: 100%;
-        overflow: auto;
     }
 }
