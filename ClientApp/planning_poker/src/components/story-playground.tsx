@@ -20,7 +20,7 @@ export const StoryPlayground = () => {
     const { session } = useSession();
     const { story, dispatch } = useStory();
     const { enqueueSnackbar } = useSnackbar();
-    const [duration, setDuration] = useState<string>('');
+    const [duration, setDuration] = useState<string>(dayjs(dayjs().diff(dayjs(story.startedAt))).format('mm:ss'));
 
     useEffect(() => {
         let subscriptions: ISubscription<any>;
@@ -57,8 +57,7 @@ export const StoryPlayground = () => {
         let timer: any = null;
         if (story.startedAt) {
             timer = setInterval(() => {
-                const diff = dayjs(dayjs().diff(dayjs(story.startedAt)));
-                setDuration(`${diff.format('mm:ss')}`);
+                setDuration(`${dayjs(dayjs().diff(dayjs(story.startedAt))).format('mm:ss')}`);
             }, 500);
         }
 

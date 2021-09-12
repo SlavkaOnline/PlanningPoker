@@ -87,7 +87,7 @@ namespace WebApi.Controllers
         public async Task<Views.SessionView> SetActiveStory(Guid id, Requests.SetActiveStory request)
         {
             var session = _silo.GetGrain<ISessionGrain>(id);
-            return await session.SetActiveStory(HttpContext.User.GetDomainUser(), Guid.Parse(request.Id));
+            return await session.SetActiveStory(HttpContext.User.GetDomainUser(), Guid.Parse(request.Id), DateTime.UtcNow);
         }
 
         [HttpGet]
