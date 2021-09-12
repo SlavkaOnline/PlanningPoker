@@ -70,7 +70,7 @@ module Views =
           Result: string
           Statistics: Dictionary<string, VoteResultView>
           StartedAt: DateTime Nullable
-          FinishedAt: DateTime Nullable }
+          Duration: string }
         static member create (id: Guid) (version: int32) (story: StoryObj) (user: User) : StoryView =
             { Id = id
               Title = story.Title
@@ -144,10 +144,10 @@ module Views =
                   | Started dt -> Nullable dt
                   | _ -> Unchecked.defaultof<DateTime Nullable>
 
-              FinishedAt =
-                  match story.State with
-                  | ClosedStory s -> Nullable s.FinishedAt
-                  | _ -> Unchecked.defaultof<DateTime Nullable>
+              Duration =
+                  match (story.State, story.StartedAt)  with
+                  | ClosedStory(c), Started s -> (c.FinishedAt - s).ToString(@"hh\:mm\:ss")
+                  | _ -> Unchecked.defaultof<string>
 
             }
 

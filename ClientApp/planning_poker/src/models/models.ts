@@ -27,6 +27,10 @@ export type Session = Readonly<{
     stories: readonly string[];
 }>;
 
+export type Statistics = Readonly<{
+    [key: string]: VoteResult;
+}>;
+
 export type Story = Readonly<{
     id: string;
     title: string;
@@ -39,8 +43,8 @@ export type Story = Readonly<{
     voted: readonly string[];
     result: string | null;
     startedAt: string;
-    finishedAt: string;
-    statistics: { [key: string]: VoteResult };
+    duration: string;
+    statistics: Statistics;
 }>;
 
 export type VoteResult = Readonly<{

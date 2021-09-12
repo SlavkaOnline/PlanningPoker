@@ -16,7 +16,7 @@ const defaultStory: Story = {
     result: '',
     voted: [],
     isClosed: false,
-    finishedAt: '',
+    duration: '',
     startedAt: '',
     statistics: {},
 };
