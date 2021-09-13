@@ -14,7 +14,6 @@ type Errors =
     | UnexpectedCardValue
     | CardsHasDuplicatesValues
     | CardsHasNotValues
-    | StoryNotStarted
     static member ConvertToExnMessage =
         function
         | UnauthorizedAccess -> "Only the creator can perform this action"
@@ -28,6 +27,5 @@ type Errors =
         | CardsHasDuplicatesValues -> "Cards has duplicates values"
         | CardsHasNotValues -> "Cards hasn't values"
         | VotesIsNotExist -> "Votes isn't exist"
-        | StoryNotStarted -> "Cannot paused not started story"
 
     static member RaiseDomainExn err = raise(PlanningPokerDomainException <| Errors.ConvertToExnMessage err)

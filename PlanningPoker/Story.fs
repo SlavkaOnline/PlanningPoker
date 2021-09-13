@@ -75,11 +75,6 @@ module Story =
             else
                 Ok state
 
-        let validateStartedState state =
-            match state with
-            | Started dt -> Ok dt
-            | _ -> Error Errors.StoryNotStarted
-
     type Command =
         | Configure of user: User * title: string * cards: Cards
         | CloseStory of user: User * finishedAt: DateTime
@@ -111,6 +106,11 @@ module Story =
         | Started dt -> dt
         | StartedState.Paused dt -> startAt - dt
         | _ -> startAt
+
+    let getPausedDuration (pausedAt: DateTime) (story: StoryObj) =
+        match story.StartedAt with
+        | Started dt -> pausedAt - dt
+        | _ -> TimeSpan.Zero
 
     let calculateStatistics (story: ActiveStory) (Started startedAt) =
         if (story.Votes.Count = 0) then
@@ -187,8 +187,8 @@ module Story =
 
         | Pause (user, dt) ->
                             Validation.validateOwnerAccess user state
-                            |> Result.bind(fun s -> Validation.validateStartedState s.StartedAt)
-                            |> Result.map(fun timeStamp -> (dt - timeStamp) |> Paused  )
+                            |> Result.map(getPausedDuration dt)
+                            |> Result.map Paused
 
     let reducer (state: StoryObj) event =
         match event with
@@ -200,6 +200,7 @@ module Story =
 
         | StoryClosed (result, stats, dt) ->
             { state with
+                  StartedAt = NotStarted
                   State =
                       ClosedStory
                           { Result = result
