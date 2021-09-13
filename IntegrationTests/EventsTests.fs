@@ -216,8 +216,8 @@ type EventsTests(server: RealServerFixture) =
 
             do! connection.StartAsync() |> Async.AwaitTask
             //action1 StoryConfigured
-            let! _, storyId = Helper.addStoryToSession apiClient user.Token session { CreateStory.Title = "Story 1"; CardsId = cardsId; CustomCards = [||] }
-            let! _, anotherStoryId = Helper.addStoryToSession apiClient user.Token session { CreateStory.Title = "Story 2"; CardsId = cardsId; CustomCards = [||] }
+            let! s, storyId = Helper.addStoryToSession apiClient user.Token session { CreateStory.Title = "Story 1"; CardsId = cardsId; CustomCards = [||] }
+            let! _, anotherStoryId = Helper.addStoryToSession apiClient user.Token s { CreateStory.Title = "Story 2"; CardsId = cardsId; CustomCards = [||] }
 
             let! subscription =
                 connection.StreamAsChannelAsync<EventsDeliveryHub.Event>("Story", storyId, 0)
