@@ -66,9 +66,9 @@ namespace Grains
             return Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story, user);
         }
 
-        public async Task<Views.StoryView> Vote(CommonTypes.User user, string card)
+        public async Task<Views.StoryView> Vote(CommonTypes.User user, string card, DateTime timeStamp)
         {
-            await _aggregate.Exec(State.Story, Story.Command.NewVote(user, card, DateTime.UtcNow));
+            await _aggregate.Exec(State.Story, Story.Command.NewVote(user, card, timeStamp));
             return Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story, user);
         }
 
@@ -78,9 +78,9 @@ namespace Grains
             return Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story, user);
         }
 
-        public async Task<Views.StoryView> Close(CommonTypes.User user)
+        public async Task<Views.StoryView> Close(CommonTypes.User user, DateTime timeStamp)
         {
-            await _aggregate.Exec(State.Story, Story.Command.NewCloseStory(user, DateTime.UtcNow));
+            await _aggregate.Exec(State.Story, Story.Command.NewCloseStory(user, timeStamp));
             return Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story, user);
         }
 

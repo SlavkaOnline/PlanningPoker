@@ -36,7 +36,7 @@ namespace WebApi.Controllers
         public async Task<Views.StoryView> Vote(Guid id, Requests.Vote request)
         {
             var story = silo.GetGrain<IStoryGrain>(id);
-            return await story.Vote(HttpContext.User.GetDomainUser(), request.Card);
+            return await story.Vote(HttpContext.User.GetDomainUser(), request.Card, DateTime.UtcNow);
         }
 
         [HttpDelete]
@@ -52,7 +52,7 @@ namespace WebApi.Controllers
         public async Task<Views.StoryView> Close(Guid id)
         {
             var story = silo.GetGrain<IStoryGrain>(id);
-            return await story.Close(HttpContext.User.GetDomainUser());
+            return await story.Close(HttpContext.User.GetDomainUser(), DateTime.UtcNow);
         }
 
         [HttpPost]

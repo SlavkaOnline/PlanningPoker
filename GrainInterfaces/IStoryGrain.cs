@@ -13,9 +13,9 @@ namespace GrainInterfaces
 		Task<Views.StoryView> Configure(CommonTypes.User user, string title, string[] cards);
         Task<Views.StoryView> SetActive(CommonTypes.User user, DateTime startedAt);
         Task<Views.StoryView> Clear(CommonTypes.User user, DateTime startedAt);
-        Task<Views.StoryView> Vote(CommonTypes.User user, string card);
+        Task<Views.StoryView> Vote(CommonTypes.User user, string card, DateTime timeStamp);
         Task<Views.StoryView> RemoveVote(CommonTypes.User user);
-        Task<Views.StoryView> Close(CommonTypes.User user);
+        Task<Views.StoryView> Close(CommonTypes.User user, DateTime timeStamp);
         Task<Views.StoryView> Pause(CommonTypes.User user, DateTime timeStamp);
     }
 }
