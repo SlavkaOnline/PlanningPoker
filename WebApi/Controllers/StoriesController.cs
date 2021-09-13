@@ -11,7 +11,7 @@ using WebApi.Application;
 namespace WebApi.Controllers
 {
     [Authorize]
-    [Route("api/[controller]")]
+    [Route("api/[controller]/{id:guid}")]
     [ApiController]
     public class StoriesController : ControllerBase
     {
@@ -24,7 +24,7 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
-        [Route("{id}")]
+        [Route("")]
         public async Task<Views.StoryView> Get(Guid id)
         {
             var story = silo.GetGrain<IStoryGrain>(id);
@@ -32,7 +32,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        [Route("{id}/vote")]
+        [Route("vote")]
         public async Task<Views.StoryView> Vote(Guid id, Requests.Vote request)
         {
             var story = silo.GetGrain<IStoryGrain>(id);
@@ -40,7 +40,7 @@ namespace WebApi.Controllers
         }
 
         [HttpDelete]
-        [Route("{id}/vote")]
+        [Route("vote")]
         public async Task<Views.StoryView> RemoveVote(Guid id)
         {
             var story = silo.GetGrain<IStoryGrain>(id);
@@ -48,7 +48,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        [Route("{id}/close")]
+        [Route("closed")]
         public async Task<Views.StoryView> Close(Guid id)
         {
             var story = silo.GetGrain<IStoryGrain>(id);
@@ -56,7 +56,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        [Route("{id}/cleared")]
+        [Route("cleared")]
         public async Task<Views.StoryView> Clear(Guid id)
         {
             var story = silo.GetGrain<IStoryGrain>(id);

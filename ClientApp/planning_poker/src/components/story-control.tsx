@@ -1,7 +1,7 @@
 import React from 'react';
 import { useStory } from '../contexts/story-context';
 import { clearStory, closeStory } from '../models/Api';
-import styles from '../styles/session-control.module.scss';
+import styles from '../styles/story-control.module.scss';
 import { Button } from '@material-ui/core';
 
 export const StoryControl = () => {

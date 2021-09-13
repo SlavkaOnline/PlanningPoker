@@ -31,7 +31,7 @@ namespace WebApi.Controllers
 		}
 
         [HttpGet]
-        [Route("{id}")]
+        [Route("{id:guid}")]
         public async Task<Views.SessionView> Get(Guid id)
         {
             var session = _silo.GetGrain<ISessionGrain>(id);
@@ -39,7 +39,7 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
-        [Route("{id}/events")]
+        [Route("{id:guid}/events")]
         public async Task<IReadOnlyList<Views.EventView<Session.Event>>> GetEvents(Guid id)
         {
             var session = _silo.GetGrain<IDomainGrain<Session.Event>>(id);
@@ -55,7 +55,7 @@ namespace WebApi.Controllers
         }
 
 		[HttpPost]
-		[Route("{id}/stories")]
+		[Route("{id:guid}/stories")]
 		public async Task<Views.SessionView> AddStory(Guid id, Requests.CreateStory request)
 		{
 			var cards = string.IsNullOrEmpty(request.CardsId)
@@ -67,7 +67,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        [Route("{id}/join")]
+        [Route("{id:guid}/join")]
         public async Task<Views.SessionView> Join(Guid id)
         {
             var session = _silo.GetGrain<ISessionGrain>(id);
@@ -75,7 +75,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        [Route("{id}/leave")]
+        [Route("{id:guid}/leave")]
         public async Task<Views.SessionView> Leave(Guid id)
         {
             var session = _silo.GetGrain<ISessionGrain>(id);
@@ -83,11 +83,11 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        [Route("{id}/activestory")]
+        [Route("{id:guid}/activestory")]
         public async Task<Views.SessionView> SetActiveStory(Guid id, Requests.SetActiveStory request)
         {
             var session = _silo.GetGrain<ISessionGrain>(id);
-            return await session.SetActiveStory(HttpContext.User.GetDomainUser(), Guid.Parse(request.Id), DateTime.UtcNow);
+            return await session.SetActiveStory(HttpContext.User.GetDomainUser(), request.Id, DateTime.UtcNow);
         }
 
         [HttpGet]

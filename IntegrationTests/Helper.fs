@@ -4,6 +4,8 @@ open System
 open System.Net.Http
 open System.Net.Http.Headers
 open System.Text
+open Gateway.Requests
+open Gateway.Views
 open Microsoft.Extensions.Hosting
 open Newtonsoft.Json
 open WebApi.Application
@@ -53,6 +55,26 @@ module Helper =
             return JsonConvert.DeserializeObject<'TResult>(content)
         }
 
+    let requestPostWithoutBody<'TResult>
+        (client: HttpClient)
+        (token: string)
+        (path: string)
+        : Async<'TResult> =
+        async {
+            let request = new HttpRequestMessage()
+            request.RequestUri <- Uri($"%s{client.BaseAddress.ToString()}api/%s{path}")
+            request.Method <- HttpMethod.Post
+            request.Headers.Authorization <- AuthenticationHeaderValue("Bearer", token)
+
+            let! response = client.SendAsync(request) |> Async.AwaitTask
+            response.EnsureSuccessStatusCode() |> ignore
+            let! content =
+                response.Content.ReadAsStringAsync()
+                |> Async.AwaitTask
+
+            return JsonConvert.DeserializeObject<'TResult>(content)
+        }
+
     let requestGet<'TResult> (client: HttpClient) (token: string) (path: string) : Async<'TResult> =
         async {
             let request = new HttpRequestMessage()
@@ -69,3 +91,39 @@ module Helper =
 
             return JsonConvert.DeserializeObject<'TResult>(content)
         }
+
+    let createSession (client: HttpClient) (token: string) (title: string) =
+        requestPost<_, SessionView> client { CreateSession.Title = title } token "sessions"
+
+    let addStoryToSession (client: HttpClient) (token: string) (session: SessionView) (arg: CreateStory) = async {
+        let stories = session.Stories
+        let! s = requestPost<_, SessionView>
+                                            client
+                                            arg
+                                            token
+                                            $"Sessions/%s{session.Id.ToString()}/stories"
+        let storyId = (set s.Stories - set stories)
+                      |> Set.toSeq
+                      |> Seq.rev
+                      |> Seq.head
+        return s, storyId
+        }
+
+    let setActiveStory (client: HttpClient) (token: string) (sessionId: Guid) (id: Guid) =
+        requestPost<_, _>
+                    client
+                    { SetActiveStory.Id = id }
+                    token
+                    $"sessions/%s{sessionId.ToString()}/activestory"
+
+    let getSession  (client: HttpClient) (token: string) (id: Guid) =
+        requestGet<SessionView> client token $"sessions/%s{id.ToString()}"
+
+    let vote  (client: HttpClient) (token: string) (id: Guid) (card: string) =
+        requestPost<_, StoryView> client {Card = card} token $"stories/%s{id.ToString()}/vote"
+
+    let closeStory  (client: HttpClient) (token: string) (id: Guid) =
+        requestPostWithoutBody<StoryView> client token $"stories/%s{id.ToString()}/closed"
+
+    let clearStory  (client: HttpClient) (token: string) (id: Guid)  =
+        requestPostWithoutBody<StoryView> client token $"stories/%s{id.ToString()}/cleared"

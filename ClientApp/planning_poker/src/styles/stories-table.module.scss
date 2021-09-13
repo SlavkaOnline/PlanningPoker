@@ -10,6 +10,11 @@ $grey: rgba(128, 128, 128, 0.32);
         justify-content: space-between;
         border-bottom: 1px solid $grey;
         margin-bottom: 10px;
+        padding: 0 10px;
+
+        .action {
+            width: 120px;
+        }
     }
 
     .table {
@@ -18,6 +23,7 @@ $grey: rgba(128, 128, 128, 0.32);
         .row {
             display: flex;
             align-items: center;
+            justify-content: flex-start;
             padding-left: 10px;
             height: 30px;
             &:hover {
@@ -52,6 +58,10 @@ $grey: rgba(128, 128, 128, 0.32);
                 padding-left: 5px;
             }
 
+            .result {
+                margin-left: auto;
+                padding: 0 10px;
+            }
         }
     }
 }

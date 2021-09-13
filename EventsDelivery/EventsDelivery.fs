@@ -67,7 +67,7 @@ module EventsDeliveryHub =
             create "VoteRemoved"
             <| JsonConvert.SerializeObject({| id = %user.Id; name = user.Name |})
         | Story.Event.StoryClosed _ -> create "StoryClosed" ""
-        | Story.Event.StoryConfigured _ -> create "StoryStarted" ""
+        | Story.Event.StoryConfigured _ -> create "StoryConfigured" ""
         | Story.Event.ActiveSet dt ->
             create "ActiveSet"
             <| JsonConvert.SerializeObject({| startedAt = dt |})

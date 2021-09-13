@@ -70,7 +70,7 @@ const reducer = (state: Story, action: Action): Story => {
 
                     case 'StoryClosed':
                         return { ...state, isClosed: true };
-                    case 'StoryStarted':
+                    case 'StoryConfigured':
                         return { ...state, version: action.event.order };
                     case 'Cleared': {
                         const cleared = JSON.parse(action.event.payload) as Cleared;

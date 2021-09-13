@@ -40,7 +40,7 @@ export const SessionPage = () => {
 
     function handleEvent(e: Event<SessionEventType>): void {
         if (e.type === 'ActiveStorySet') {
-            enqueueSnackbar(`Story changed`, { variant: 'info' });
+            enqueueSnackbar(`Current story was selected`, { variant: 'info' });
         }
         if (e.type === 'StoryAdded') {
             enqueueSnackbar(`Story added`, { variant: 'info' });

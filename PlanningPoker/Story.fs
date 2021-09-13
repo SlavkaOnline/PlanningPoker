@@ -200,7 +200,6 @@ module Story =
 
         | StoryClosed (result, stats, dt) ->
             { state with
-                  StartedAt = NotStarted
                   State =
                       ClosedStory
                           { Result = result

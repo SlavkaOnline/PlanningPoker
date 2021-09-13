@@ -20,7 +20,7 @@ export type ParticipantAdded = Readonly<Participant>;
 
 export type ParticipantRemoved = Readonly<Participant>;
 
-export type StoryEventType = 'Voted' | 'VoteRemoved' | 'StoryClosed' | 'StoryStarted' | 'ActiveSet' | 'Cleared';
+export type StoryEventType = 'Voted' | 'VoteRemoved' | 'StoryClosed' | 'StoryConfigured' | 'ActiveSet' | 'Cleared';
 
 export type Voted = Readonly<Participant>;
 export type VoteRemoved = Readonly<Participant>;

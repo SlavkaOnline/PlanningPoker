@@ -57,7 +57,10 @@ export const StoriesTable = () => {
         <div className={styles.wrapper}>
             <div className={styles.header}>
                 <Typography variant="h6">Stories</Typography>
-                <OwnerWrapper component={StoryCreator()} />
+                <div className={styles.action}>
+                    {' '}
+                    <OwnerWrapper component={StoryCreator()} />
+                </div>
             </div>
             <div className={styles.table}>
                 {stories.map((story) => {
@@ -66,6 +69,7 @@ export const StoriesTable = () => {
                         <div key={story.id} className={styles.row + ' ' + style} onClick={() => selectStory(story.id)}>
                             {icon}
                             <div className={styles.name}> {clipText(story.title, 70)} </div>
+                            <div className={styles.result}>{story.result}</div>
                         </div>
                     );
                 })}

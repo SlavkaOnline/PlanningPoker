@@ -29,7 +29,7 @@ export const StoryResult = () => {
                 <></>
             )}
             <div className={styles.stats}>
-                <div className={styles.duration}>Working time: {story.duration}</div>
+                <div className={styles.duration}>Duration: {story.duration}</div>
                 <div className={styles.table}>
                     <StoryResultsTable statistics={story.statistics} />
                 </div>
