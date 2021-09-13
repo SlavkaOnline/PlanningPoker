@@ -22,4 +22,18 @@
     .playground {
         height: 100%;
     }
+
+    .work_panel {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        .duration {
+
+        }
+
+        .action {
+            margin-left: auto;
+        }
+    }
+
 }

@@ -79,12 +79,14 @@ export const StoryPlayground = () => {
     ) : (
         <div className={styles.wrapper}>
             <div className={styles.title}>
-                <Typography variant="h5">{clipText(story.title, 70)}</Typography>
+                <Typography variant="h5">{story.title}</Typography>
+            </div>
+            <div className={styles.work_panel}>
+                {!story.isClosed ? <div className={styles.duration}>Duration: {duration}</div> : <></>}
                 <div className={styles.action}>
                     <OwnerWrapper component={StoryControl()} />
                 </div>
             </div>
-            {!story.isClosed ? <div className={styles.time}>Duration: {duration}</div> : <></>}{' '}
             <div className={styles.playground}>
                 {!story.isClosed ? <Cards cardsTypes={story.cards} /> : <StoryResult />}
             </div>
