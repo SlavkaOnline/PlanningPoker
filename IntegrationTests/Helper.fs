@@ -95,19 +95,14 @@ module Helper =
     let createSession (client: HttpClient) (token: string) (title: string) =
         requestPost<_, SessionView> client { CreateSession.Title = title } token "sessions"
 
-    let addStoryToSession (client: HttpClient) (token: string) (session: SessionView) (arg: CreateStory) = async {
-        let stories = session.Stories
-        let! s = requestPost<_, SessionView>
+    let addStoryToSession (client: HttpClient) (token: string) (session: SessionView) (arg: CreateStory) =
+        requestPost<_, SessionView>
                                             client
                                             arg
                                             token
                                             $"Sessions/%s{session.Id.ToString()}/stories"
-        let storyId = (set s.Stories - set stories)
-                      |> Set.toSeq
-                      |> Seq.rev
-                      |> Seq.head
-        return s, storyId
-        }
+
+
 
     let setActiveStory (client: HttpClient) (token: string) (sessionId: Guid) (id: Guid) =
         requestPost<_, _>

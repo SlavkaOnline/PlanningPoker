@@ -174,7 +174,9 @@ type EventsTests(server: RealServerFixture) =
             Async.StartWithContinuations (subs, complete, complete, complete)
 
             //action 3 StoryAdded
-            let! _, storyId = Helper.addStoryToSession apiClient user.Token session { CreateStory.Title = "Story 1"; CardsId = cardsId; CustomCards = [|"1"; "2"|] }
+            let! ses = Helper.addStoryToSession apiClient user.Token session { CreateStory.Title = "Story 1"; CardsId = cardsId; CustomCards = [|"1"; "2"|] }
+
+            let storyId = ses.Stories.[0]
 
             //action 4 ActiveStorySet
             do! Helper.setActiveStory apiClient user.Token session.Id storyId
@@ -216,8 +218,11 @@ type EventsTests(server: RealServerFixture) =
 
             do! connection.StartAsync() |> Async.AwaitTask
             //action1 StoryConfigured
-            let! s, storyId = Helper.addStoryToSession apiClient user.Token session { CreateStory.Title = "Story 1"; CardsId = cardsId; CustomCards = [||] }
-            let! _, anotherStoryId = Helper.addStoryToSession apiClient user.Token s { CreateStory.Title = "Story 2"; CardsId = cardsId; CustomCards = [||] }
+            let! s = Helper.addStoryToSession apiClient user.Token session { CreateStory.Title = "Story 1"; CardsId = cardsId; CustomCards = [||] }
+            let! ses = Helper.addStoryToSession apiClient user.Token s { CreateStory.Title = "Story 2"; CardsId = cardsId; CustomCards = [||] }
+
+            let storyId = ses.Stories.[1]
+            let anotherStoryId = ses.Stories.[0]
 
             let! subscription =
                 connection.StreamAsChannelAsync<EventsDeliveryHub.Event>("Story", storyId, 0)
