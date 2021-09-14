@@ -246,6 +246,8 @@ type EventsTests(server: RealServerFixture) =
 
             //action5  Paused
             do! Helper.setActiveStory apiClient user.Token session.Id anotherStoryId
+            do! Helper.vote apiClient user.Token anotherStoryId "XXS" |> Async.Ignore
+            do! Helper.closeStory apiClient user.Token anotherStoryId |> Async.Ignore
 
             //action6  ActiveSet
             do! Helper.setActiveStory apiClient user.Token session.Id storyId

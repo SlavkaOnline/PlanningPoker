@@ -46,10 +46,10 @@ export const StoryPlayground = () => {
             enqueueSnackbar(`${payload.name} voted`, { variant: 'success' });
         }
         if (e.type === 'StoryClosed') {
-            enqueueSnackbar(`Story was closed`, { variant: 'info' });
+            enqueueSnackbar(`Story is closed`, { variant: 'info' });
         }
         if (e.type === 'Cleared') {
-            enqueueSnackbar(`Story was cleared`, { variant: 'warning' });
+            enqueueSnackbar(`Story is cleared`, { variant: 'warning' });
         }
     }
 
