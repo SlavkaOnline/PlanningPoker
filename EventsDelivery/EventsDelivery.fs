@@ -81,14 +81,13 @@ module EventsDeliveryHub =
     type DomainEventHub(client: IClusterClient) =
         inherit Hub()
 
-
         member private this.CreateSubscriptionsToEvent<'TEvent>
             (
                 id: string,
                 version: int32,
                 eventConverter: Guid -> EventView<'TEvent> -> Event,
                 [<EnumeratorCancellation>] cancellationToken: CancellationToken
-            ) : System.Collections.Generic.IAsyncEnumerable<Event> =
+            ) : Async<System.Collections.Generic.IAsyncEnumerable<Event>> = async {
             let guid = Guid.Parse(id)
 
             let grain =
@@ -97,55 +96,41 @@ module EventsDeliveryHub =
             let bufferChannel =
                 Channel.CreateUnbounded<EventView<'TEvent>>()
 
-            let eventsChannel =
-                Channel.CreateUnbounded<EventView<'TEvent>>()
-
-            let task =
-                async {
-                    let! sub =
+            let! sub =
                         client
                             .GetStreamProvider("SMS")
                             .GetStream<EventView<'TEvent>>(guid, "DomainEvents")
                             .SubscribeAsync(fun event token -> bufferChannel.Writer.WriteAsync(event).AsTask())
                         |> Async.AwaitTask
 
-                    cancellationToken.Register
+            cancellationToken.Register
                         (fun _ ->
                             sub.UnsubscribeAsync()
                             |> Async.AwaitTask
                             |> Async.RunSynchronously)
                     |> ignore
 
-                    let! events = grain.GetEventsAfter(version) |> Async.AwaitTask
+            let! events = grain.GetEventsAfter(version) |> Async.AwaitTask
 
-                    let lastVersion =
-                        if events.Count > 0 then
-                            events.Item(events.Count - 1).Order
-                        else
-                            0
+            let lastVersion =
+                        events
+                        |> Seq.tryLast
+                        |> Option.map(fun e -> e.Order)
+                        |> Option.defaultValue 0
+                            
+            return
+                asyncSeq {
+                               for e in events do
+                                    e
+                               yield! bufferChannel.Reader.ReadAllAsync(cancellationToken)
+                                                |> AsyncSeq.ofAsyncEnum
+                                                |> AsyncSeq.filter (fun e -> e.Order > lastVersion)    
+                        }
+                    |> AsyncSeq.map (eventConverter guid)
+                    |> AsyncSeq.toAsyncEnum
+            }
 
-                    for e in events do
-                        do!
-                            eventsChannel.Writer.WriteAsync(e).AsTask()
-                            |> Async.AwaitTask
-
-                    do!
-                        bufferChannel.Reader.ReadAllAsync()
-                        |> AsyncSeq.ofAsyncEnum
-                        |> AsyncSeq.filter (fun e -> e.Order > lastVersion)
-                        |> AsyncSeq.iterAsync
-                            (fun e ->
-                                eventsChannel.Writer.WriteAsync(e).AsTask()
-                                |> Async.AwaitTask)
-                }
-
-            Async.StartAsTask(task, ?taskCreationOptions = None, ?cancellationToken = Some cancellationToken)
-            |> ignore
-
-            eventsChannel.Reader.ReadAllAsync()
-            |> AsyncSeq.ofAsyncEnum
-            |> AsyncSeq.map (fun e -> eventConverter guid e)
-            |> AsyncSeq.toAsyncEnum
+          
 
 
         member this.Session
@@ -180,7 +165,7 @@ module EventsDeliveryHub =
                     |> Async.AwaitTask
                     |> Async.Ignore
 
-                return this.CreateSubscriptionsToEvent(id, version, convertSessionEvent, cancellationToken)
+                return! this.CreateSubscriptionsToEvent(id, version, convertSessionEvent, cancellationToken)
             }
             |> Async.RunSynchronously
 
@@ -190,4 +175,4 @@ module EventsDeliveryHub =
                 version: int32,
                 [<EnumeratorCancellation>] cancellationToken: CancellationToken
             ) : System.Collections.Generic.IAsyncEnumerable<Event> =
-            this.CreateSubscriptionsToEvent(id, version, convertStoryEvent, cancellationToken)
+            this.CreateSubscriptionsToEvent(id, version, convertStoryEvent, cancellationToken) |> Async.RunSynchronously
