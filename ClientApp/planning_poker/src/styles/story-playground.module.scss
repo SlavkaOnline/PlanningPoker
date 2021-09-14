@@ -11,6 +11,7 @@
     .title {
         display: flex;
         justify-content: space-between;
+        height: 32px;
     }
 
     .time {
@@ -20,6 +21,7 @@
 
     .playground {
         height: 100%;
+        overflow: hidden;
     }
 
     .work_panel {
