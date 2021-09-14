@@ -55,7 +55,7 @@ module PropertyTests =
 
 
     [<Fact>]
-    let ``Array shouldn't be empty``() =
+    let ``Array cards shouldn't be empty``() =
         let cards = [||]
         match Story.validateCards cards  with
         | Error e -> e = Errors.CardsHasNotValues

@@ -94,6 +94,9 @@ module Helper =
 
     let createSession (client: HttpClient) (token: string) (title: string) =
         requestPost<_, SessionView> client { CreateSession.Title = title } token "sessions"
+        
+    let getStory (client: HttpClient) (token: string) (id:Guid) =
+        requestGet<StoryView> client token $"stories/%s{id.ToString()}"    
 
     let addStoryToSession (client: HttpClient) (token: string) (session: SessionView) (arg: CreateStory) =
         requestPost<_, SessionView>
