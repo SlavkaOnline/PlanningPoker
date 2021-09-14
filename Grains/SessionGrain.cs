@@ -104,7 +104,7 @@ namespace Grains
         {
             var events = await RetrieveConfirmedEvents(version, Version);
             return events.Select((v, order) =>
-                new Views.EventView<Session.Event>(version > 0 ? order + version : order, v)).ToArray();
+                new Views.EventView<Session.Event>(version > 0 ? order + version + 1: order + 1, v)).ToArray();
         }
     }
 }

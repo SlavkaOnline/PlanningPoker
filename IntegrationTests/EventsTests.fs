@@ -179,7 +179,7 @@ type EventsTests(server: RealServerFixture) =
             let storyId = ses.Stories.[0]
 
             //action 4 ActiveStorySet
-            do! Helper.setActiveStory apiClient user.Token session.Id storyId
+            let! s =  Helper.setActiveStory apiClient user.Token session.Id storyId
 
             do! Async.Sleep(1000)
 
@@ -188,9 +188,70 @@ type EventsTests(server: RealServerFixture) =
             let events = eventsBuffer.Reader.ReadAllAsync()
                          |> AsyncSeq.ofAsyncEnum
                          |> AsyncSeq.toArraySynchronously
-                         |> Array.map(fun e -> e.Type)
+                         |> Array.map(fun e -> (e.Order, e.Type))
 
-            test <@ events = [|"Started"; "ParticipantAdded"; "StoryAdded"; "ActiveStorySet"|] @>
+            test <@ events = [|1,"Started"; 2,"ParticipantAdded"; 3,"StoryAdded"; 4,"ActiveStorySet"|] @>
+            test <@ s.Version = 4 @>
+        }
+        
+        
+        
+    [<Fact>]
+    let ``Session events in stream equals completed actions from non zero event`` () =
+        async {
+
+            use apiClient = new HttpClient()
+            do apiClient.BaseAddress <- Uri(url)
+
+            let! user = Helper.login apiClient "test"
+
+            let connection =
+                HubConnectionBuilder()
+                    .WithUrl(
+                        $"%s{apiClient.BaseAddress.ToString()}events",
+                        fun options ->
+                            options.AccessTokenProvider <- (fun _ -> Task.FromResult user.Token)
+                            options.Transports <- HttpTransportType.WebSockets
+                            options.SkipNegotiation <- true
+                    )
+                    .Build()
+
+            //action 1 Started
+            let! session = Helper.createSession apiClient user.Token "Session"
+
+            do! connection.StartAsync() |> Async.AwaitTask
+
+           //action 2 "ParticipantAdded"
+            let! subscription =
+                connection.StreamAsChannelAsync<EventsDeliveryHub.Event>("Session", session.Id, session.Version)
+                |> Async.AwaitTask
+
+            let eventsBuffer = Channel.CreateUnbounded<EventsDeliveryHub.Event>()
+            let subs =  subscription.ReadAllAsync()
+                       |> AsyncSeq.ofAsyncEnum
+                       |> AsyncSeq.iterAsync(fun e -> eventsBuffer.Writer.WriteAsync(e).AsTask() |> Async.AwaitTask)
+            let complete _ = eventsBuffer.Writer.Complete();
+            Async.StartWithContinuations (subs, complete, complete, complete)
+
+            //action 3 StoryAdded
+            let! ses = Helper.addStoryToSession apiClient user.Token session { CreateStory.Title = "Story 1"; CardsId = cardsId; CustomCards = [|"1"; "2"|] }
+
+            let storyId = ses.Stories.[0]
+
+            //action 4 ActiveStorySet
+            let! s = Helper.setActiveStory apiClient user.Token session.Id storyId
+
+            do! Async.Sleep(1000)
+
+            do! connection.StopAsync() |> Async.AwaitTask
+
+            let events = eventsBuffer.Reader.ReadAllAsync()
+                         |> AsyncSeq.ofAsyncEnum
+                         |> AsyncSeq.toArraySynchronously
+                         |> Array.map(fun e -> (e.Order, e.Type))
+
+            test <@ events = [|2,"ParticipantAdded"; 3,"StoryAdded"; 4,"ActiveStorySet"|] @>
+            test <@ s.Version = 4 @>
         }
 
 
@@ -256,8 +317,10 @@ type EventsTests(server: RealServerFixture) =
             do! Helper.clearStory apiClient user.Token storyId |> Async.Ignore
 
             //action8  Paused
-            do! Helper.setActiveStory apiClient user.Token session.Id anotherStoryId
+            do! Helper.setActiveStory apiClient user.Token session.Id anotherStoryId |> Async.Ignore
 
+            let! s = Helper.getStory apiClient user.Token storyId
+            
             do! Async.Sleep(1000)
 
             do! connection.StopAsync() |> Async.AwaitTask
@@ -265,7 +328,8 @@ type EventsTests(server: RealServerFixture) =
             let events = eventsBuffer.Reader.ReadAllAsync()
                          |> AsyncSeq.ofAsyncEnum
                          |> AsyncSeq.toArraySynchronously
-                         |> Array.map(fun e -> e.Type)
+                         |> Array.map(fun e -> (e.Order, e.Type))
 
-            test <@ events = [|"StoryConfigured"; "ActiveSet"; "Voted"; "StoryClosed"; "Paused"; "ActiveSet"; "Cleared"; "Paused" |] @>
+            test <@ events = [|1,"StoryConfigured"; 2,"ActiveSet"; 3,"Voted"; 4,"StoryClosed"; 5,"Paused"; 6,"ActiveSet"; 7,"Cleared"; 8,"Paused" |] @>
+            test <@ s.Version = 8 @>
         }
