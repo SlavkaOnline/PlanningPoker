@@ -161,7 +161,7 @@ type EventsTests(server: RealServerFixture) =
 
             do! connection.StartAsync() |> Async.AwaitTask
 
-           //action 2 "ParticipantAdded"
+            //action 3 "ParticipantAdded"
             let! subscription =
                 connection.StreamAsChannelAsync<EventsDeliveryHub.Event>("Session", session.Id, 0)
                 |> Async.AwaitTask
@@ -172,6 +172,7 @@ type EventsTests(server: RealServerFixture) =
                        |> AsyncSeq.iterAsync(fun e -> eventsBuffer.Writer.WriteAsync(e).AsTask() |> Async.AwaitTask)
             let complete _ = eventsBuffer.Writer.Complete();
             Async.StartWithContinuations (subs, complete, complete, complete)
+            do! Async.Sleep(1000)
 
             //action 3 StoryAdded
             let! ses = Helper.addStoryToSession apiClient user.Token session { CreateStory.Title = "Story 1"; CardsId = cardsId; CustomCards = [|"1"; "2"|] }
@@ -179,23 +180,28 @@ type EventsTests(server: RealServerFixture) =
             let storyId = ses.Stories.[0]
 
             //action 4 ActiveStorySet
-            let! s =  Helper.setActiveStory apiClient user.Token session.Id storyId
+            do! Helper.setActiveStory apiClient user.Token session.Id storyId |> Async.Ignore
 
             do! Async.Sleep(1000)
 
+            //action 4 "ParticipantRemoved"
             do! connection.StopAsync() |> Async.AwaitTask
+
+            do! Async.Sleep(1000)
+
+            let! s = Helper.getSession apiClient user.Token session.Id
 
             let events = eventsBuffer.Reader.ReadAllAsync()
                          |> AsyncSeq.ofAsyncEnum
                          |> AsyncSeq.toArraySynchronously
                          |> Array.map(fun e -> (e.Order, e.Type))
 
-            test <@ events = [|1,"Started"; 2,"ParticipantAdded"; 3,"StoryAdded"; 4,"ActiveStorySet"|] @>
-            test <@ s.Version = 4 @>
+            test <@ events = [|1,"Started"; 2,"ParticipantAdded"; 3,"StoryAdded"; 4,"ActiveStorySet"; |] @>
+            test <@ s.Version = 5 @>
         }
-        
-        
-        
+
+
+
     [<Fact>]
     let ``Session events in stream equals completed actions from non zero event`` () =
         async {
@@ -233,6 +239,7 @@ type EventsTests(server: RealServerFixture) =
             let complete _ = eventsBuffer.Writer.Complete();
             Async.StartWithContinuations (subs, complete, complete, complete)
 
+            do! Async.Sleep(1000)
             //action 3 StoryAdded
             let! ses = Helper.addStoryToSession apiClient user.Token session { CreateStory.Title = "Story 1"; CardsId = cardsId; CustomCards = [|"1"; "2"|] }
 
@@ -320,7 +327,7 @@ type EventsTests(server: RealServerFixture) =
             do! Helper.setActiveStory apiClient user.Token session.Id anotherStoryId |> Async.Ignore
 
             let! s = Helper.getStory apiClient user.Token storyId
-            
+
             do! Async.Sleep(1000)
 
             do! connection.StopAsync() |> Async.AwaitTask
