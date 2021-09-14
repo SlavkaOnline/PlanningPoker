@@ -18,6 +18,7 @@
         "@types/react-dom": "^17.0.5",
         "@types/react-router-dom": "^5.1.7",
         "axios": "^0.21.1",
+        "dayjs": "^1.10.7",
         "http-proxy-middleware": "^2.0.0",
         "jwt-decode": "^3.1.2",
         "node-sass": "5.0.0",

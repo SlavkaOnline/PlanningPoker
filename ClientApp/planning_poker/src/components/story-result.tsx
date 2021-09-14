@@ -2,6 +2,7 @@ import React from 'react';
 import { useStory } from '../contexts/story-context';
 import { Chart } from 'react-google-charts';
 import styles from '../styles/story-result.module.scss';
+import { StoryResultsTable } from './story-results-table';
 
 export const StoryResult = () => {
     const { story } = useStory();
@@ -10,6 +11,7 @@ export const StoryResult = () => {
         <div className={styles.wrapper}>
             {story.statistics ? (
                 <Chart
+                    className={styles.chart}
                     chartType={'PieChart'}
                     graph_id="PieChart"
                     width={'100%'}
@@ -26,12 +28,11 @@ export const StoryResult = () => {
             ) : (
                 <></>
             )}
-            <div className={styles.tables}>
-                {Object.keys(story.statistics).map((card) => (
-                    <div key={card}>
-                        {card} - {story.statistics[card].voters.map((v) => v.name).join(', ')}
-                    </div>
-                ))}
+            <div className={styles.stats}>
+                <div className={styles.duration}>Duration: {story.duration}</div>
+                <div className={styles.table}>
+                    <StoryResultsTable statistics={story.statistics} />
+                </div>
             </div>
         </div>
     );

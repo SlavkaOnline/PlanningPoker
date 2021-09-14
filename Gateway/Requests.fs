@@ -20,4 +20,4 @@ module Requests =
     type Vote = { Card: string }
 
     [<CLIMutable>]
-    type SetActiveStory = { Id: string }
+    type SetActiveStory = { Id: Guid }

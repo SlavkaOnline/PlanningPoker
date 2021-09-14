@@ -20,8 +20,9 @@ export type ParticipantAdded = Readonly<Participant>;
 
 export type ParticipantRemoved = Readonly<Participant>;
 
-export type StoryEventType = 'Voted' | 'VoteRemoved' | 'StoryClosed' | 'StoryStarted' | 'Cleared';
+export type StoryEventType = 'Voted' | 'VoteRemoved' | 'StoryClosed' | 'StoryConfigured' | 'ActiveSet' | 'Cleared';
 
 export type Voted = Readonly<Participant>;
 export type VoteRemoved = Readonly<Participant>;
+export type ActiveSet = Readonly<{ startedAt: string }>;
 export type Cleared = Readonly<{ startedAt: string }>;

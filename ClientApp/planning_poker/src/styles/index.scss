@@ -10,6 +10,7 @@ html, body, #root {
     margin: 0 auto;
     display: flex;
     flex-flow: column;
+    overflow: hidden;
 }
 
 body {

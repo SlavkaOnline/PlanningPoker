@@ -3,9 +3,7 @@ namespace PlanningPoker.Domain
 open System
 
 open CommonTypes
-open PlanningPoker.Domain
 open FSharp.UMX
-
 
 [<Measure>]
 type CardValue
@@ -15,9 +13,11 @@ type Cards = Card array
 
 type Vote = { Card: Card; VotedAt: DateTime }
 
-type VoteResult = { Percent: float; Voters: User list }
+type VotedUser = {User: User; Duration: TimeSpan}
 
-type ActiveStory = { Votes: Map<User, Vote> }
+type VoteResult = { Percent: float; Voters: VotedUser array; }
+
+type ActiveStory = { Votes: Map<User, Vote>; }
 
 type ClosedStory =
     { Result: string<CardValue>
@@ -29,41 +29,69 @@ type StoryState =
     | ClosedStory of ClosedStory
     static member createActive = ActiveStory { Votes = Map.empty }
 
+
+type StartedState =
+    | NotStarted
+    | Started of dateTime: DateTime
+    | Paused of TimeSpan
+
 [<CLIMutable>]
 type StoryObj =
     { Owner: User option
       Title: string
       State: StoryState
       Cards: Cards
-      StartedAt: DateTime }
-    member this.hasAccessToChange user =
-        match this.Owner with
-        | Some u -> u = user
-        | None -> false
+      StartedAt: StartedState
+    }
 
     static member zero =
-        { Owner = None
+        {
+          Owner = None
           Title = String.Empty
           State = StoryState.createActive
           Cards = [||]
-          StartedAt = DateTime.MinValue }
+          StartedAt = NotStarted
+        }
 
 [<RequireQualifiedAccess>]
 module Story =
 
+    module Validation =
+
+        let validateOwnerAccess user story =
+            match story.Owner with
+            | Some u when u = user -> Ok story
+            | _ -> Error Errors.UnauthorizedAccess
+
+
+        let validateActiveStoryState story =
+            match story.State with
+            | ActiveStory s -> Ok s
+            | _ -> Error Errors.StoryIsClosed
+
+        let validateVotesCount (state: ActiveStory) =
+            if Map.isEmpty state.Votes then
+                Error Errors.StoryHasNotVotes
+            else
+                Ok state
+
     type Command =
-        | StartStory of user: User * title: string * cards: Cards * startedAt: DateTime
+        | Configure of user: User * title: string * cards: Cards
         | CloseStory of user: User * finishedAt: DateTime
         | Vote of user: User * Card: Card * VotedAt: DateTime
         | RemoveVote of user: User
-        | Clear of user: User * startedAt: DateTime
+        | SetActive of user: User * startAt: DateTime
+        | Clear of user: User * startAt: DateTime
+        | Pause of user: User * timeStamp: DateTime
 
     type Event =
-        | StoryStarted of user: User * title: string * cards: Cards * startedAt: DateTime
+        | StoryConfigured of user: User * title: string * cards: Cards
         | StoryClosed of result: string<CardValue> * statistics: Map<Card, VoteResult> * finishedAt: DateTime
         | Voted of user: User * vote: Vote
         | VoteRemoved of user: User
+        | ActiveSet of startedAt: DateTime
         | Cleared of startedAt: DateTime
+        | Paused of duration: TimeSpan
 
 
     let makeVote user card votedAt cards =
@@ -73,25 +101,37 @@ module Story =
         else
             Error Errors.UnexpectedCardValue
 
-    let calculateStatistics (story: ActiveStory) =
+    let getActiveStartAt (startAt: DateTime) (story: StoryObj) =
+        match story.StartedAt with
+        | Started dt -> dt
+        | StartedState.Paused dt -> startAt - dt
+        | _ -> startAt
+
+    let getPausedDuration (pausedAt: DateTime) (story: StoryObj) =
+        match story.StartedAt with
+        | Started dt -> pausedAt - dt
+        | _ -> TimeSpan.Zero
+
+    let calculateStatistics (story: ActiveStory) (Started startedAt) =
         if (story.Votes.Count = 0) then
-            Map.ofArray [| % "", { Percent = 100.0; Voters = [] } |], % ""
+            Map.ofArray [| % "", { Percent = 100.0; Voters = [||] } |], % ""
         else
             let stats =
                 story.Votes
                 |> Seq.groupBy (fun v -> v.Value.Card)
-                |> Seq.map (fun (card, items) -> (card, items |> Seq.map (fun i -> i.Key)))
                 |> Seq.map
-                    (fun (card, users) ->
+                    (fun (card, items) ->
                         (card,
                          { Percent =
                                Math.Round(
-                                   (Seq.length users |> float)
+                                   (Seq.length items |> float)
                                    / (story.Votes.Count |> float)
                                    * 100.0,
                                    1
                                )
-                           Voters = List.ofSeq users }))
+                           Voters = items
+                                    |> Seq.map (fun pair->  { User = pair.Key; Duration = pair.Value.VotedAt  - startedAt})
+                                    |> Array.ofSeq }))
 
             let result =
                 stats
@@ -99,27 +139,6 @@ module Story =
                 |> Seq.head
 
             (stats |> Map.ofSeq, fst result)
-
-    let closeStory user closedAt (story: StoryObj) =
-        if story.hasAccessToChange user then
-            match story.State with
-            | ActiveStory s ->
-                if s.Votes.Count > 0 then
-                    let stats = calculateStatistics s
-                    Ok <| StoryClosed(snd stats, fst stats, closedAt)
-                else
-                    Error <| Errors.StoryHasNotVotes
-            | ClosedStory _ -> Error <| Errors.StoryIsClosed
-        else
-            Error <| Errors.UnauthorizedAccess
-
-    let clear user closedAt (story: StoryObj) =
-        if story.hasAccessToChange user then
-            match story.State with
-            | ClosedStory _ -> Ok <| Cleared closedAt
-            | ActiveStory _ -> Error <| Errors.StoryIsNotClosed
-        else
-            Error <| Errors.UnauthorizedAccess
 
     let validateCards (cards: Cards) =
         if cards.Length = 0 then
@@ -139,32 +158,46 @@ module Story =
 
     let producer (state: StoryObj) command =
         match command with
-        | StartStory (user, title, cards, dt) ->
+        | Configure (user, title, cards) ->
             validateCards cards
-            |> Result.map (fun _ -> StoryStarted(user, title, cards, dt))
+            |> Result.map (fun _ -> StoryConfigured(user, title, cards))
 
-        | CloseStory (user, dt) -> closeStory user dt state
+        | CloseStory (user, dt) ->
+                    Validation.validateOwnerAccess user state
+                    |> Result.bind Validation.validateActiveStoryState
+                    |> Result.bind Validation.validateVotesCount
+                    |> Result.map(fun s -> calculateStatistics s state.StartedAt)
+                    |> Result.map(fun stats -> StoryClosed(snd stats, fst stats, dt))
+
         | Vote (user, card, votedAt) ->
-            match state.State with
-            | ActiveStory _ -> makeVote user card votedAt state.Cards
-            | ClosedStory _ -> Error <| Errors.StoryIsClosed
+           Validation.validateActiveStoryState state
+           |> Result.bind (fun _ -> makeVote user card votedAt state.Cards)
 
         | RemoveVote user ->
-            match state.State with
-            | ActiveStory _ -> Ok <| VoteRemoved(user)
-            | ClosedStory _ -> Error <| Errors.StoryIsClosed
+            Validation.validateActiveStoryState state
+            |> Result.map(fun _ -> VoteRemoved(user))
 
-        | Clear (user, dt) -> clear user dt state
+        | SetActive (user, startAt) ->
+                    Validation.validateOwnerAccess user state
+                    |> Result.map(fun _ -> getActiveStartAt startAt state |> ActiveSet )
 
+        | Clear (user, startedAt) ->
+                            Validation.validateOwnerAccess user state
+                            |> Result.map(fun _ -> Cleared startedAt)
+
+        | Pause (user, dt) ->
+                            Validation.validateOwnerAccess user state
+                            |> Result.map(getPausedDuration dt)
+                            |> Result.map Paused
 
     let reducer (state: StoryObj) event =
         match event with
-        | StoryStarted (user, title, cards, dt) ->
+        | StoryConfigured (user, title, cards) ->
             { state with
                   Owner = Some user
                   Title = title
-                  Cards = cards
-                  StartedAt = dt }
+                  Cards = cards }
+
         | StoryClosed (result, stats, dt) ->
             { state with
                   State =
@@ -172,29 +205,43 @@ module Story =
                           { Result = result
                             Statistics = stats
                             FinishedAt = dt } }
+
         | Voted (user, vote) ->
             match state.State with
-            | ClosedStory _ -> state
             | ActiveStory s ->
                 { state with
                       State =
                           ActiveStory
                           <| { s with
                                    Votes = s.Votes.Add(user, vote) } }
+            | _ -> state
 
         | VoteRemoved user ->
             match state.State with
-            | ClosedStory _ -> state
             | ActiveStory s ->
                 { state with
                       State =
                           ActiveStory
                           <| { s with Votes = s.Votes.Remove user } }
+            | _ -> state
+
+        | ActiveSet dt ->
+            match state.State with
+            | ClosedStory _ -> state
+            |  _ ->
+                { state with
+                      StartedAt = Started dt
+                }
 
         | Cleared dt ->
             match state.State with
             | ClosedStory _ ->
                 { state with
                       State = StoryState.createActive
-                      StartedAt = dt }
-            | ActiveStory _ -> state
+                      StartedAt = Started dt
+                }
+            | _ -> state
+
+        | Paused duration ->
+            {state with StartedAt = StartedState.Paused duration}
+

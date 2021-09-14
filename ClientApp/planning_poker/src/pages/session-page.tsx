@@ -40,10 +40,10 @@ export const SessionPage = () => {
 
     function handleEvent(e: Event<SessionEventType>): void {
         if (e.type === 'ActiveStorySet') {
-            enqueueSnackbar(`Story changed`, { variant: 'info' });
+            enqueueSnackbar(`Story is switched`, { variant: 'info' });
         }
         if (e.type === 'StoryAdded') {
-            enqueueSnackbar(`Story added`, { variant: 'info' });
+            enqueueSnackbar(`Story is added`, { variant: 'info' });
         }
         if (e.type === 'ParticipantAdded') {
             const participantAdded = JSON.parse(e.payload) as ParticipantAdded;

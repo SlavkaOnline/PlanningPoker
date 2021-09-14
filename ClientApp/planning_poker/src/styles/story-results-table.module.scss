@@ -1,0 +1,30 @@
+.wrapper {
+    display: flex;
+    flex-flow: column;
+    overflow: auto;
+    height: 100%;
+    justify-content: flex-start;
+
+    .result {
+        display: flex;
+        justify-content: space-between;
+        padding-bottom: 10px;
+        box-sizing: border-box;
+        height: 100%;
+        .card {
+            width: 60px;
+            .value {
+                font-weight: bolder;
+            }
+        }
+    }
+
+    .participants {
+        padding-left: 50px;
+        height: 100%;
+        width: 100%;
+        .participant {
+                height: 30px;
+        }
+    }
+}

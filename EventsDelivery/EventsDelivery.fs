@@ -67,10 +67,15 @@ module EventsDeliveryHub =
             create "VoteRemoved"
             <| JsonConvert.SerializeObject({| id = %user.Id; name = user.Name |})
         | Story.Event.StoryClosed _ -> create "StoryClosed" ""
-        | Story.Event.StoryStarted _ -> create "StoryStarted" ""
+        | Story.Event.StoryConfigured _ -> create "StoryConfigured" ""
+        | Story.Event.ActiveSet dt ->
+            create "ActiveSet"
+            <| JsonConvert.SerializeObject({| startedAt = dt |})
         | Story.Event.Cleared dt ->
             create "Cleared"
-            <| JsonConvert.SerializeObject({| startedAt = dt.ToString() |})
+            <| JsonConvert.SerializeObject({| startedAt = dt |})
+        | Story.Paused duration ->
+            create "Paused" <| JsonConvert.SerializeObject({||})
 
 
     type DomainEventHub(client: IClusterClient) =

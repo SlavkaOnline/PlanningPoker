@@ -3,8 +3,27 @@
     justify-content: space-between;
     height: 100%;
     align-items: center;
+    overflow: hidden;
 
-    .tables {
+    .chart {
+        height: 100%;
+    }
+
+    .stats {
         width: 100%;
+        height: 100%;
+        display: flex;
+        flex-flow: column;
+        overflow: hidden;
+
+        .duration {
+            height: 30px;
+            padding-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        .table {
+            height: 100%;
+        }
     }
 }

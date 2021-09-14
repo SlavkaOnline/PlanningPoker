@@ -22,6 +22,8 @@ $grey: rgba(128, 128, 128, 0.32);
         overflow: hidden;
         .left {
             padding: 10px;
+            height: 100%;
+            box-sizing: border-box;
             width: 100%;
             display: flex;
             flex-flow: column;
@@ -31,6 +33,7 @@ $grey: rgba(128, 128, 128, 0.32);
             .playground {
                 flex-grow: 7;
                 height: 100%;
+                overflow: hidden;
             }
 
             .stories {

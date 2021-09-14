@@ -5,6 +5,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="Extensions.fs" />
         <Compile Include="CommonTypes.fs" />
         <Compile Include="Errors.fs" />
         <Compile Include="Session.fs" />

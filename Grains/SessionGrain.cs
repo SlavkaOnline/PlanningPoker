@@ -9,6 +9,7 @@ using Orleans.EventSourcing;
 using Orleans.Providers;
 using Orleans.Streams;
 using PlanningPoker.Domain;
+using PlanningPoker.Extensions;
 
 namespace Grains
 {
@@ -60,14 +61,27 @@ namespace Grains
         {
             var id = Guid.NewGuid();
             var story = GrainFactory.GetGrain<IStoryGrain>(id);
-            await story.Start(State.Session.Owner.Value, title, cards);
+            await story.Configure(State.Session.Owner.Value, title, cards);
             await _aggregate.Exec(State.Session, Session.Command.NewAddStory(user, id));
             return Views.SessionView.create(this.GetPrimaryKey(), Version, State.Session);
         }
 
-        public async Task<Views.SessionView> SetActiveStory(CommonTypes.User user, Guid id)
+        public async Task<Views.SessionView> SetActiveStory(CommonTypes.User user, Guid id, DateTime timeStamp)
         {
+            var currentStory = State.Session.ActiveStory.GetValue();
+
+            var lazy = new Lazy<Task>(() =>
+            {
+                if (currentStory == default) return Task.CompletedTask;
+                var oldStory = GrainFactory.GetGrain<IStoryGrain>(currentStory);
+                return oldStory.Pause(user, timeStamp);
+
+            });
+
             await _aggregate.Exec(State.Session, Session.Command.NewSetActiveStory(user, id));
+            var story = GrainFactory.GetGrain<IStoryGrain>(id);
+
+            await Task.WhenAll(new []{story.SetActive(user, timeStamp), lazy.Value});
             return Views.SessionView.create(this.GetPrimaryKey(), Version, State.Session);
         }
 

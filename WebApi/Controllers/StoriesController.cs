@@ -11,7 +11,7 @@ using WebApi.Application;
 namespace WebApi.Controllers
 {
     [Authorize]
-    [Route("api/[controller]")]
+    [Route("api/[controller]/{id:guid}")]
     [ApiController]
     public class StoriesController : ControllerBase
     {
@@ -24,7 +24,7 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
-        [Route("{id}")]
+        [Route("")]
         public async Task<Views.StoryView> Get(Guid id)
         {
             var story = silo.GetGrain<IStoryGrain>(id);
@@ -32,15 +32,15 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        [Route("{id}/vote")]
+        [Route("vote")]
         public async Task<Views.StoryView> Vote(Guid id, Requests.Vote request)
         {
             var story = silo.GetGrain<IStoryGrain>(id);
-            return await story.Vote(HttpContext.User.GetDomainUser(), request.Card);
+            return await story.Vote(HttpContext.User.GetDomainUser(), request.Card, DateTime.UtcNow);
         }
 
-        [HttpPost]
-        [Route("{id}/remove_vote")]
+        [HttpDelete]
+        [Route("vote")]
         public async Task<Views.StoryView> RemoveVote(Guid id)
         {
             var story = silo.GetGrain<IStoryGrain>(id);
@@ -48,19 +48,19 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        [Route("{id}/close")]
+        [Route("closed")]
         public async Task<Views.StoryView> Close(Guid id)
         {
             var story = silo.GetGrain<IStoryGrain>(id);
-            return await story.Close(HttpContext.User.GetDomainUser());
+            return await story.Close(HttpContext.User.GetDomainUser(), DateTime.UtcNow);
         }
 
         [HttpPost]
-        [Route("{id}/clear")]
-        public async Task<Views.StoryView> ClearStory(Guid id)
+        [Route("cleared")]
+        public async Task<Views.StoryView> Clear(Guid id)
         {
             var story = silo.GetGrain<IStoryGrain>(id);
-            return await story.Clear(HttpContext.User.GetDomainUser());
+            return await story.Clear(HttpContext.User.GetDomainUser(), DateTime.UtcNow);
         }
     }
 }

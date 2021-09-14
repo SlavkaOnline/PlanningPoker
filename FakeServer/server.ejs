@@ -1,0 +1,203 @@
+  {
+    "port": 5000,
+    "protocol": "http",
+    "name": "origin",
+    "stubs": [
+      {
+        "predicates": [{
+            "equals": {
+                "method": "GET",
+                "path": "/api/sessions/a77dfdfd-6fe2-4400-81d7-3cdd73459f97"
+            }
+        }], 
+        "responses": [
+        { "is": { 
+            "statusCode": 200,
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": {"id":"a77dfdfd-6fe2-4400-81d7-3cdd73459f97","title":"asdadsdad","version":9,"ownerId":"c2f5e51c-9511-4feb-bc62-305fd715eeb2","ownerName":"Vyacheslav Lopaev","activeStory":"70c0c0d9-a1dd-497e-ac7c-112a0aafe589","participants":[],"stories":["70c0c0d9-a1dd-497e-ac7c-112a0aafe589"]}
+        }
+        }]
+      },
+      {
+        "predicates": [{
+            "equals": {
+                "method": "GET",
+                "path": "/api/stories/70c0c0d9-a1dd-497e-ac7c-112a0aafe589"
+            }
+        }], 
+        "responses": [
+        { "is": { 
+            "statusCode": 200,
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": {
+              "id": "70c0c0d9-a1dd-497e-ac7c-112a0aafe589",
+              "title": "asdasd",
+              "version": 5,
+              "ownerId": "c2f5e51c-9511-4feb-bc62-305fd715eeb2",
+              "ownerName": "Vyacheslav Lopaev",
+              "userCard": "XS",
+              "cards": [
+                  "XXS",
+                  "XS",
+                  "S",
+                  "M",
+                  "L",
+                  "XL",
+                  "XXL",
+                  "?",
+                  "Coffee"
+              ],
+              "isClosed": true,
+              "voted": [
+                  "c2f5e51c-9511-4feb-bc62-305fd715eeb2"
+              ],
+              "result": "XS",
+              "statistics": {
+                  "XS": {
+                      "percent": 50,
+                      "voters": [
+                          {
+                              "name": "Vyacheslav Lopaev1",
+                              "duration": "00:00:20"
+                          },
+                          {
+                              "name": "Vyacheslav Lopaev2",
+                              "duration": "00:00:20"
+                          },
+                          {
+                              "name": "Vyacheslav Lopaev3",
+                              "duration": "00:00:20"
+                          },
+                          {
+                              "name": "Vyacheslav Lopaev4",
+                              "duration": "00:00:20"
+                          },
+                          {
+                              "name": "Vyacheslav Lopaev5",
+                              "duration": "00:00:20"
+                          },
+                          {
+                              "name": "Vyacheslav Lopaev6",
+                              "duration": "00:00:20"
+                          },
+                          {
+                              "name": "Vyacheslav Lopaev7",
+                              "duration": "00:00:20"
+                          },
+                          {
+                              "name": "Vyacheslav Lopaev8",
+                              "duration": "00:00:20"
+                          },
+                          {
+                              "name": "Vyacheslav Lopaev9",
+                              "duration": "00:00:20"
+                          }
+                      ]
+                  },
+                  "XL": {
+                      "percent": 50,
+                      "voters": [
+                          {
+                              "name": "Slava1",
+                              "duration": "00:00:20"
+                          },
+                          {
+                              "name": "Slava2",
+                              "duration": "00:00:20"
+                          },
+                          {
+                              "name": "Slava3",
+                              "duration": "00:00:20"
+                          },
+                          {
+                              "name": "Slava4",
+                              "duration": "00:00:20"
+                          },
+                          {
+                              "name": "Slava5",
+                              "duration": "00:00:20"
+                          },
+                          {
+                              "name": "Slava6",
+                              "duration": "00:00:20"
+                          },
+                          {
+                              "name": "Slava7",
+                              "duration": "00:00:20"
+                          },
+                          {
+                              "name": "Slava8",
+                              "duration": "00:00:20"
+                          }
+                      ]
+                  },
+                  "XLL": {
+                    "percent": 50,
+                    "voters": [
+                        {
+                            "name": "Slava1",
+                            "duration": "00:00:20"
+                        },
+                        {
+                            "name": "Slava2",
+                            "duration": "00:00:20"
+                        },
+                        {
+                            "name": "Slava3",
+                            "duration": "00:00:20"
+                        },
+                        {
+                            "name": "Slava4",
+                            "duration": "00:00:20"
+                        },
+                        {
+                            "name": "Slava5",
+                            "duration": "00:00:20"
+                        },
+                        {
+                            "name": "Slava6",
+                            "duration": "00:00:20"
+                        },
+                        {
+                            "name": "Slava7",
+                            "duration": "00:00:20"
+                        },
+                        {
+                            "name": "Slava8",
+                            "duration": "00:00:20"
+                        }
+                    ]
+                }
+              },
+              "startedAt": "2021-09-12T16:17:49.792745Z",
+              "duration": "00:00:24"
+          }
+        }
+        }]
+      },
+
+
+      {
+        "predicates": [{
+            "equals": {
+                "method": "GET",
+                "path": "/api/sessions/cards_types"
+            }
+        }], 
+        "responses": [
+        { "is": { 
+            "statusCode": 200,
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": [{"id":"66920B8F-3962-46FE-A2C1-434134B7F0FD","caption":"T-Shirts"},{"id":"21E48BCA-832B-4366-B179-3296F70E526D","caption":"Fibonacci"}]
+        }
+        }]
+      }
+
+    ]
+  }
