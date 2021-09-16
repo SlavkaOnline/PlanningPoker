@@ -43,9 +43,9 @@ module EventsDeliveryHub =
         | Session.Event.ParticipantAdded participant ->
             create "ParticipantAdded"
             <| JsonConvert.SerializeObject(
-                {| id = %participant.Id
-                   name = participant.Name
-                   picture = participant.Picture |> Option.defaultValue "" |}
+                {| id = %participant.User.Id
+                   name = participant.User.Name
+                   picture = participant.User.Picture |> Option.defaultValue "" |}
             )
         | Session.Event.ParticipantRemoved participant ->
             create "ParticipantRemoved"
@@ -117,20 +117,20 @@ module EventsDeliveryHub =
                         |> Seq.tryLast
                         |> Option.map(fun e -> e.Order)
                         |> Option.defaultValue 0
-                            
+
             return
                 asyncSeq {
                                for e in events do
                                     e
                                yield! bufferChannel.Reader.ReadAllAsync(cancellationToken)
                                                 |> AsyncSeq.ofAsyncEnum
-                                                |> AsyncSeq.filter (fun e -> e.Order > lastVersion)    
+                                                |> AsyncSeq.filter (fun e -> e.Order > lastVersion)
                         }
                     |> AsyncSeq.map (eventConverter guid)
                     |> AsyncSeq.toAsyncEnum
             }
 
-          
+
 
 
         member this.Session

@@ -6,6 +6,9 @@ open CommonTypes
 open FSharp.UMX
 
 [<Measure>]
+type StoryId
+
+[<Measure>]
 type CardValue
 
 type Card = string<CardValue>

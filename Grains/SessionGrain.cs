@@ -15,7 +15,7 @@ namespace Grains
 {
     public class SessionGrainState
     {
-        public SessionObj Session { get; private set; } = SessionObj.zero;
+        public SessionObj Session { get; private set; } = SessionObj.zero();
 
         public void Apply(Session.Event e)
         {

@@ -11,7 +11,9 @@ module Views =
     type ParticipantView =
         { Id: Guid
           Name: string
-          Picture: string }
+          Picture: string
+          GroupId: Guid
+           }
 
     type VotedParticipantView =
         {
@@ -25,6 +27,12 @@ module Views =
 
     type CardsType = { Id: string; Caption: string }
 
+    type GroupView =
+        {
+            Id: Guid
+            Name: string
+        }
+
     type SessionView =
         { Id: Guid
           Title: string
@@ -33,6 +41,8 @@ module Views =
           OwnerName: string
           ActiveStory: string
           Participants: ParticipantView array
+          Groups: GroupView array
+          DefaultGroup: Guid
           Stories: Guid array }
         static member create (id: Guid) (version: int32) (session: SessionObj) =
             { Id = id
@@ -40,17 +50,28 @@ module Views =
               Version = version
               OwnerId = %session.Owner.Value.Id
               OwnerName = session.Owner.Value.Name
+              DefaultGroup = %session.DefaultGroupId
+              Groups = session.Groups
+                       |> List.map(fun g -> {
+                           Id = %g.Id
+                           Name = g.Name
+                       })
+                       |> Array.ofList
               ActiveStory =
                   session.ActiveStory
                   |> Option.map (fun id -> (%id).ToString())
                   |> Option.defaultValue Unchecked.defaultof<_>
               Participants =
                   session.Participants
+                  |> Map.toList
+                  |> List.map snd
                   |> List.map
                       (fun p ->
-                          { Id = (%p.Id)
-                            Name = p.Name
-                            Picture = p.Picture |> Option.defaultValue "" })
+                          { Id = %p.User.Id
+                            Name = p.User.Name
+                            Picture = p.User.Picture |> Option.defaultValue ""
+                            GroupId = %p.GroupId
+                            })
                   |> List.toArray
               Stories =
                   session.Stories
