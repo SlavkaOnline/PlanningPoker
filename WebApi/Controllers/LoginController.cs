@@ -30,7 +30,7 @@ namespace WebApi.Controllers
             var token = _jwtTokenProvider.CreateToken(id, request.Name, "");
             return new AuthUserModel()
             {
-                Id = id.ToString(),
+                Id = id,
                 Name = request.Name,
                 Token = token,
                 Picture = ""

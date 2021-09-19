@@ -42,7 +42,7 @@ module Views =
           ActiveStory: string
           Participants: ParticipantView array
           Groups: GroupView array
-          DefaultGroup: Guid
+          DefaultGroupId: Guid
           Stories: Guid array }
         static member create (id: Guid) (version: int32) (session: SessionObj) =
             { Id = id
@@ -50,7 +50,7 @@ module Views =
               Version = version
               OwnerId = %session.Owner.Value.Id
               OwnerName = session.Owner.Value.Name
-              DefaultGroup = %session.DefaultGroupId
+              DefaultGroupId = %session.DefaultGroupId
               Groups = session.Groups
                        |> List.map(fun g -> {
                            Id = %g.Id

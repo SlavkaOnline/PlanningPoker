@@ -158,7 +158,7 @@ module Session =
 
         | MoveParticipantToGroup (user, participantId, groupId) ->
             Validation.validateOwnerAccess user state
-            |> Result.bind(fun _ -> Validation.validateParticipantExist user.Id state.Participants)
+            |> Result.bind(fun _ -> Validation.validateParticipantExist participantId state.Participants)
             |> Result.bind(fun user -> state.Groups
                                        |> List.tryFind (fun g -> g.Id = groupId)
                                        |> Option.map(fun g -> Ok (user, g))

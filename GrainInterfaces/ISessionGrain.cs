@@ -16,5 +16,9 @@ namespace GrainInterfaces
         Task<Views.SessionView> SetActiveStory(CommonTypes.User user, Guid id, DateTime timeStamp);
         Task<Views.SessionView> AddParticipant(CommonTypes.User user);
         Task<Views.SessionView> RemoveParticipant(Guid id);
+
+        Task<Views.SessionView> AddGroup(CommonTypes.User user, Group group);
+        Task<Views.SessionView> RemoveGroup(CommonTypes.User user, Guid id);
+        Task<Views.SessionView> MoveParticipantToGroup(CommonTypes.User user, Guid participantId, Guid groupId);
     }
 }

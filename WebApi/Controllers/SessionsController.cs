@@ -83,16 +83,41 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        [Route("{id:guid}/activestory")]
-        public async Task<Views.SessionView> SetActiveStory(Guid id, Requests.SetActiveStory request)
+        [Route("{id:guid}/activestory/{storyId:guid}")]
+        public async Task<Views.SessionView> SetActiveStory(Guid id, Guid storyId)
         {
             var session = _silo.GetGrain<ISessionGrain>(id);
-            return await session.SetActiveStory(HttpContext.User.GetDomainUser(), request.Id, DateTime.UtcNow);
+            return await session.SetActiveStory(HttpContext.User.GetDomainUser(), storyId, DateTime.UtcNow);
         }
 
         [HttpGet]
         [Route("cards_types")]
         public IEnumerable<Views.CardsType> GetCardsTypes() =>
 	        _cardsTypeProvider.CardsTypes.Select(ct => new Views.CardsType(ct.Id, ct.Caption));
+
+        [HttpPost]
+        [Route("{id:guid}/groups")]
+        public async Task<Views.SessionView> AddGroup(Guid id, Requests.CreateGroup request)
+        {
+            var session = _silo.GetGrain<ISessionGrain>(id);
+            return await session.AddGroup(HttpContext.User.GetDomainUser(), new Group(Guid.NewGuid(), request.Name));
+        }
+
+        [HttpDelete]
+        [Route("{id:guid}/groups/{groupId:guid}")]
+        public async Task<Views.SessionView> RemoveGroup(Guid id, Guid groupId)
+        {
+            var session = _silo.GetGrain<ISessionGrain>(id);
+            return await session.RemoveGroup(HttpContext.User.GetDomainUser(), groupId);
+        }
+
+        [HttpPost]
+        [Route("{id:guid}/groups/{groupId:guid}")]
+        public async Task<Views.SessionView> MoveParticipantToGroup(Guid id, Guid groupId, Requests.MoveParticipantToGroup request)
+        {
+            var session = _silo.GetGrain<ISessionGrain>(id);
+            return await session.MoveParticipantToGroup(HttpContext.User.GetDomainUser(), request.ParticipantId,  groupId);
+        }
+
 	}
 }

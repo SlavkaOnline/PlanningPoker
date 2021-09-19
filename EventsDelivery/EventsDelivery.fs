@@ -55,6 +55,29 @@ module EventsDeliveryHub =
             )
         | Session.Event.Started _ -> create "Started" ""
 
+        | Session.Event.GroupAdded group ->
+            create "GroupAdded"
+            <| JsonConvert.SerializeObject(
+                {|
+                  id = group.Id
+                  name = group.Name |}
+                )
+        | Session.Event.GroupRemoved group ->
+            create "GroupRemoved"
+            <| JsonConvert.SerializeObject(
+                {|
+                  id = group.Id
+                  name = group.Name |}
+                )
+
+        | Session.Event.ParticipantMovedToGroup(user, group) ->
+            create "ParticipantMovedToGroup"
+            <| JsonConvert.SerializeObject(
+                {|
+                  group = group
+                  user = user |}
+                )
+
 
     let convertStoryEvent (entityId: Guid) (domainEvent: EventView<Story.Event>) : Event =
         let create = createEvent entityId domainEvent.Order

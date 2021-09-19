@@ -100,6 +100,24 @@ namespace Grains
             return Views.SessionView.create(this.GetPrimaryKey(), Version, State.Session);
         }
 
+        public async Task<Views.SessionView> AddGroup(CommonTypes.User user, Group group)
+        {
+            await _aggregate.Exec(State.Session, Session.Command.NewAddGroup(user, group));
+            return Views.SessionView.create(this.GetPrimaryKey(), Version, State.Session);
+        }
+
+        public async Task<Views.SessionView> RemoveGroup(CommonTypes.User user, Guid id)
+        {
+            await _aggregate.Exec(State.Session, Session.Command.NewRemoveGroup(user, id));
+            return Views.SessionView.create(this.GetPrimaryKey(), Version, State.Session);
+        }
+
+        public async Task<Views.SessionView> MoveParticipantToGroup(CommonTypes.User user, Guid participantId, Guid groupId)
+        {
+            await _aggregate.Exec(State.Session, Session.Command.NewMoveParticipantToGroup(user, participantId, groupId));
+            return Views.SessionView.create(this.GetPrimaryKey(), Version, State.Session);
+        }
+
         public async Task<IReadOnlyList<Views.EventView<Session.Event>>> GetEventsAfter(int version)
         {
             var events = await RetrieveConfirmedEvents(version, Version);

@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="Helper.fs" />
         <Compile Include="Story.fs" />
         <Compile Include="Session.fs" />
         <Compile Include="Program.fs" />

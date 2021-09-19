@@ -84,7 +84,7 @@ export async function getStory(id: string, cancelToken?: CancelToken): Promise<S
 }
 
 export async function setActiveStory(id: string, storyId: string): Promise<Session> {
-    return axios.post<Session>(`/api/sessions/${id}/activestory`, { id: storyId }).then((r) => r.data);
+    return axios.post<Session>(`/api/sessions/${id}/activestory/${storyId}`).then((r) => r.data);
 }
 
 export async function vote(id: string, card: string): Promise<Story> {

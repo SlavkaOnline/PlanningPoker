@@ -65,21 +65,9 @@ type EventsTests(server: RealServerFixture) =
 
             let! user = Helper.login apiClient "test"
 
-            let connection =
-                HubConnectionBuilder()
-                    .WithUrl(
-                        $"%s{apiClient.BaseAddress.ToString()}events",
-                        fun options ->
-                            options.AccessTokenProvider <- (fun _ -> Task.FromResult user.Token)
-                            options.Transports <- HttpTransportType.WebSockets
-                            options.SkipNegotiation <- true
-                    )
-                    .Build()
-
+            let! connection = Helper.createWebSocketConnection apiClient user.Token
 
             let! session = Helper.createSession apiClient user.Token "Session"
-
-            do! connection.StartAsync() |> Async.AwaitTask
 
             let! subscription =
                 connection.StreamAsChannelAsync<_>("Session", session.Id, 0)
@@ -101,21 +89,9 @@ type EventsTests(server: RealServerFixture) =
 
             let! user = Helper.login apiClient "test"
 
-            let connection =
-                HubConnectionBuilder()
-                    .WithUrl(
-                        $"%s{apiClient.BaseAddress.ToString()}events",
-                        fun options ->
-                            options.AccessTokenProvider <- (fun _ -> Task.FromResult user.Token)
-                            options.Transports <- HttpTransportType.WebSockets
-                            options.SkipNegotiation <- true
-                    )
-                    .Build()
-
+            let! connection = Helper.createWebSocketConnection apiClient user.Token
 
             let! session = Helper.createSession apiClient user.Token "Session"
-
-            do! connection.StartAsync() |> Async.AwaitTask
 
             let! subscription =
                 connection.StreamAsChannelAsync<_>("Session", session.Id, 0)
@@ -145,21 +121,10 @@ type EventsTests(server: RealServerFixture) =
 
             let! user = Helper.login apiClient "test"
 
-            let connection =
-                HubConnectionBuilder()
-                    .WithUrl(
-                        $"%s{apiClient.BaseAddress.ToString()}events",
-                        fun options ->
-                            options.AccessTokenProvider <- (fun _ -> Task.FromResult user.Token)
-                            options.Transports <- HttpTransportType.WebSockets
-                            options.SkipNegotiation <- true
-                    )
-                    .Build()
+            let! connection = Helper.createWebSocketConnection apiClient user.Token
 
             //action 1 Started
             let! session = Helper.createSession apiClient user.Token "Session"
-
-            do! connection.StartAsync() |> Async.AwaitTask
 
             //action 3 "ParticipantAdded"
             let! subscription =
@@ -211,21 +176,10 @@ type EventsTests(server: RealServerFixture) =
 
             let! user = Helper.login apiClient "test"
 
-            let connection =
-                HubConnectionBuilder()
-                    .WithUrl(
-                        $"%s{apiClient.BaseAddress.ToString()}events",
-                        fun options ->
-                            options.AccessTokenProvider <- (fun _ -> Task.FromResult user.Token)
-                            options.Transports <- HttpTransportType.WebSockets
-                            options.SkipNegotiation <- true
-                    )
-                    .Build()
+            let! connection = Helper.createWebSocketConnection apiClient user.Token
 
             //action 1 Started
             let! session = Helper.createSession apiClient user.Token "Session"
-
-            do! connection.StartAsync() |> Async.AwaitTask
 
            //action 2 "ParticipantAdded"
             let! subscription =
@@ -271,20 +225,9 @@ type EventsTests(server: RealServerFixture) =
 
             let! user = Helper.login apiClient "test"
 
-            let connection =
-                HubConnectionBuilder()
-                    .WithUrl(
-                        $"%s{apiClient.BaseAddress.ToString()}events",
-                        fun options ->
-                            options.AccessTokenProvider <- (fun _ -> Task.FromResult user.Token)
-                            options.Transports <- HttpTransportType.WebSockets
-                            options.SkipNegotiation <- true
-                    )
-                    .Build()
-
+            let! connection = Helper.createWebSocketConnection apiClient user.Token
             let! session = Helper.createSession apiClient user.Token "Session"
 
-            do! connection.StartAsync() |> Async.AwaitTask
             //action1 StoryConfigured
             let! s = Helper.addStoryToSession apiClient user.Token session { CreateStory.Title = "Story 1"; CardsId = cardsId; CustomCards = [||] }
             let! ses = Helper.addStoryToSession apiClient user.Token s { CreateStory.Title = "Story 2"; CardsId = cardsId; CustomCards = [||] }
@@ -302,6 +245,8 @@ type EventsTests(server: RealServerFixture) =
                        |> AsyncSeq.iterAsync(fun e -> eventsBuffer.Writer.WriteAsync(e).AsTask() |> Async.AwaitTask)
             let complete _ = eventsBuffer.Writer.Complete();
             Async.StartWithContinuations (subs, complete, complete, complete)
+
+            do! Async.Sleep(1000)
 
             //action2  ActiveSet
             do! Helper.setActiveStory apiClient user.Token session.Id storyId
@@ -340,3 +285,45 @@ type EventsTests(server: RealServerFixture) =
             test <@ events = [|1,"StoryConfigured"; 2,"ActiveSet"; 3,"Voted"; 4,"StoryClosed"; 5,"Paused"; 6,"ActiveSet"; 7,"Cleared"; 8,"Paused" |] @>
             test <@ s.Version = 8 @>
         }
+
+    [<Fact>]
+    let ``The workflow add group, move Participant, remove group works fine``() = async {
+
+            use apiClient = new HttpClient()
+            do apiClient.BaseAddress <- Uri(url)
+
+            let! user = Helper.login apiClient "test"
+
+            let! connection = Helper.createWebSocketConnection apiClient user.Token
+            let! session = Helper.createSession apiClient user.Token "Session"
+
+            let! subscription =
+                connection.StreamAsChannelAsync<EventsDeliveryHub.Event>("Session", session.Id, 0)
+                |> Async.AwaitTask
+
+            let eventsBuffer = Channel.CreateUnbounded<EventsDeliveryHub.Event>()
+            let subs =  subscription.ReadAllAsync()
+                       |> AsyncSeq.ofAsyncEnum
+                       |> AsyncSeq.iterAsync(fun e -> eventsBuffer.Writer.WriteAsync(e).AsTask() |> Async.AwaitTask)
+            let complete _ = eventsBuffer.Writer.Complete();
+            Async.StartWithContinuations (subs, complete, complete, complete)
+
+            do! Async.Sleep(1000)
+
+            let! sessionWithGroup = Helper.addGroup apiClient user.Token session.Id "group"
+            let group = sessionWithGroup.Groups |> Array.find (fun g -> g.Id <> session.DefaultGroupId)
+            do! Helper.moveParticipantToGroup apiClient user.Token session.Id user.Id group.Id |> Async.Ignore
+            let! s = Helper.removeGroup apiClient user.Token session.Id group.Id
+
+            do! Async.Sleep(1000)
+            do! connection.StopAsync() |> Async.AwaitTask
+
+            let events = eventsBuffer.Reader.ReadAllAsync()
+                         |> AsyncSeq.ofAsyncEnum
+                         |> AsyncSeq.toArraySynchronously
+                         |> Array.map(fun e -> (e.Order, e.Type))
+
+            test <@ events = [|1,"Started"; 2,"ParticipantAdded"; 3,"GroupAdded"; 4,"ParticipantMovedToGroup"; 5,"GroupRemoved" |] @>
+            test <@ s.Version = 5 @>
+
+            }
