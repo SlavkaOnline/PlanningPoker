@@ -106,3 +106,7 @@ export async function clearStory(id: string): Promise<Story> {
 export async function getCards(): Promise<readonly Cards[]> {
     return axios.get<readonly Cards[]>(`/api/Sessions/cards_types`).then((r) => r.data);
 }
+
+export async function addGroup(id: string, name: string): Promise<Session> {
+    return axios.post<Session>(`/api/sessions/${id}/groups`, { name: name }).then((r) => r.data);
+}

@@ -1,22 +1,31 @@
 import React, { useEffect, useState } from 'react';
 import { useSession } from '../contexts/session-context';
 import { useStory } from '../contexts/story-context';
-import { Avatar, Typography } from '@material-ui/core';
+import { Dialog, Tooltip, Typography } from '@material-ui/core';
+import GroupAddIcon from '@material-ui/icons/GroupAdd';
 import styles from '../styles/users-list.module.scss';
-import StarIcon from '@material-ui/icons/Star';
+
+import { UsersGroup } from './users-group';
+import { CreateGroupWizard } from './create-group-wizard';
+import { CreateGroupDialog } from './create-group-dialog';
 
 export const UsersList = () => {
     const { session } = useSession();
     const { story } = useStory();
 
-    function checkVote(userId: string) {
-        return story.voted.includes(userId);
+    const [open, setOpen] = useState(false);
+
+    function closeCreateDialog() {
+        setOpen(false);
     }
 
     return (
         <div className={styles.wrapper}>
             <div className={styles.title}>
                 <Typography variant="h6">Users</Typography>
+                <Tooltip title={'Create a new group'}>
+                    <GroupAddIcon className={styles.groups} onClick={() => setOpen(true)} />
+                </Tooltip>
                 <div className={styles.panel}>
                     <div>votes/users</div>
                     <div className={styles.numbers}>
@@ -25,16 +34,16 @@ export const UsersList = () => {
                 </div>
             </div>
             <div className={styles.list}>
-                {session.participants.map((p) => (
-                    <div className={styles.item} key={p.id}>
-                        <Avatar src={p.picture} />
-                        <div className={styles.name + '  ' + (checkVote(p.id) ? styles.voted : styles.novoted)}>
-                            {p.name}
-                            {p.id === session.ownerId ? <StarIcon className={styles.star} /> : <></>}
-                        </div>
-                    </div>
+                {session.groups.map((g) => (
+                    <UsersGroup
+                        key={g.id}
+                        group={g}
+                        participants={session.participants.filter((p) => p.groupId === g.id)}
+                        isVisibleHeader={true}
+                    />
                 ))}
             </div>
+            <CreateGroupDialog open={open} onClose={closeCreateDialog} />
         </div>
     );
 };

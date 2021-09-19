@@ -45,7 +45,9 @@ module EventsDeliveryHub =
             <| JsonConvert.SerializeObject(
                 {| id = %participant.User.Id
                    name = participant.User.Name
-                   picture = participant.User.Picture |> Option.defaultValue "" |}
+                   picture = participant.User.Picture |> Option.defaultValue ""
+                   groupId = participant.GroupId
+                    |}
             )
         | Session.Event.ParticipantRemoved participant ->
             create "ParticipantRemoved"

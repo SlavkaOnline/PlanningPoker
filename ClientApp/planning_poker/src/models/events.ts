@@ -1,6 +1,14 @@
-import { Participant } from './models';
+import { Group, Participant } from './models';
 
-export type SessionEventType = 'ActiveStorySet' | 'StoryAdded' | 'ParticipantAdded' | 'ParticipantRemoved' | 'Started';
+export type SessionEventType =
+    | 'ActiveStorySet'
+    | 'StoryAdded'
+    | 'ParticipantAdded'
+    | 'ParticipantRemoved'
+    | 'Started'
+    | 'GroupAdded'
+    | 'GroupRemoved'
+    | 'ParticipantMovedToGroup';
 
 export type Event<TEvent> = Readonly<{
     entityId: string;
@@ -16,9 +24,9 @@ export type StoryAdded = Readonly<{
     id: string;
 }>;
 
-export type ParticipantAdded = Readonly<Participant>;
+export type ParticipantAdded = Participant;
 
-export type ParticipantRemoved = Readonly<Participant>;
+export type ParticipantRemoved = Participant;
 
 export type StoryEventType = 'Voted' | 'VoteRemoved' | 'StoryClosed' | 'StoryConfigured' | 'ActiveSet' | 'Cleared';
 
@@ -26,3 +34,6 @@ export type Voted = Readonly<Participant>;
 export type VoteRemoved = Readonly<Participant>;
 export type ActiveSet = Readonly<{ startedAt: string }>;
 export type Cleared = Readonly<{ startedAt: string }>;
+export type GroupAdded = Group;
+export type GroupRemoved = Group;
+export type ParticipantMovedToGroup = Readonly<{ group: Group; user: Omit<Participant, 'GroupId'> }>;

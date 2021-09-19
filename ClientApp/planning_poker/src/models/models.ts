@@ -9,11 +9,17 @@ export type Participant = Readonly<{
     id: string;
     name: string;
     picture: string;
+    groupId: string;
 }>;
 
 export type VotedParticipant = Readonly<{
     name: string;
     duration: string;
+}>;
+
+export type Group = Readonly<{
+    id: string;
+    name: string;
 }>;
 
 export type Session = Readonly<{
@@ -23,6 +29,8 @@ export type Session = Readonly<{
     ownerId: string;
     ownerName: string;
     activeStory: string | null;
+    defaultGroupId: string;
+    groups: readonly Group[];
     participants: readonly Participant[];
     stories: readonly string[];
 }>;

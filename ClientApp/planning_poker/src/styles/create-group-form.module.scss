@@ -1,0 +1,14 @@
+.wrapper {
+    height: 100%;
+    width: 100%;
+
+    .form_block {
+        display: block;
+
+        &.submit {
+            text-align: right;
+            margin: 10px 0;
+        }
+    }
+
+}

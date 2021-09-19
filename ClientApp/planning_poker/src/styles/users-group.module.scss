@@ -1,0 +1,52 @@
+.wrapper {
+
+    .header {
+
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        border-bottom: 1px solid #000000;
+        padding-bottom: 5px;
+        box-sizing: border-box;
+
+        .name {
+            font-weight: bolder;
+        }
+
+        .settings {
+            display: block;
+            cursor: pointer;
+        }
+    }
+
+
+    .list {
+        padding-top: 5px;
+
+        .item {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin: 10px 0;
+
+            .name {
+                margin-left: 10px;
+                font-size: 18px;
+                display: flex;
+                align-items: center;
+
+                .star {
+                    margin-left: 10px;
+                }
+
+                &.voted {
+                    color: green;
+                }
+                &.novoted {
+                    color: darkred;
+                }
+            }
+        }
+    }
+}

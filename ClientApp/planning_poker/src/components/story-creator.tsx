@@ -129,7 +129,12 @@ export const StoryCreator = () => {
                 Create story
             </Button>
 
-            <Dialog className={styles.dialog} open={open} aria-labelledby="form-dialog-title">
+            <Dialog
+                className={styles.dialog}
+                open={open}
+                onClose={() => setOpen(false)}
+                aria-labelledby="form-dialog-title"
+            >
                 <form>
                     <DialogTitle id="form-dialog-title"> Create New Story</DialogTitle>
                     <DialogContent className={styles.dialog}>

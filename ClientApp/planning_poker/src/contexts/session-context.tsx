@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useEffect, useReducer } from 'react';
-import { Participant, Session } from '../models/models';
+import { Session } from '../models/models';
 import {
     ActiveStorySet,
     Event,
+    GroupAdded,
     ParticipantAdded,
     ParticipantRemoved,
     SessionEventType,
@@ -20,6 +21,8 @@ const defaultSession: Session = {
     ownerId: '',
     ownerName: '',
     participants: [],
+    defaultGroupId: '',
+    groups: [],
     stories: [],
 };
 
@@ -85,6 +88,11 @@ const reducer = (state: Session, action: Action) => {
                     }
                     case 'Started':
                         return { ...state, version: action.event.order };
+
+                    case 'GroupAdded': {
+                        const groupAdded = JSON.parse(action.event.payload) as GroupAdded;
+                        return { ...state, version: action.event.order, groups: [groupAdded, ...state.groups] };
+                    }
 
                     default:
                         return { ...state, version: action.event.order };
