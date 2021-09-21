@@ -67,10 +67,10 @@ module Views =
                   |> List.map snd
                   |> List.map
                       (fun p ->
-                          { Id = %p.User.Id
-                            Name = p.User.Name
-                            Picture = p.User.Picture |> Option.defaultValue ""
-                            GroupId = %p.GroupId
+                          { Id = %p.Id
+                            Name = p.Name
+                            Picture = p.Picture |> Option.defaultValue ""
+                            GroupId = %(session.UserGroupMap.TryFind p.Id |> Option.defaultValue session.DefaultGroupId)
                             })
                   |> List.toArray
               Stories =

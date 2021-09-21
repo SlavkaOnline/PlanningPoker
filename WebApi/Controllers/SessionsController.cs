@@ -112,7 +112,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        [Route("{id:guid}/groups/{groupId:guid}/participant")]
+        [Route("{id:guid}/groups/{groupId:guid}/participants")]
         public async Task<Views.SessionView> MoveParticipantToGroup(Guid id, Guid groupId, Requests.MoveParticipantToGroup request)
         {
             var session = _silo.GetGrain<ISessionGrain>(id);

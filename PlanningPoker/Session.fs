@@ -12,19 +12,15 @@ type Group = {
     Name: string
 }
 
-type Participant = {
-    User: User
-    GroupId: Guid<GroupId>
-}
-
 
 [<CLIMutable>]
 type SessionObj =
     { Title: string
       Owner: User option
-      Participants:  Map<Guid<UserId>,Participant>
+      Participants:  Map<Guid<UserId>,User>
       Groups: Group list
       DefaultGroupId: Guid<GroupId>
+      UserGroupMap: Map<Guid<UserId>, Guid<GroupId>>
       ActiveStory: Guid<StoryId> option
       Stories: Guid<StoryId> list }
 
@@ -34,7 +30,8 @@ type SessionObj =
           Owner = None
           ActiveStory = None
           DefaultGroupId = %defaultGroupId
-          Groups = [{Name = "Others"; Id = %defaultGroupId}]
+          Groups = [{Name = "Others"; Id = %defaultGroupId;}]
+          UserGroupMap = Map.empty
           Participants = Map.empty
           Stories = [] }
 
@@ -61,9 +58,9 @@ module Session =
             | Some g when g.Id = session.DefaultGroupId -> Error Errors.CantRemoveGroup
             | _ -> Error Errors.GroupNotExist
 
-         let validateParticipantExist userId (participants: Map<_,_>) =
+         let validateParticipantExist (userId: Guid<UserId>) (participants: Map<Guid<UserId>,User>) =
              participants.TryFind userId
-             |> Option.map(fun p -> Ok p.User)
+             |> Option.map(Ok)
              |> Option.defaultValue (Error <| Errors.ParticipantNotExist)
 
     type Command =
@@ -79,16 +76,17 @@ module Session =
     type Event =
         | Started of title: string * user: User
         | StoryAdded of story: Guid<StoryId>
-        | ParticipantAdded of participant: Participant
+        | ParticipantAdded of participant: User * GroupId: Guid<GroupId>
         | ParticipantRemoved of participant: User
         | ActiveStorySet of id: Guid<StoryId>
         | GroupAdded of Group
         | GroupRemoved of Group
         | ParticipantMovedToGroup of user: User * group: Group
 
-    let addParticipant participant session =
+    let addParticipant (participant: User) groupId session =
         { session with
-              Participants = session.Participants.Add(participant.User.Id, participant) }
+              Participants = session.Participants.Add(participant.Id, participant)
+              UserGroupMap = session.UserGroupMap.Add(participant.Id, groupId) }
 
     let removeParticipant (participant: User) session =
         { session with
@@ -101,26 +99,25 @@ module Session =
               Stories = story :: session.Stories }
 
     let removeGroup groupId session =
-       let rec updateGroup participants rest =
-           match participants with
+
+       let rec updateGroup map rest =
+           match map with
            | [] -> rest
            | head::tail ->
-               if head.GroupId = groupId then
-                   {head with GroupId = session.DefaultGroupId} :: rest
+               if snd head = groupId then
+                   (fst head, session.DefaultGroupId) :: rest
                else
                    head :: rest
                |> updateGroup tail
 
-       let participants = updateGroup (session.Participants |> Map.toList |> List.map(snd)) List.empty
-                          |> List.rev
+       let userGroupList = session.UserGroupMap |> Map.toList;
 
        { session with
             Groups = session.Groups |> List.filter(fun g -> g.Id <> groupId)
-            Participants = participants
-                           |> List.toSeq
-                           |> Seq.map(fun p -> p.User.Id, p)
-                           |> Map.ofSeq
-                           }
+            UserGroupMap =  updateGroup userGroupList List.empty
+                            |> List.rev
+                            |> Map.ofList
+                          }
 
     let producer (state: SessionObj) command =
         match command with
@@ -132,7 +129,7 @@ module Session =
         | AddParticipant user ->
            match Validation.validateParticipantExist user.Id state.Participants with
            | Ok _ -> Error Errors.ParticipantAlreadyExist
-           | Error _ -> Ok <| ParticipantAdded { User = user; GroupId = state.DefaultGroupId }
+           | Error _ -> Ok <| ParticipantAdded (user, state.UserGroupMap.TryFind user.Id |> Option.defaultValue state.DefaultGroupId)
 
         | RemoveParticipant id ->
             Validation.validateParticipantExist id state.Participants
@@ -172,9 +169,9 @@ module Session =
                   Title = title
                   Owner = Some user }
         | StoryAdded story -> addStory story state
-        | ParticipantAdded user -> addParticipant user state
+        | ParticipantAdded (user, groupId) -> addParticipant user groupId state
         | ParticipantRemoved user -> removeParticipant user state
         | ActiveStorySet id -> { state with ActiveStory = Some id }
         | GroupAdded group -> {state with Groups =  group :: state.Groups}
         | GroupRemoved group -> removeGroup group.Id state
-        | ParticipantMovedToGroup (user, group) -> {state with Participants = state.Participants.Add(user.Id, {GroupId = group.Id; User = user})}
+        | ParticipantMovedToGroup (user, group) ->  {state with UserGroupMap = state.UserGroupMap.Add(user.Id, group.Id)}

@@ -117,6 +117,6 @@ export async function removeGroup(id: string, groupId: string): Promise<Session>
 
 export async function moveParticipantToGroup(id: string, groupId: string, participantId: string): Promise<Session> {
     return axios
-        .post<Session>(`/api/sessions/${id}/groups/${groupId}/participant`, { participantId })
+        .post<Session>(`/api/sessions/${id}/groups/${groupId}/participants`, { participantId })
         .then((r) => r.data);
 }

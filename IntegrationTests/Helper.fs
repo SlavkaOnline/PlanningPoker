@@ -170,4 +170,4 @@ module Helper =
         requestDelete<SessionView> client token $"sessions/%s{id.ToString()}/groups/%s{groupId.ToString()}"
 
     let moveParticipantToGroup (client: HttpClient) (token: string) (id: Guid) (userId: Guid) (groupId: Guid) =
-        requestPost<_,SessionView> client {MoveParticipantToGroup.ParticipantId = userId} token $"sessions/%s{id.ToString()}/groups/%s{groupId.ToString()}"
+        requestPost<_,SessionView> client {MoveParticipantToGroup.ParticipantId = userId} token $"sessions/%s{id.ToString()}/groups/%s{groupId.ToString()}/participants"

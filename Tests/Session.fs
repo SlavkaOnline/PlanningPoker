@@ -20,40 +20,22 @@ let ``The session is created with default group`` () =
     test <@ session.Groups.Head.Id = session.DefaultGroupId @>
 
 [<Fact>]
-let ``The new participant is added to default group`` () =
-    let session = SessionObj.zero ()
-    let user = getUser ()
-
-    let result =
-        Session.producer session
-        <| Session.AddParticipant user
-
-    test
-        <@ match result with
-           | Ok event ->
-               match event with
-               | Session.ParticipantAdded p -> p.User = user
-               | _ -> false
-           | _ -> false @>
-
-
-[<Fact>]
 let ``The Participant is added to the new group``() =
     let session = SessionObj.zero ()
     let user = getUser ()
     let group = { Id = %Guid.NewGuid(); Name = "Group" }
     let handler = Aggregate.createHandler Session.producer Session.reducer
 
-    let participant =
+    let result =
         session
         |> handler (Session.Start("Session", user))
         |> Result.bind(Session.AddGroup(user, group) |> handler)
         |> Result.bind(Session.AddParticipant user |> handler)
         |> Result.bind(Session.MoveParticipantToGroup(user, user.Id, group.Id) |> handler)
-        |> Result.map(fun s ->  s.Participants |> Map.toSeq |> Seq.map snd |> Seq.head )
+        |> Result.map(fun s ->  s.UserGroupMap)
 
-    test <@ match participant with
-            | Ok p -> p.GroupId = group.Id
+    test <@ match result with
+            | Ok userGroupMap -> userGroupMap.[user.Id] = group.Id
             | _ -> false
              @>
 
@@ -67,7 +49,7 @@ let ``The participant from removed group moving to default group``() =
 
     let handler = Aggregate.createHandler Session.producer Session.reducer
 
-    let allParticipantHasDefaultGroupId =
+    let result =
         session
         |> handler (Session.Start("Session", user))
         |> Result.bind(Session.AddGroup(user, group) |> handler )
@@ -78,9 +60,9 @@ let ``The participant from removed group moving to default group``() =
         |> Result.bind(Session.AddParticipant participants.[2] |> handler )
         |> Result.bind(Session.MoveParticipantToGroup(user, participants.[2].Id, group.Id) |> handler )
         |> Result.bind(Session.RemoveGroup(user, group.Id) |> handler )
-        |> Result.map(fun s -> s.Participants |> Map.toSeq |> Seq.map(snd) |> Seq.map(fun p -> p.GroupId = s.DefaultGroupId) |> Seq.reduce (&&))
+        |> Result.map(fun s -> s.UserGroupMap)
 
-    test <@ match allParticipantHasDefaultGroupId with
-            | Ok res -> res
+    test <@ match result with
+            | Ok userGroupMap -> userGroupMap |> Map.toSeq |> Seq.map( fun g -> snd g = session.DefaultGroupId) |> Seq.reduce (&&)
             | _ -> false
              @>

@@ -40,13 +40,13 @@ module EventsDeliveryHub =
         | Session.Event.StoryAdded id ->
             create "StoryAdded"
             <| JsonConvert.SerializeObject({| id = %id |})
-        | Session.Event.ParticipantAdded participant ->
+        | Session.Event.ParticipantAdded (participant, groupId) ->
             create "ParticipantAdded"
             <| JsonConvert.SerializeObject(
-                {| id = %participant.User.Id
-                   name = participant.User.Name
-                   picture = participant.User.Picture |> Option.defaultValue ""
-                   groupId = participant.GroupId
+                {| id = %participant.Id
+                   name = participant.Name
+                   picture = participant.Picture |> Option.defaultValue ""
+                   groupId = groupId
                     |}
             )
         | Session.Event.ParticipantRemoved participant ->
