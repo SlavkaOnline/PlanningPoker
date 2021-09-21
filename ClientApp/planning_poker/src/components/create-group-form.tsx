@@ -29,6 +29,7 @@ export const CreateGroupForm = (props: CreateGroupFormProps) => {
             <form onSubmit={submit}>
                 <FormControl className={styles.form_block}>
                     <TextField
+                        autoFocus
                         fullWidth
                         label="Group name"
                         variant="outlined"

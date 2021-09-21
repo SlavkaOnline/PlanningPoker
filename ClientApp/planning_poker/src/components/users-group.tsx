@@ -8,6 +8,7 @@ import { Avatar, Tooltip } from '@material-ui/core';
 import StarIcon from '@material-ui/icons/Star';
 import { useStory } from '../contexts/story-context';
 import { useSession } from '../contexts/session-context';
+import { UserView } from './user-view';
 
 export type UsersGroupProps = Readonly<{
     group: Group;
@@ -25,25 +26,23 @@ export const UsersGroup = (props: UsersGroupProps) => {
 
     return (
         <div className={styles.wrapper}>
-            <div className={styles.header}>
-                <div className={styles.name}>{props.group.name}</div>
-                <OwnerWrapper
-                    component={
-                        <Tooltip title={'Open group settings'}>
-                            <SettingsIcon className={styles.settings} />
-                        </Tooltip>
-                    }
-                />
-            </div>
+            {props.isVisibleHeader ? (
+                <div className={styles.header}>
+                    <div className={styles.name}>{props.group.name}</div>
+                    <OwnerWrapper
+                        component={
+                            <Tooltip title={'Open group settings'}>
+                                <SettingsIcon className={styles.settings} />
+                            </Tooltip>
+                        }
+                    />
+                </div>
+            ) : (
+                <></>
+            )}
             <div className={styles.list}>
                 {props.participants.map((p) => (
-                    <div className={styles.item} key={p.id}>
-                        <Avatar src={p.picture} />
-                        <div className={styles.name + '  ' + (checkVote(p.id) ? styles.voted : styles.novoted)}>
-                            {p.name}
-                            {p.id === session.ownerId ? <StarIcon className={styles.star} /> : <></>}
-                        </div>
-                    </div>
+                    <UserView key={p.id} user={p} isOwner={p.id === session.ownerId} voted={checkVote(p.id)} />
                 ))}
             </div>
         </div>
