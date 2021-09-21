@@ -110,3 +110,13 @@ export async function getCards(): Promise<readonly Cards[]> {
 export async function addGroup(id: string, name: string): Promise<Session> {
     return axios.post<Session>(`/api/sessions/${id}/groups`, { name: name }).then((r) => r.data);
 }
+
+export async function removeGroup(id: string, groupId: string): Promise<Session> {
+    return axios.delete<Session>(`/api/sessions/${id}/groups/${groupId}`).then((r) => r.data);
+}
+
+export async function moveParticipantToGroup(id: string, groupId: string, participantId: string): Promise<Session> {
+    return axios
+        .post<Session>(`/api/sessions/${id}/groups/${groupId}/participant`, { participantId })
+        .then((r) => r.data);
+}

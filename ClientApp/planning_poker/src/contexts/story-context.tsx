@@ -94,7 +94,7 @@ const reducer = (state: Story, action: Action): Story => {
                         };
                     }
                     default:
-                        return { ...state, version: action.event.order };
+                        return state;
                 }
             }
         default:

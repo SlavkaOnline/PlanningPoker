@@ -11,12 +11,13 @@ export type CreateGroupFormProps = Readonly<{
 }>;
 
 export const CreateGroupForm = (props: CreateGroupFormProps) => {
-    const { session } = useSession();
+    const { session, dispatch } = useSession();
     const [name, setName] = useState('');
 
     function submit(e: any) {
         e.preventDefault();
         addGroup(session.id, name).then((s) => {
+            dispatch({ tag: 'init', session: s });
             const group = s.groups.find((g) => g.name === name);
             if (group) {
                 props.onCreate(group);

@@ -1,0 +1,13 @@
+.wrapper {
+    .title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        .close {
+            cursor: pointer;
+            margin-left: auto;
+            padding: 0 20px;
+        }
+    }
+}

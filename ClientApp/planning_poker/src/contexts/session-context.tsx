@@ -95,7 +95,7 @@ const reducer = (state: Session, action: Action) => {
                     }
 
                     default:
-                        return { ...state, version: action.event.order };
+                        return state;
                 }
             }
         default:

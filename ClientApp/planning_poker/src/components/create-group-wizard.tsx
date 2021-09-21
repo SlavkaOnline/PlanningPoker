@@ -4,6 +4,7 @@ import { CreateGroupForm } from './create-group-form';
 import { Group } from '../models/models';
 
 import styles from '../styles/create-group-wizard.module.scss';
+import { ManageUserGroup } from './manage-user-group';
 
 export const CreateGroupWizard = () => {
     const [activeStep, setActiveStep] = useState(0);
@@ -20,7 +21,11 @@ export const CreateGroupWizard = () => {
             case 0:
                 return <CreateGroupForm onCreate={onGroupCreated} />;
             case 1:
-                return <div>{group?.name}</div>;
+                if (group) {
+                    return <ManageUserGroup group={group} />;
+                } else {
+                    return <></>;
+                }
         }
     }
 
