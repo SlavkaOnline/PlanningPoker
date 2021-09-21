@@ -66,3 +66,26 @@ let ``The participant from removed group moving to default group``() =
             | Ok userGroupMap -> userGroupMap |> Map.toSeq |> Seq.map( fun g -> snd g = session.DefaultGroupId) |> Seq.reduce (&&)
             | _ -> false
              @>
+
+[<Fact>]
+let ``The participant add after removing has old group``() =
+    let session = SessionObj.zero()
+    let user = getUser()
+    let group = { Id = %Guid.NewGuid(); Name = "Group" }
+
+    let handler = Aggregate.createHandler Session.producer Session.reducer
+
+    let result =
+        session
+        |> handler (Session.Start("Session", user))
+        |> Result.bind(Session.AddGroup(user, group) |> handler )
+        |> Result.bind(Session.AddParticipant user |> handler )
+        |> Result.bind(Session.MoveParticipantToGroup(user, user.Id, group.Id) |> handler )
+        |> Result.bind(Session.RemoveParticipant user.Id |> handler )
+        |> Result.bind(Session.AddParticipant user |> handler )
+        |> Result.map(fun s -> s.UserGroupMap)
+
+    test <@ match result with
+            | Ok userGroupMap -> userGroupMap.[user.Id] = group.Id
+            | _ -> false
+             @>
