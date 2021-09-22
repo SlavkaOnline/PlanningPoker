@@ -22,9 +22,19 @@ type VoteResult = { Percent: float; Voters: VotedUser array; }
 
 type ActiveStory = { Votes: Map<User, Vote>; }
 
+type StatisticsGroup = {
+    Id: Guid
+    Participants: Guid<UserId> array
+}
+
+type Statistics = {
+    Id: Guid option
+    Result: Map<Card, VoteResult> * Card
+}
+
 type ClosedStory =
     { Result: string<CardValue>
-      Statistics: Map<Card, VoteResult>
+      Statistics: Statistics array
       FinishedAt: DateTime }
 
 type StoryState =
@@ -80,7 +90,7 @@ module Story =
 
     type Command =
         | Configure of user: User * title: string * cards: Cards
-        | CloseStory of user: User * finishedAt: DateTime
+        | CloseStory of user: User * finishedAt: DateTime * statisticsGroups: StatisticsGroup array
         | Vote of user: User * Card: Card * VotedAt: DateTime
         | RemoveVote of user: User
         | SetActive of user: User * startAt: DateTime
@@ -89,7 +99,7 @@ module Story =
 
     type Event =
         | StoryConfigured of user: User * title: string * cards: Cards
-        | StoryClosed of result: string<CardValue> * statistics: Map<Card, VoteResult> * finishedAt: DateTime
+        | StoryClosed of statistics: Statistics array * finishedAt: DateTime
         | Voted of user: User * vote: Vote
         | VoteRemoved of user: User
         | ActiveSet of startedAt: DateTime
@@ -115,12 +125,12 @@ module Story =
         | Started dt -> pausedAt - dt
         | _ -> TimeSpan.Zero
 
-    let calculateStatistics (story: ActiveStory) (Started startedAt) =
-        if (story.Votes.Count = 0) then
+    let calculateStatistics startedAt (votes: Map<User, Vote>) =
+        if (votes.Count = 0) then
             Map.ofArray [| % "", { Percent = 100.0; Voters = [||] } |], % ""
         else
             let stats =
-                story.Votes
+                votes
                 |> Seq.groupBy (fun v -> v.Value.Card)
                 |> Seq.map
                     (fun (card, items) ->
@@ -128,7 +138,7 @@ module Story =
                          { Percent =
                                Math.Round(
                                    (Seq.length items |> float)
-                                   / (story.Votes.Count |> float)
+                                   / (votes.Count |> float)
                                    * 100.0,
                                    1
                                )
@@ -142,6 +152,23 @@ module Story =
                 |> Seq.head
 
             (stats |> Map.ofSeq, fst result)
+
+    let calculateStatisticsForGroups (votes: Map<User, Vote>) (Started startedAt) (statisticsGroup: StatisticsGroup array) =
+        if statisticsGroup.Length = 1 then
+            [| {Id = Some statisticsGroup.[0].Id; Result = calculateStatistics startedAt votes } |]
+        else
+            [|
+                {Id = None; Result = calculateStatistics startedAt votes }
+                for group in statisticsGroup do
+                    let result = votes
+                                |> Map.toArray
+                                |> Array.filter(fun (user, vote) -> Array.contains user.Id group.Participants )
+                                |> Map.ofArray
+                                |> calculateStatistics startedAt
+                    {Id = Some statisticsGroup.[0].Id; Result = result }
+            |]
+
+
 
     let validateCards (cards: Cards) =
         if cards.Length = 0 then
@@ -165,12 +192,12 @@ module Story =
             validateCards cards
             |> Result.map (fun _ -> StoryConfigured(user, title, cards))
 
-        | CloseStory (user, dt) ->
+        | CloseStory (user, dt, statisticsGroups) ->
                     Validation.validateOwnerAccess user state
                     |> Result.bind Validation.validateActiveStoryState
                     |> Result.bind Validation.validateVotesCount
-                    |> Result.map(fun s -> calculateStatistics s state.StartedAt)
-                    |> Result.map(fun stats -> StoryClosed(snd stats, fst stats, dt))
+                    |> Result.map(fun s -> calculateStatisticsForGroups s.Votes state.StartedAt statisticsGroups)
+                    |> Result.map(fun stats -> StoryClosed(stats, dt))
 
         | Vote (user, card, votedAt) ->
            Validation.validateActiveStoryState state
@@ -201,11 +228,11 @@ module Story =
                   Title = title
                   Cards = cards }
 
-        | StoryClosed (result, stats, dt) ->
+        | StoryClosed (stats, dt) ->
             { state with
                   State =
                       ClosedStory
-                          { Result = result
+                          { Result = snd stats.[0].Result
                             Statistics = stats
                             FinishedAt = dt } }
 

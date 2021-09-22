@@ -33,6 +33,12 @@ module Views =
             Name: string
         }
 
+    type StatisticsView =
+        {
+            Id: Nullable<Guid>
+            Result: Dictionary<string, VoteResultView>
+        }
+
     type SessionView =
         { Id: Guid
           Title: string
@@ -89,7 +95,7 @@ module Views =
           IsClosed: bool
           Voted: Guid array
           Result: string
-          Statistics: Dictionary<string, VoteResultView>
+          Statistics: StatisticsView array
           StartedAt: DateTime Nullable
           Duration: string }
         static member create (id: Guid) (version: int32) (story: StoryObj) (user: User) : StoryView =
@@ -105,7 +111,7 @@ module Views =
                       |> Option.map (fun v -> %v.Card)
                       |> Option.defaultValue ""
                   | ClosedStory s ->
-                      s.Statistics
+                      fst s.Statistics.[0].Result
                       |> Map.toSeq
                       |> Seq.filter (fun s -> Array.contains user ((snd s).Voters |> Array.map(fun v -> v.User)))
                       |> Seq.tryHead
@@ -131,7 +137,7 @@ module Views =
                       |> Seq.toArray
                   | ClosedStory s ->
                       seq {
-                          for st in s.Statistics |> Map.toSeq do
+                          for st in fst s.Statistics.[0].Result |> Map.toSeq do
                               let results = snd st
 
                               for v in results.Voters ->
@@ -144,21 +150,26 @@ module Views =
                   match story.State with
                   | ClosedStory s ->
                       s.Statistics
-                      |> Map.toSeq
-                      |> Seq.map
-                          (fun s ->
-                              (%(fst s),
-                               { VoteResultView.Percent = (snd s).Percent
-                                 Voters =
-                                     (snd s).Voters
-                                     |> Array.map
-                                         (fun v ->
-                                             { Name = v.User.Name
-                                               Duration = v.Duration.ToString(@"hh\:mm\:ss") })
-                                     }))
-                      |> dict
-                      |> Dictionary
-                  | _ -> Dictionary()
+                      |> Array.map(fun s ->
+                              {
+                                  StatisticsView.Id = s.Id |> Option.map Nullable |> Option.defaultValue (Unchecked.defaultof<Guid Nullable>)
+                                  Result = fst s.Result
+                                           |> Map.toSeq
+                                           |> Seq.map
+                                                      (fun m ->
+                                                          (%(fst m),
+                                                           { VoteResultView.Percent = (snd m).Percent
+                                                             Voters =
+                                                                 (snd m).Voters
+                                                                 |> Array.map
+                                                                     (fun v ->
+                                                                         { Name = v.User.Name
+                                                                           Duration = v.Duration.ToString(@"hh\:mm\:ss") })
+                                                                 }))
+                                                  |> dict
+                                                  |> Dictionary
+                              })
+                  | _ -> Array.empty
 
               StartedAt =
                   match story.StartedAt with

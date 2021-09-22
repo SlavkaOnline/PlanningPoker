@@ -3,15 +3,16 @@ module Tests.Story
 open System
 open FsCheck.Xunit
 open PlanningPoker.Domain
+open PlanningPoker.Domain.CommonTypes
 open Xunit
 open FSharp.UMX
 
 let private equalFloat (a: float) (b: float) (c: float) = Math.Abs a - b < c
 
 [<Property>]
-let ``Sum of elements of statistics equal 100`` (story: ActiveStory) =
+let ``Sum of elements of statistics equal 100`` (votes: Map<User, Vote>) =
     let sum =
-        fst (Story.calculateStatistics story (Started <| DateTime.UtcNow.AddMinutes(10.0)))
+        fst (Story.calculateStatistics (DateTime.UtcNow.AddMinutes(10.0)) votes)
         |> Map.toSeq
         |> Seq.map snd
         |> Seq.map (fun r -> r.Percent)
@@ -21,9 +22,9 @@ let ``Sum of elements of statistics equal 100`` (story: ActiveStory) =
 
 
 [<Property>]
-let ``The result card of statistics has max percent`` (story: ActiveStory) =
+let ``The result card of statistics has max percent`` (votes: Map<User, Vote>) =
     let stats, card =
-        Story.calculateStatistics story (Started <| DateTime.UtcNow.AddMinutes(10.0))
+        Story.calculateStatistics (DateTime.UtcNow.AddMinutes(10.0)) votes
 
     let maxVote =
         stats
