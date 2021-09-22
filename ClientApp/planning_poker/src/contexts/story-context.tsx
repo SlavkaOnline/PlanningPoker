@@ -42,7 +42,7 @@ const reducer = (state: Story, action: Action): Story => {
                 return state;
             }
         case 'applyEvent':
-            if (state.version > action.event.order) {
+            if (state.version >= action.event.order) {
                 return state;
             } else {
                 switch (action.event.type) {

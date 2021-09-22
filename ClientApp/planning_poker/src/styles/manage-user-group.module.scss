@@ -1,24 +1,49 @@
 $grey: rgba(128, 128, 128, 0.32);
 
 .wrapper {
-    height: 100%;
-    min-height: 300px;
-    max-height: 500px;
-    width: 500px;
+    height: 500px;
+    width: 100%;
+    min-width: 600px;
+    padding: 10px 24px;
+    box-sizing: border-box;
+    display: flex;
+    flex-flow: column;
     overflow: hidden;
+
+    .help {
+        color: $grey;
+        padding-bottom: 5px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        .text {
+            margin-left: 5px;
+            display: block;
+            font-size: 12px;
+        }
+    }
 
     .blocks {
         height: 100%;
         display: flex;
         justify-content: space-between;
+        overflow: hidden;
 
         .block {
             height: 100%;
             width: 100%;
             padding: 5px;
+            display: flex;
+            flex-flow: column;
+            overflow: hidden;
+            box-sizing: border-box;
 
             &:last-child {
                 border-left: 1px solid $grey;
+            }
+            .title {
+                text-align: center;
             }
         }
 
@@ -27,6 +52,7 @@ $grey: rgba(128, 128, 128, 0.32);
             flex-flow: column;
             height: 100%;
             overflow: auto;
+            overflow-x: hidden;
 
             .user {
                 cursor: pointer;

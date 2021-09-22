@@ -17,7 +17,7 @@ export const GeneralDialog = (props: CreateGroupDialogProps) => {
                 <DialogTitle id="simple-dialog-title">{props.title}</DialogTitle>
                 <CloseIcon className={styles.close} onClick={props.onClose} />
             </div>
-            {props.content}
+            <div className={styles.content}>{props.content}</div>
         </Dialog>
     );
 };

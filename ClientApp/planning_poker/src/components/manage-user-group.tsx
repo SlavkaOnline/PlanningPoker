@@ -6,6 +6,7 @@ import { UsersGroup } from './users-group';
 import { UserView } from './user-view';
 import { Typography } from '@material-ui/core';
 import { moveParticipantToGroup } from '../models/Api';
+import HelpIcon from '@material-ui/icons/Help';
 
 export type ManageUserGroupProps = Readonly<{
     group: Group;
@@ -21,9 +22,15 @@ export const ManageUserGroup = (props: ManageUserGroupProps) => {
 
     return (
         <div className={styles.wrapper}>
+            <div className={styles.help}>
+                <HelpIcon />
+                <span className={styles.text}>Click on the user to move </span>
+            </div>
             <div className={styles.blocks}>
                 <div className={styles.block}>
-                    <Typography variant="h6">Users</Typography>
+                    <Typography className={styles.title} variant="h6">
+                        Users
+                    </Typography>
                     <div className={styles.users}>
                         {session.participants
                             .filter((p) => p.groupId !== group.id)
@@ -35,8 +42,18 @@ export const ManageUserGroup = (props: ManageUserGroupProps) => {
                     </div>
                 </div>
                 <div className={styles.block}>
-                    <Typography variant="h6">{group.name}</Typography>
-                    <UsersGroup group={group} isVisibleHeader={false} />
+                    <Typography className={styles.title} variant="h6">
+                        {group.name}
+                    </Typography>
+                    <div className={styles.users}>
+                        {session.participants
+                            .filter((p) => p.groupId === group.id)
+                            .map((p) => (
+                                <div className={styles.user} key={p.id} onClick={() => move(p.id)}>
+                                    <UserView user={p} isOwner={session.ownerId === p.id} voted={false} />
+                                </div>
+                            ))}
+                    </div>
                 </div>
             </div>
         </div>

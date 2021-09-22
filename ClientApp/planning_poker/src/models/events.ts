@@ -36,4 +36,4 @@ export type ActiveSet = Readonly<{ startedAt: string }>;
 export type Cleared = Readonly<{ startedAt: string }>;
 export type GroupAdded = Group;
 export type GroupRemoved = Group;
-export type ParticipantMovedToGroup = Readonly<{ group: Group; user: Omit<Participant, 'GroupId'> }>;
+export type ParticipantMovedToGroup = Readonly<{ group: Group; user: Omit<Participant, 'groupId'> }>;
