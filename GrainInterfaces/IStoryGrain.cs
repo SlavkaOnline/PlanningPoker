@@ -15,7 +15,7 @@ namespace GrainInterfaces
         Task<Views.StoryView> Clear(CommonTypes.User user, DateTime startedAt);
         Task<Views.StoryView> Vote(CommonTypes.User user, string card, DateTime timeStamp);
         Task<Views.StoryView> RemoveVote(CommonTypes.User user);
-        Task<Views.StoryView> Close(CommonTypes.User user, DateTime timeStamp);
+        Task<Views.StoryView> Close(CommonTypes.User user, DateTime timeStamp, Dictionary<Guid, IEnumerable<Guid>> groups);
         Task<Views.StoryView> Pause(CommonTypes.User user, DateTime timeStamp);
     }
 }

@@ -1,10 +1,12 @@
 namespace IntegrationTests
 
 open System
+open System.Collections.Generic
 open System.Net.Http
 open System.Net.Http.Headers
 open System.Text
 open System.Threading.Tasks
+open Gateway
 open Gateway.Requests
 open Gateway.Views
 open Microsoft.AspNetCore.Http.Connections
@@ -157,8 +159,8 @@ module Helper =
     let vote  (client: HttpClient) (token: string) (id: Guid) (card: string) =
         requestPost<_, StoryView> client {Card = card} token $"stories/%s{id.ToString()}/vote"
 
-    let closeStory  (client: HttpClient) (token: string) (id: Guid) =
-        requestPostWithoutBody<StoryView> client token $"stories/%s{id.ToString()}/closed"
+    let closeStory  (client: HttpClient) (token: string) (id: Guid) (arg: CloseStory) =
+        requestPost<_,StoryView> client arg token $"stories/%s{id.ToString()}/closed"
 
     let clearStory  (client: HttpClient) (token: string) (id: Guid)  =
         requestPostWithoutBody<StoryView> client token $"stories/%s{id.ToString()}/cleared"

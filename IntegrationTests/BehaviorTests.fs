@@ -1,8 +1,8 @@
 namespace IntegrationTests
 
+open System.Collections.Generic
 open FSharp.UMX
 open GrainInterfaces
-open Grains
 open PlanningPoker.Domain
 open Xunit
 open FSharp.Control.Tasks
@@ -65,7 +65,9 @@ type BehaviorTests(fixture: ClusterFixture) =
 
             let dt4 = dt1.AddMinutes 15.0
 
-            let! story = storyGrain.Close(user, dt4)
+            let groups = seq {(session.Groups.[0].Id, (session.Participants |> Array.map(fun p -> p.Id) |> Array.toSeq)) } |> dict |> Dictionary
+
+            let! story = storyGrain.Close(user, dt4, groups)
 
             let expected = TimeSpan.FromMinutes(10.).ToString(@"hh\:mm\:ss");
             test <@ story.Duration = expected @>
@@ -103,8 +105,10 @@ type BehaviorTests(fixture: ClusterFixture) =
 
             let dt4 = dt1.AddMinutes 10.0
 
-            let! story = storyGrain.Close(user, dt4)
+            let groups = seq {(session.Groups.[0].Id, (session.Participants |> Array.map(fun p -> p.Id) |> Array.toSeq)) } |> dict |> Dictionary
+
+            let! story = storyGrain.Close(user, dt4, groups)
             let expected = TimeSpan.FromMinutes(5.).ToString(@"hh\:mm\:ss")
-            let duration = story.Statistics.["Card 1"].Voters.[0].Duration
+            let duration = story.Statistics.[0].Result.["Card 1"].Voters.[0].Duration
             test <@ duration = expected @>
         }

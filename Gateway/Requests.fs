@@ -1,6 +1,7 @@
 namespace Gateway
 
 open System
+open System.Collections.Generic
 
 module Requests =
 
@@ -23,3 +24,8 @@ module Requests =
 
     [<CLIMutable>]
     type MoveParticipantToGroup = { ParticipantId: Guid}
+
+    [<CLIMutable>]
+    type CloseStory = {
+        Groups: Dictionary<Guid, IEnumerable<Guid>>
+    }

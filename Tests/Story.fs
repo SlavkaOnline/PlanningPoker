@@ -6,6 +6,7 @@ open PlanningPoker.Domain
 open PlanningPoker.Domain.CommonTypes
 open Xunit
 open FSharp.UMX
+open Swensen.Unquote
 
 let private equalFloat (a: float) (b: float) (c: float) = Math.Abs a - b < c
 
@@ -67,3 +68,44 @@ let ``Array cards shouldn't be empty`` () =
     match Story.validateCards cards with
     | Error e -> e = Errors.CardsHasNotValues
     | Ok _ -> false
+
+
+[<Fact>]
+let ``The closed story for one group has one statistics`` () =
+
+    let stats =
+        Story.calculateStatisticsForGroups
+            Map.empty
+            (Started DateTime.UtcNow)
+            [| { Id = Guid.NewGuid()
+                 Participants = [||] } |]
+
+    test <@ stats.Length = 1 @>
+
+[<Fact>]
+let ``The closed story for more one group has statistics without Id`` () =
+
+    let stats =
+        Story.calculateStatisticsForGroups
+            Map.empty
+            (Started DateTime.UtcNow)
+            [| { Id = Guid.NewGuid()
+                 Participants = [||] }
+               { Id = Guid.NewGuid()
+                 Participants = [||] } |]
+
+    test <@ stats.[0].Id.IsNone @>
+
+[<Property>]
+let ``The closed story for more one group has has one more group`` (groups: StatisticsGroup array) =
+
+    let stats =
+        Story.calculateStatisticsForGroups Map.empty (Started DateTime.UtcNow) groups
+
+    test
+        <@ if groups.Length > 1 then
+               stats.Length - groups.Length = 1
+           else if groups.Length = 1 then
+               stats.Length = groups.Length
+           else
+               stats.Length = 1 @>

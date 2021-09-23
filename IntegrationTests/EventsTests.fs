@@ -1,6 +1,7 @@
 namespace IntegrationTests
 
 open System
+open System.Collections.Generic
 open System.Threading
 open System.Threading.Channels
 open System.Threading.Tasks
@@ -254,13 +255,15 @@ type EventsTests(server: RealServerFixture) =
             //action3 Voted
             do! Helper.vote apiClient user.Token storyId "XXS" |> Async.Ignore
 
+            let groups = seq {(session.Groups.[0].Id, (session.Participants |> Array.map(fun p -> p.Id) |> Array.toSeq)) } |> dict |> Dictionary
+
             //action4 StoryClosed
-            do! Helper.closeStory apiClient user.Token storyId |> Async.Ignore
+            do! Helper.closeStory apiClient user.Token storyId {Groups = groups} |> Async.Ignore
 
             //action5  Paused
             do! Helper.setActiveStory apiClient user.Token session.Id anotherStoryId
             do! Helper.vote apiClient user.Token anotherStoryId "XXS" |> Async.Ignore
-            do! Helper.closeStory apiClient user.Token anotherStoryId |> Async.Ignore
+            do! Helper.closeStory apiClient user.Token anotherStoryId {Groups = groups} |> Async.Ignore
 
             //action6  ActiveSet
             do! Helper.setActiveStory apiClient user.Token session.Id storyId
