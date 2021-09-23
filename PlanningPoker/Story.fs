@@ -196,7 +196,7 @@ module Story =
                     Validation.validateOwnerAccess user state
                     |> Result.bind Validation.validateActiveStoryState
                     |> Result.bind Validation.validateVotesCount
-                    |> Result.map(fun s -> calculateStatisticsForGroups s.Votes state.StartedAt statisticsGroups)
+                    |> Result.map(fun s -> calculateStatisticsForGroups s.Votes state.StartedAt (statisticsGroups |> Array.filter(fun s -> s.Participants.Length > 0)))
                     |> Result.map(fun stats -> StoryClosed(stats, dt))
 
         | Vote (user, card, votedAt) ->
