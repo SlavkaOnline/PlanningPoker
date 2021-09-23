@@ -65,7 +65,8 @@ export const StoryCreator = () => {
         }
     }, [cards]);
 
-    function create() {
+    function create(e: any) {
+        e.preventDefault();
         if (!Object.keys(storyForm.errors).length && storyForm.isModified) {
             setOpen(false);
             createStory(session.id, storyForm.title, storyForm.cardsId, storyForm.customCards).then((s) =>
@@ -135,8 +136,8 @@ export const StoryCreator = () => {
                 onClose={() => setOpen(false)}
                 aria-labelledby="form-dialog-title"
             >
-                <form>
-                    <DialogTitle id="form-dialog-title"> Create New Story</DialogTitle>
+                <form onSubmit={create}>
+                    <DialogTitle id="form-dialog-title">Create New Story</DialogTitle>
                     <DialogContent className={styles.dialog}>
                         <FormControl fullWidth={true}>
                             <FormControl component="fieldset">
@@ -185,7 +186,7 @@ export const StoryCreator = () => {
                         <Button disabled={!storyForm.isModified} onClick={createAndAdd} color="default">
                             Create and Add
                         </Button>
-                        <Button disabled={!storyForm.isModified} onClick={create} color="default">
+                        <Button type={'submit'} disabled={!storyForm.isModified} color="default">
                             Create
                         </Button>
                     </DialogActions>

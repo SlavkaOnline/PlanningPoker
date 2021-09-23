@@ -1,6 +1,7 @@
 module Tests.Story
 
 open System
+open System.Collections.Generic
 open FsCheck.Xunit
 open PlanningPoker.Domain
 open PlanningPoker.Domain.CommonTypes
@@ -109,3 +110,20 @@ let ``The closed story for more one group has has one more group`` (groups: Stat
                stats.Length = groups.Length
            else
                stats.Length = 1 @>
+
+[<Fact>]
+let ``The statistics id equals groups id`` () =
+    let groupsId = [| Guid.NewGuid(); Guid.NewGuid() |]
+
+    let stats =
+        Story.calculateStatisticsForGroups
+            Map.empty
+            (Started DateTime.UtcNow)
+            (groupsId
+             |> Array.map (fun groupId -> { Id = groupId; Participants = [||] }))
+        |> Array.toList
+        |> List.tail
+        |> List.toArray
+        |> Array.map (fun s -> s.Id.Value)
+
+    test <@ groupsId = stats @>

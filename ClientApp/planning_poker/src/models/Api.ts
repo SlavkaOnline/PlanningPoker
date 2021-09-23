@@ -95,8 +95,8 @@ export async function removeVote(id: string): Promise<Story> {
     return axios.delete<Story>(`/api/stories/${id}/vote`).then((r) => r.data);
 }
 
-export async function closeStory(id: string): Promise<Story> {
-    return axios.post<Story>(`/api/stories/${id}/closed`).then((r) => r.data);
+export async function closeStory(id: string, groups: { [key: string]: readonly string[] }): Promise<Story> {
+    return axios.post<Story>(`/api/stories/${id}/closed`, { groups: groups }).then((r) => r.data);
 }
 
 export async function clearStory(id: string): Promise<Story> {

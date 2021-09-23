@@ -165,7 +165,7 @@ module Story =
                                 |> Array.filter(fun (user, vote) -> Array.contains user.Id group.Participants )
                                 |> Map.ofArray
                                 |> calculateStatistics startedAt
-                    {Id = Some statisticsGroup.[0].Id; Result = result }
+                    {Id = Some group.Id; Result = result }
             |]
 
 

@@ -1,9 +1,9 @@
 import React from 'react';
-import { Statistics } from '../models/models';
+import { StatisticsResult } from '../models/models';
 import styles from '../styles/story-results-table.module.scss';
 
 export type StoryResultsTable = Readonly<{
-    statistics: Statistics;
+    statistics: StatisticsResult;
 }>;
 
 export const StoryResultsTable = (props: StoryResultsTable) => {

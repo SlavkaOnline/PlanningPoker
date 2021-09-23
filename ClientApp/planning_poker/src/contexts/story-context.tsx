@@ -18,7 +18,7 @@ const defaultStory: Story = {
     isClosed: false,
     duration: '',
     startedAt: '',
-    statistics: {},
+    statistics: [],
 };
 
 type Init = Readonly<{
@@ -78,7 +78,7 @@ const reducer = (state: Story, action: Action): Story => {
                             ...state,
                             version: action.event.order,
                             isClosed: false,
-                            statistics: {},
+                            statistics: [],
                             result: null,
                             startedAt: cleared.startedAt,
                             userCard: '',
