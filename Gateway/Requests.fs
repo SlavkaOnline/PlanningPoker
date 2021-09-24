@@ -27,5 +27,5 @@ module Requests =
 
     [<CLIMutable>]
     type CloseStory = {
-        Groups: Dictionary<Guid, IEnumerable<Guid>>
+        Groups: Dictionary<Guid, Guid[]>
     }

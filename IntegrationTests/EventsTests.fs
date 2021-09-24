@@ -255,7 +255,7 @@ type EventsTests(server: RealServerFixture) =
             //action3 Voted
             do! Helper.vote apiClient user.Token storyId "XXS" |> Async.Ignore
 
-            let groups = seq {(session.Groups.[0].Id, (session.Participants |> Array.map(fun p -> p.Id) |> Array.toSeq)) } |> dict |> Dictionary
+            let groups = seq {(session.Groups.[0].Id, (session.Participants |> Array.map(fun p -> p.Id))) } |> dict |> Dictionary
 
             //action4 StoryClosed
             do! Helper.closeStory apiClient user.Token storyId {Groups = groups} |> Async.Ignore

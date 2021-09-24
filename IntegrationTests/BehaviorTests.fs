@@ -65,7 +65,7 @@ type BehaviorTests(fixture: ClusterFixture) =
 
             let dt4 = dt1.AddMinutes 15.0
 
-            let groups = seq {(session.Groups.[0].Id, (session.Participants |> Array.map(fun p -> p.Id) |> Array.toSeq)) } |> dict |> Dictionary
+            let groups = seq {session.Groups.[0].Id, (session.Participants |> Array.map(fun p -> p.Id)) } |> dict |> Dictionary
 
             let! story = storyGrain.Close(user, dt4, groups)
 
@@ -105,7 +105,7 @@ type BehaviorTests(fixture: ClusterFixture) =
 
             let dt4 = dt1.AddMinutes 10.0
 
-            let groups = seq {(session.Groups.[0].Id, (session.Participants |> Array.map(fun p -> p.Id) |> Array.toSeq)) } |> dict |> Dictionary
+            let groups = seq {(session.Groups.[0].Id, (session.Participants |> Array.map(fun p -> p.Id) )) } |> dict |> Dictionary
 
             let! story = storyGrain.Close(user, dt4, groups)
             let expected = TimeSpan.FromMinutes(5.).ToString(@"hh\:mm\:ss")
