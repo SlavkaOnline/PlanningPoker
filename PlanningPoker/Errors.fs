@@ -10,10 +10,13 @@ type Errors =
     | StoryIsClosed
     | StoryIsNotClosed
     | StoryHasNotVotes
-    | VotesIsNotExist
+    | VoteIsNotExist
     | UnexpectedCardValue
     | CardsHasDuplicatesValues
     | CardsHasNotValues
+    | GroupAlreadyExist
+    | GroupNotExist
+    | CantRemoveGroup
     static member ConvertToExnMessage =
         function
         | UnauthorizedAccess -> "Only the creator can perform this action"
@@ -26,6 +29,9 @@ type Errors =
         | UnexpectedCardValue -> "Unexpected card value"
         | CardsHasDuplicatesValues -> "Cards has duplicates values"
         | CardsHasNotValues -> "Cards hasn't values"
-        | VotesIsNotExist -> "Votes isn't exist"
+        | VoteIsNotExist -> "Vote isn't exist"
+        | GroupAlreadyExist -> "The group with the same name already exists"
+        | GroupNotExist -> "The group not found"
+        | CantRemoveGroup -> "The group can't be removed"
 
     static member RaiseDomainExn err = raise(PlanningPokerDomainException <| Errors.ConvertToExnMessage err)

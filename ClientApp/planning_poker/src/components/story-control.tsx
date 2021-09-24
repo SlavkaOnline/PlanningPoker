@@ -3,13 +3,22 @@ import { useStory } from '../contexts/story-context';
 import { clearStory, closeStory } from '../models/Api';
 import styles from '../styles/story-control.module.scss';
 import { Button } from '@material-ui/core';
+import { useSession } from '../contexts/session-context';
 
 export const StoryControl = () => {
+    const { session } = useSession();
     const { story, dispatch: dispatchStory } = useStory();
 
     function flipCards() {
+        const groups = session.groups
+            .map((g) => g.id)
+            .reduce((agg, groupId) => {
+                agg[groupId] = session.participants.filter((p) => p.groupId === groupId).map((p) => p.id);
+                return agg;
+            }, {} as { [key: string]: readonly string[] });
+
         if (story.id) {
-            closeStory(story.id).then((s) => dispatchStory({ tag: 'init', story: s }));
+            closeStory(story.id, groups).then((s) => dispatchStory({ tag: 'init', story: s }));
         }
     }
 

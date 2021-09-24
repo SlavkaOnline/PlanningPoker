@@ -74,6 +74,10 @@ export const StoryPlayground = () => {
         }
     }, [story.isClosed]);
 
+    function getTitle(groupId: string | null): string {
+        return groupId !== null ? (session.groups.find((g) => g.id === groupId) || null)?.name || '' : 'Results';
+    }
+
     return !story.id || session.stories.length == 0 ? (
         <div>Please select the story or create a new one</div>
     ) : (
@@ -88,7 +92,18 @@ export const StoryPlayground = () => {
                 </div>
             </div>
             <div className={styles.playground}>
-                {!story.isClosed ? <Cards cardsTypes={story.cards} /> : <StoryResult />}
+                {!story.isClosed ? (
+                    <Cards cardsTypes={story.cards} />
+                ) : (
+                    story.statistics.map((s) => (
+                        <StoryResult
+                            key={s.id || '0'}
+                            statistics={s}
+                            duration={story.duration}
+                            title={getTitle(s.id)}
+                        />
+                    ))
+                )}
             </div>
         </div>
     );

@@ -9,11 +9,17 @@ export type Participant = Readonly<{
     id: string;
     name: string;
     picture: string;
+    groupId: string;
 }>;
 
 export type VotedParticipant = Readonly<{
     name: string;
     duration: string;
+}>;
+
+export type Group = Readonly<{
+    id: string;
+    name: string;
 }>;
 
 export type Session = Readonly<{
@@ -23,12 +29,19 @@ export type Session = Readonly<{
     ownerId: string;
     ownerName: string;
     activeStory: string | null;
+    defaultGroupId: string;
+    groups: readonly Group[];
     participants: readonly Participant[];
     stories: readonly string[];
 }>;
 
-export type Statistics = Readonly<{
+export type StatisticsResult = Readonly<{
     [key: string]: VoteResult;
+}>;
+
+export type Statistics = Readonly<{
+    id: string | null;
+    result: StatisticsResult;
 }>;
 
 export type Story = Readonly<{
@@ -44,7 +57,7 @@ export type Story = Readonly<{
     result: string | null;
     startedAt: string;
     duration: string;
-    statistics: Statistics;
+    statistics: readonly Statistics[];
 }>;
 
 export type VoteResult = Readonly<{

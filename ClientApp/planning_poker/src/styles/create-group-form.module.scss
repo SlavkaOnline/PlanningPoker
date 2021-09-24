@@ -1,0 +1,16 @@
+.wrapper {
+    height: 100%;
+    width: 100%;
+    padding: 0 24px;
+    box-sizing: border-box;
+
+    .form_block {
+        display: block;
+
+        &.submit {
+            text-align: right;
+            margin: 10px 0;
+        }
+    }
+
+}

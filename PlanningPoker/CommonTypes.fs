@@ -7,9 +7,6 @@ module CommonTypes =
     [<Measure>]
     type UserId
 
-    [<Measure>]
-    type ObjectId
-
     type User = {
         Id: Guid<UserId>
         Name: string

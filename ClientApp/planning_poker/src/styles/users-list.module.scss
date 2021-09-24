@@ -7,12 +7,20 @@ $grey: rgba(128, 128, 128, 0.32);
 
     .title {
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-start;
+        align-items: center;
         border-bottom: 1px solid $grey;
         margin-bottom: 10px;
+
+        .groups {
+            display: block;
+            margin-left: 10px;
+            cursor: pointer;
+        }
     }
 
     .panel {
+        margin-left: auto;
         padding: 5px 0;
         display: flex;
         justify-content: start;
@@ -26,29 +34,5 @@ $grey: rgba(128, 128, 128, 0.32);
         height: 100%;
         overflow: auto;
 
-        .item {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            margin: 10px 0;
-
-            .name {
-                margin-left: 10px;
-                font-size: 18px;
-                display: flex;
-                align-items: center;
-
-                .star {
-                    margin-left: 10px;
-                }
-
-                &.voted {
-                    color: green;
-                }
-                &.novoted {
-                    color: darkred;
-                }
-            }
-        }
     }
 }

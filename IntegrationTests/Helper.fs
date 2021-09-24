@@ -1,11 +1,16 @@
 namespace IntegrationTests
 
 open System
+open System.Collections.Generic
 open System.Net.Http
 open System.Net.Http.Headers
 open System.Text
+open System.Threading.Tasks
+open Gateway
 open Gateway.Requests
 open Gateway.Views
+open Microsoft.AspNetCore.Http.Connections
+open Microsoft.AspNetCore.SignalR.Client
 open Microsoft.Extensions.Hosting
 open Newtonsoft.Json
 open WebApi.Application
@@ -55,6 +60,26 @@ module Helper =
             return JsonConvert.DeserializeObject<'TResult>(content)
         }
 
+    let requestDelete<'TResult>
+        (client: HttpClient)
+        (token: string)
+        (path: string)
+        : Async<'TResult> =
+        async {
+            let request = new HttpRequestMessage()
+            request.RequestUri <- Uri($"%s{client.BaseAddress.ToString()}api/%s{path}")
+            request.Method <- HttpMethod.Delete
+            request.Headers.Authorization <- AuthenticationHeaderValue("Bearer", token)
+
+            let! response = client.SendAsync(request) |> Async.AwaitTask
+            response.EnsureSuccessStatusCode() |> ignore
+            let! content =
+                response.Content.ReadAsStringAsync()
+                |> Async.AwaitTask
+
+            return JsonConvert.DeserializeObject<'TResult>(content)
+        }
+
     let requestPostWithoutBody<'TResult>
         (client: HttpClient)
         (token: string)
@@ -92,6 +117,21 @@ module Helper =
             return JsonConvert.DeserializeObject<'TResult>(content)
         }
 
+    let createWebSocketConnection (client: HttpClient) (token: string) = async {
+         let connection =
+                HubConnectionBuilder()
+                    .WithUrl(
+                        $"%s{client.BaseAddress.ToString()}events",
+                        fun options ->
+                            options.AccessTokenProvider <- (fun _ -> Task.FromResult token)
+                            options.Transports <- HttpTransportType.WebSockets
+                            options.SkipNegotiation <- true
+                    )
+                    .Build()
+         do! connection.StartAsync() |> Async.AwaitTask
+         return connection
+         }
+
     let createSession (client: HttpClient) (token: string) (title: string) =
         requestPost<_, SessionView> client { CreateSession.Title = title } token "sessions"
 
@@ -108,11 +148,10 @@ module Helper =
 
 
     let setActiveStory (client: HttpClient) (token: string) (sessionId: Guid) (id: Guid) =
-        requestPost<_, _>
+        requestPostWithoutBody<_>
                     client
-                    { SetActiveStory.Id = id }
                     token
-                    $"sessions/%s{sessionId.ToString()}/activestory"
+                    $"sessions/%s{sessionId.ToString()}/activestory/%s{id.ToString()}"
 
     let getSession  (client: HttpClient) (token: string) (id: Guid) =
         requestGet<SessionView> client token $"sessions/%s{id.ToString()}"
@@ -120,8 +159,17 @@ module Helper =
     let vote  (client: HttpClient) (token: string) (id: Guid) (card: string) =
         requestPost<_, StoryView> client {Card = card} token $"stories/%s{id.ToString()}/vote"
 
-    let closeStory  (client: HttpClient) (token: string) (id: Guid) =
-        requestPostWithoutBody<StoryView> client token $"stories/%s{id.ToString()}/closed"
+    let closeStory  (client: HttpClient) (token: string) (id: Guid) (arg: CloseStory) =
+        requestPost<_,StoryView> client arg token $"stories/%s{id.ToString()}/closed"
 
     let clearStory  (client: HttpClient) (token: string) (id: Guid)  =
         requestPostWithoutBody<StoryView> client token $"stories/%s{id.ToString()}/cleared"
+
+    let addGroup (client: HttpClient) (token: string) (id: Guid) (name: string) =
+        requestPost<_, SessionView> client { CreateGroup.Name = name } token $"sessions/%s{id.ToString()}/groups"
+
+    let removeGroup (client: HttpClient) (token: string) (id: Guid) (groupId: Guid) =
+        requestDelete<SessionView> client token $"sessions/%s{id.ToString()}/groups/%s{groupId.ToString()}"
+
+    let moveParticipantToGroup (client: HttpClient) (token: string) (id: Guid) (userId: Guid) (groupId: Guid) =
+        requestPost<_,SessionView> client {MoveParticipantToGroup.ParticipantId = userId} token $"sessions/%s{id.ToString()}/groups/%s{groupId.ToString()}/participants"

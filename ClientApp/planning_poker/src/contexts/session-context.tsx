@@ -1,9 +1,12 @@
 import React, { createContext, useContext, useEffect, useReducer } from 'react';
-import { Participant, Session } from '../models/models';
+import { Session } from '../models/models';
 import {
     ActiveStorySet,
     Event,
+    GroupAdded,
+    GroupRemoved,
     ParticipantAdded,
+    ParticipantMovedToGroup,
     ParticipantRemoved,
     SessionEventType,
     StoryAdded,
@@ -20,6 +23,8 @@ const defaultSession: Session = {
     ownerId: '',
     ownerName: '',
     participants: [],
+    defaultGroupId: '',
+    groups: [],
     stories: [],
 };
 
@@ -45,7 +50,7 @@ const reducer = (state: Session, action: Action) => {
                 return state;
             }
         case 'applyEvent':
-            if (state.version > action.event.order) {
+            if (state.version >= action.event.order) {
                 return state;
             } else {
                 switch (action.event.type) {
@@ -86,8 +91,37 @@ const reducer = (state: Session, action: Action) => {
                     case 'Started':
                         return { ...state, version: action.event.order };
 
+                    case 'GroupAdded': {
+                        const groupAdded = JSON.parse(action.event.payload) as GroupAdded;
+                        return { ...state, version: action.event.order, groups: [groupAdded, ...state.groups] };
+                    }
+
+                    case 'GroupRemoved': {
+                        const groupRemoved = JSON.parse(action.event.payload) as GroupRemoved;
+                        return {
+                            ...state,
+                            version: action.event.order,
+                            participants: state.participants.map((p) =>
+                                p.groupId === groupRemoved.id ? { ...p, groupId: state.defaultGroupId } : p,
+                            ),
+                            groups: state.groups.filter((g) => g.id !== groupRemoved.id),
+                        };
+                    }
+                    case 'ParticipantMovedToGroup': {
+                        const participantMovedToGroup = JSON.parse(action.event.payload) as ParticipantMovedToGroup;
+                        return {
+                            ...state,
+                            version: action.event.order,
+                            participants: state.participants.map((p) =>
+                                p.id === participantMovedToGroup.user.id
+                                    ? { ...p, groupId: participantMovedToGroup.group.id }
+                                    : p,
+                            ),
+                        };
+                    }
+
                     default:
-                        return { ...state, version: action.event.order };
+                        return state;
                 }
             }
         default:

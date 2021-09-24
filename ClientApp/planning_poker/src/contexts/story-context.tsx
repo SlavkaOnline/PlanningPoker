@@ -18,7 +18,7 @@ const defaultStory: Story = {
     isClosed: false,
     duration: '',
     startedAt: '',
-    statistics: {},
+    statistics: [],
 };
 
 type Init = Readonly<{
@@ -42,7 +42,7 @@ const reducer = (state: Story, action: Action): Story => {
                 return state;
             }
         case 'applyEvent':
-            if (state.version > action.event.order) {
+            if (state.version >= action.event.order) {
                 return state;
             } else {
                 switch (action.event.type) {
@@ -78,7 +78,7 @@ const reducer = (state: Story, action: Action): Story => {
                             ...state,
                             version: action.event.order,
                             isClosed: false,
-                            statistics: {},
+                            statistics: [],
                             result: null,
                             startedAt: cleared.startedAt,
                             userCard: '',
@@ -94,7 +94,7 @@ const reducer = (state: Story, action: Action): Story => {
                         };
                     }
                     default:
-                        return { ...state, version: action.event.order };
+                        return state;
                 }
             }
         default:

@@ -84,7 +84,7 @@ export async function getStory(id: string, cancelToken?: CancelToken): Promise<S
 }
 
 export async function setActiveStory(id: string, storyId: string): Promise<Session> {
-    return axios.post<Session>(`/api/sessions/${id}/activestory`, { id: storyId }).then((r) => r.data);
+    return axios.post<Session>(`/api/sessions/${id}/activestory/${storyId}`).then((r) => r.data);
 }
 
 export async function vote(id: string, card: string): Promise<Story> {
@@ -95,8 +95,8 @@ export async function removeVote(id: string): Promise<Story> {
     return axios.delete<Story>(`/api/stories/${id}/vote`).then((r) => r.data);
 }
 
-export async function closeStory(id: string): Promise<Story> {
-    return axios.post<Story>(`/api/stories/${id}/closed`).then((r) => r.data);
+export async function closeStory(id: string, groups: { [key: string]: readonly string[] }): Promise<Story> {
+    return axios.post<Story>(`/api/stories/${id}/closed`, { groups: groups }).then((r) => r.data);
 }
 
 export async function clearStory(id: string): Promise<Story> {
@@ -105,4 +105,18 @@ export async function clearStory(id: string): Promise<Story> {
 
 export async function getCards(): Promise<readonly Cards[]> {
     return axios.get<readonly Cards[]>(`/api/Sessions/cards_types`).then((r) => r.data);
+}
+
+export async function addGroup(id: string, name: string): Promise<Session> {
+    return axios.post<Session>(`/api/sessions/${id}/groups`, { name: name }).then((r) => r.data);
+}
+
+export async function removeGroup(id: string, groupId: string): Promise<Session> {
+    return axios.delete<Session>(`/api/sessions/${id}/groups/${groupId}`).then((r) => r.data);
+}
+
+export async function moveParticipantToGroup(id: string, groupId: string, participantId: string): Promise<Session> {
+    return axios
+        .post<Session>(`/api/sessions/${id}/groups/${groupId}/participants`, { participantId })
+        .then((r) => r.data);
 }

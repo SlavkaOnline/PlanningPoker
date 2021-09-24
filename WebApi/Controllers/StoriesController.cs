@@ -49,10 +49,10 @@ namespace WebApi.Controllers
 
         [HttpPost]
         [Route("closed")]
-        public async Task<Views.StoryView> Close(Guid id)
+        public async Task<Views.StoryView> Close(Guid id, Requests.CloseStory request)
         {
             var story = silo.GetGrain<IStoryGrain>(id);
-            return await story.Close(HttpContext.User.GetDomainUser(), DateTime.UtcNow);
+            return await story.Close(HttpContext.User.GetDomainUser(), DateTime.UtcNow, request.Groups);
         }
 
         [HttpPost]

@@ -10,6 +10,7 @@ open Gateway.Views
 open GrainInterfaces
 open Microsoft.AspNetCore.SignalR
 open Newtonsoft.Json
+open Newtonsoft.Json.Serialization
 open Orleans
 open Orleans.Streams
 open PlanningPoker.Domain
@@ -17,6 +18,11 @@ open System.Security.Claims
 open PlanningPoker.Domain.CommonTypes
 
 module EventsDeliveryHub =
+
+    let private jsonSerializerSettings = JsonSerializerSettings()
+    jsonSerializerSettings.ContractResolver <-  CamelCasePropertyNamesContractResolver()
+
+    let private toJson arg = JsonConvert.SerializeObject(arg, jsonSerializerSettings)
 
     type Event =
         { EntityId: Guid
@@ -36,24 +42,45 @@ module EventsDeliveryHub =
         match domainEvent.Payload with
         | Session.Event.ActiveStorySet id ->
             create "ActiveStorySet"
-            <| JsonConvert.SerializeObject({| id = %id |})
+            <| toJson {| id = %id |}
         | Session.Event.StoryAdded id ->
             create "StoryAdded"
-            <| JsonConvert.SerializeObject({| id = %id |})
-        | Session.Event.ParticipantAdded participant ->
+            <| toJson{| id = %id |}
+
+        | Session.Event.ParticipantAdded (participant, groupId) ->
             create "ParticipantAdded"
-            <| JsonConvert.SerializeObject(
+            <| toJson
                 {| id = %participant.Id
                    name = participant.Name
-                   picture = participant.Picture |> Option.defaultValue "" |}
-            )
+                   picture = participant.Picture |> Option.defaultValue ""
+                   groupId = groupId
+                    |}
+
         | Session.Event.ParticipantRemoved participant ->
             create "ParticipantRemoved"
-            <| JsonConvert.SerializeObject(
+            <| toJson
                 {| id = %participant.Id
                    name = participant.Name |}
-            )
         | Session.Event.Started _ -> create "Started" ""
+
+        | Session.Event.GroupAdded group ->
+            create "GroupAdded"
+            <| toJson
+                {|
+                  id = group.Id
+                  name = group.Name |}
+        | Session.Event.GroupRemoved group ->
+            create "GroupRemoved"
+            <| toJson
+                  {| id = group.Id
+                     name = group.Name |}
+
+        | Session.Event.ParticipantMovedToGroup(user, group) ->
+            create "ParticipantMovedToGroup"
+            <| toJson
+                {|
+                  group = group
+                  user = user |}
 
 
     let convertStoryEvent (entityId: Guid) (domainEvent: EventView<Story.Event>) : Event =
@@ -62,20 +89,20 @@ module EventsDeliveryHub =
         match domainEvent.Payload with
         | Story.Event.Voted (user, _) ->
             create "Voted"
-            <| JsonConvert.SerializeObject({| id = %user.Id; name = user.Name |})
+            <| toJson {| id = %user.Id; name = user.Name |}
         | Story.Event.VoteRemoved user ->
             create "VoteRemoved"
-            <| JsonConvert.SerializeObject({| id = %user.Id; name = user.Name |})
+            <| toJson{| id = %user.Id; name = user.Name |}
         | Story.Event.StoryClosed _ -> create "StoryClosed" ""
         | Story.Event.StoryConfigured _ -> create "StoryConfigured" ""
         | Story.Event.ActiveSet dt ->
             create "ActiveSet"
-            <| JsonConvert.SerializeObject({| startedAt = dt |})
+            <| toJson {| startedAt = dt |}
         | Story.Event.Cleared dt ->
             create "Cleared"
-            <| JsonConvert.SerializeObject({| startedAt = dt |})
+            <| toJson {| startedAt = dt |}
         | Story.Paused duration ->
-            create "Paused" <| JsonConvert.SerializeObject({||})
+            create "Paused" <| toJson {||}
 
 
     type DomainEventHub(client: IClusterClient) =
@@ -117,20 +144,20 @@ module EventsDeliveryHub =
                         |> Seq.tryLast
                         |> Option.map(fun e -> e.Order)
                         |> Option.defaultValue 0
-                            
+
             return
                 asyncSeq {
                                for e in events do
                                     e
                                yield! bufferChannel.Reader.ReadAllAsync(cancellationToken)
                                                 |> AsyncSeq.ofAsyncEnum
-                                                |> AsyncSeq.filter (fun e -> e.Order > lastVersion)    
+                                                |> AsyncSeq.filter (fun e -> e.Order > lastVersion)
                         }
                     |> AsyncSeq.map (eventConverter guid)
                     |> AsyncSeq.toAsyncEnum
             }
 
-          
+
 
 
         member this.Session

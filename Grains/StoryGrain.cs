@@ -78,9 +78,9 @@ namespace Grains
             return Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story, user);
         }
 
-        public async Task<Views.StoryView> Close(CommonTypes.User user, DateTime timeStamp)
+        public async Task<Views.StoryView> Close(CommonTypes.User user, DateTime timeStamp, Dictionary<Guid, Guid[]> groups)
         {
-            await _aggregate.Exec(State.Story, Story.Command.NewCloseStory(user, timeStamp));
+            await _aggregate.Exec(State.Story, Story.Command.NewCloseStory(user, timeStamp, groups.Select(kv => new StatisticsGroup(kv.Key, kv.Value.ToArray())).ToArray()));
             return Views.StoryView.create(this.GetPrimaryKey(), Version, State.Story, user);
         }
 

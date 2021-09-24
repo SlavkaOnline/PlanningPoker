@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button, TextField } from '@material-ui/core';
 
 import styles from '../styles/login-form.module.scss';
@@ -15,7 +15,8 @@ export const LoginForm = () => {
     const auth = useAuth();
     const location = useLocation<{ from: { pathname: string } }>();
 
-    async function login() {
+    async function login(e: any) {
+        e.preventDefault();
         await auth.signin(userName);
         const { from } = location.state || receiveRedirect();
         removeRedirect();
@@ -31,9 +32,11 @@ export const LoginForm = () => {
     }
 
     return (
-        <form className={styles.form} noValidate autoComplete="off">
+        <form className={styles.form} onSubmit={login} autoComplete="off">
             <div>
                 <TextField
+                    autoFocus
+                    required
                     className={styles.username}
                     id="outlined-basic"
                     label="User name"
@@ -43,7 +46,7 @@ export const LoginForm = () => {
                 />
             </div>
             <div className={styles.login}>
-                <Button className={styles.button} variant="contained" color="primary" onClick={() => login()}>
+                <Button className={styles.button} variant="contained" color="primary">
                     Login
                 </Button>
                 <GoogleButton
