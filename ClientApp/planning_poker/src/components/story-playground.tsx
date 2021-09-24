@@ -75,7 +75,13 @@ export const StoryPlayground = () => {
     }, [story.isClosed]);
 
     function getTitle(groupId: string | null): string {
-        return groupId !== null ? (session.groups.find((g) => g.id === groupId) || null)?.name || '' : 'Results';
+        if (session.groups.length === 1 && story.statistics.length === 1 && session.defaultGroupId === groupId) {
+            return 'Results';
+        }
+
+        return groupId !== null
+            ? (session.groups.find((g) => g.id === groupId) || null)?.name || `group_${groupId.substr(0, 4)}`
+            : 'Results';
     }
 
     return !story.id || session.stories.length == 0 ? (
