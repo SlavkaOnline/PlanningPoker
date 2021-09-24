@@ -11,6 +11,11 @@ open Swensen.Unquote
 
 let private equalFloat (a: float) (b: float) (c: float) = Math.Abs a - b < c
 
+let getUser () =
+    { Id = % Guid.NewGuid()
+      Name = ""
+      Picture = Some "" }
+
 [<Property>]
 let ``Sum of elements of statistics equal 100`` (votes: Map<User, Vote>) =
     let sum =
@@ -96,6 +101,29 @@ let ``The closed story for more one group has statistics without Id`` () =
                  Participants = [||] } |]
 
     test <@ stats.[0].Id.IsNone @>
+
+
+[<Fact>]
+let ``The closed story for more one group has statistics without Id with stats for all votes and other by participants count`` () =
+
+    let user1 = getUser(), {Card = %"card1"; VotedAt = DateTime.UtcNow }
+    let user2 = getUser(), {Card = %"card2"; VotedAt = DateTime.UtcNow }
+    let user3 = getUser(), {Card = %"card3"; VotedAt = DateTime.UtcNow }
+
+    let stats =
+        Story.calculateStatisticsForGroups
+            ([|user1; user2; user3|] |> Map.ofArray)
+            (Started DateTime.UtcNow)
+            [| { Id = Guid.NewGuid()
+                 Participants = [| (fst user1).Id |] }
+               { Id = Guid.NewGuid()
+                 Participants = [| (fst user2).Id; (fst user3).Id |] } |]
+
+    test <@ ((fst stats.[0].Result) |> Map.toArray).Length = 3 @>
+    test <@ ((fst stats.[1].Result) |> Map.toArray).Length = 1 @>
+    test <@ ((fst stats.[2].Result) |> Map.toArray).Length = 2 @>
+
+
 
 [<Property>]
 let ``The closed story for more one group has has one more group`` (groups: StatisticsGroup array) =
