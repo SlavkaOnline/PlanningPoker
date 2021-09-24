@@ -19,6 +19,7 @@ export const SessionCreator = () => {
             <div className={styles.title}>
                 <TextField
                     autoFocus
+                    required
                     className={styles.field}
                     id="outlined-basic"
                     label="Title"
@@ -28,7 +29,7 @@ export const SessionCreator = () => {
                 />
             </div>
             <div className={styles.create}>
-                <Button variant="outlined" color="default" type={'submit'} disabled={title.trim().length === 0}>
+                <Button variant="outlined" color="default" type={'submit'}>
                     Create
                 </Button>
             </div>

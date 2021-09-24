@@ -31,6 +31,9 @@ export const StoryResult = (props: StoryResult) => {
                     options={{
                         title: props.title,
                         is3D: true,
+                        titleTextStyle: {
+                            fontSize: 18,
+                        },
                     }}
                 />
             ) : (

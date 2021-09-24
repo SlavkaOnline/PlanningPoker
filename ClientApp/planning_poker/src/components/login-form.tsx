@@ -32,10 +32,11 @@ export const LoginForm = () => {
     }
 
     return (
-        <form className={styles.form} onSubmit={login} noValidate autoComplete="off">
+        <form className={styles.form} onSubmit={login} autoComplete="off">
             <div>
                 <TextField
                     autoFocus
+                    required
                     className={styles.username}
                     id="outlined-basic"
                     label="User name"

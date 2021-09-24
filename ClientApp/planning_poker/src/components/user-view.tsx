@@ -7,14 +7,18 @@ import StarIcon from '@material-ui/icons/Star';
 export type UserViewProps = Readonly<{
     user: Participant;
     isOwner: boolean;
-    voted: boolean;
+    voted: boolean | null;
 }>;
 
 export const UserView = (props: UserViewProps) => {
     return (
         <div className={styles.wrapper}>
             <Avatar src={props.user.picture} />
-            <div className={styles.name + '  ' + (props.voted ? styles.voted : styles.novoted)}>
+            <div
+                className={
+                    styles.name + '  ' + (props.voted !== null ? (props.voted ? styles.voted : styles.novoted) : '')
+                }
+            >
                 {props.user.name}
                 {props.isOwner ? <StarIcon className={styles.star} /> : <></>}
             </div>

@@ -36,7 +36,7 @@ export const ManageUserGroup = (props: ManageUserGroupProps) => {
                             .filter((p) => p.groupId !== group.id)
                             .map((p) => (
                                 <div className={styles.user} key={p.id} onClick={() => move(p.id)}>
-                                    <UserView user={p} isOwner={session.ownerId === p.id} voted={false} />
+                                    <UserView user={p} isOwner={session.ownerId === p.id} voted={null} />
                                 </div>
                             ))}
                     </div>
@@ -50,7 +50,7 @@ export const ManageUserGroup = (props: ManageUserGroupProps) => {
                             .filter((p) => p.groupId === group.id)
                             .map((p) => (
                                 <div className={styles.user} key={p.id} onClick={() => move(p.id)}>
-                                    <UserView user={p} isOwner={session.ownerId === p.id} voted={false} />
+                                    <UserView user={p} isOwner={session.ownerId === p.id} voted={null} />
                                 </div>
                             ))}
                     </div>

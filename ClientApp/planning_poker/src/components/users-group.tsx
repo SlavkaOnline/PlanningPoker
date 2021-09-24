@@ -49,7 +49,7 @@ export const UsersGroup = (props: UsersGroupProps) => {
                                 ) : (
                                     <></>
                                 )}
-                                <Tooltip title={'Open group settings'}>
+                                <Tooltip title={'Open the group settings'}>
                                     <SettingsIcon className={styles.action} onClick={() => setOpen(true)} />
                                 </Tooltip>
                             </div>

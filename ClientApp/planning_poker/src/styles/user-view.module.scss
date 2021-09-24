@@ -5,20 +5,22 @@
     margin: 10px 0;
 
     .name {
-      margin-left: 10px;
-      font-size: 18px;
-      display: flex;
-      align-items: center;
-
-      .star {
         margin-left: 10px;
-      }
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        color: grey;
 
-      &.voted {
-        color: green;
-      }
-      &.novoted {
-        color: darkred;
-      }
+        .star {
+            margin-left: 10px;
+        }
+
+        &.voted {
+            color: green;
+        }
+
+        &.novoted {
+            color: darkred;
+        }
     }
 }
