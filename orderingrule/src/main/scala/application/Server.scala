@@ -1,19 +1,17 @@
 package application
 
 import actors._
-import akka.actor.typed.{ActorRef, ActorSystem, Behavior, PostStop}
+import akka.actor.typed.{ActorSystem, Behavior, PostStop}
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
-import scala.util.{Failure, Success}
-import akka.util.Timeout
 
+import scala.util.{Failure, Success}
 import scala.concurrent.Future
-import scala.concurrent.duration.DurationInt
 import application.routing._
 
-import scala.io.StdIn
 
+case class User(name: String)
 
 object Server {
 
@@ -25,14 +23,12 @@ object Server {
     def apply(host: String, port: Int): Behavior[Message] = Behaviors.setup { ctx =>
 
         implicit val system = ctx.system
-
         val sessionsStore = ctx.spawn(SessionStore(), "sessions")
         ctx.watch(sessionsStore)
 
-        implicit val timeout: Timeout = 5.seconds
-        val routes = new SessionRoutes(sessionsStore)
+        val routes = new SessionRoutes(sessionsStore).routes
 
-        val serverBinding: Future[Http.ServerBinding] = Http().newServerAt(host, port).bind(routes.routes)
+        val serverBinding: Future[Http.ServerBinding] = Http().newServerAt(host, port).bind(routes)
         ctx.pipeToSelf(serverBinding) {
             case Success(binding) => Started(binding)
             case Failure(ex)      => StartFailed(ex)
@@ -77,5 +73,4 @@ object Server {
 object Main extends App {
     val system: ActorSystem[Server.Message] =
         ActorSystem(Server("localhost", 8081), "BuildJobsServer")
-    StdIn.readLine()
 }
