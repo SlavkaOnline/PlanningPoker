@@ -27,16 +27,17 @@ class SessionRoutes(sessionsStore: ActorRef[SessionStore.Message])(implicit syst
     implicit val timeout: Timeout = 5.seconds
     val owner: UUID = UUID.randomUUID()
 
-    val createSessionRoute: Endpoint[Requests.CreateSession, Unit, SessionView, Any] =
-        endpoint.post.in("sessions").in(jsonBody[Requests.CreateSession]).out(jsonBody[SessionView])
+    val createSessionRoute: Endpoint[Requests.CreateSession, Unit, Session, Any] =
+        endpoint.post.in("sessions").in(jsonBody[Requests.CreateSession]).out(jsonBody[Session])
 
-    val addStoryRoute: Endpoint[(UUID, Requests.AddStory), Unit, SessionView, Any] =
-        endpoint.post.in("sessions").in(sttp.tapir.path[UUID]).in("stories").in(jsonBody[Requests.AddStory]).out(jsonBody[SessionView])
+    val addStoryRoute: Endpoint[(UUID, Requests.AddStory), Unit, Session, Any] =
+        endpoint.post.in("sessions").in(sttp.tapir.path[UUID]).in("stories").in(jsonBody[Requests.AddStory]).out(jsonBody[Session])
 
     val createSessionHandler: Route =
         AkkaHttpServerInterpreter().toRoute(createSessionRoute){request => {
-            val f = sessionsStore.ask(SessionStore.AddSession(UUID.randomUUID(), owner, request.name, _))
-            f.flatMap(r => Future.successful(Right(sessionViewMap(r))))
+            for {
+                result <- sessionsStore.ask(SessionStore.AddSession(UUID.randomUUID(), owner, request.name, _))
+            } yield Right(sessionViewMap(result))
         }}
 
     val addStoryHandler: Route =
