@@ -14,10 +14,13 @@ libraryDependencies ++= Seq(
     "com.typesafe.akka" %% "akka-persistence-typed" % AkkaVersion,
     "com.typesafe.akka" %% "akka-persistence-testkit" % AkkaVersion % Test,
     "com.typesafe.akka" %% "akka-http" % AkkaHttpVersion,
-    "com.fasterxml.jackson.module" % "jackson-module-scala_2.13" % "2.12.5",
-    "com.softwaremill.sttp.tapir" %% "tapir-akka-http-server" % "0.19.0-M10",
+    "com.softwaremill.sttp.tapir" %% "tapir-akka-http-server" % "0.18.3",
     "ch.qos.logback" % "logback-classic" % "1.2.6",
-    "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % "0.19.0-M10"
+    "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % "0.18.3",
+    "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-akka-http" % "0.18.3" exclude("com.typesafe.akka", "akka-stream_2.12"),
+    "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs" % "0.18.3",
+    "com.softwaremill.sttp.tapir" %% "tapir-redoc-akka-http" % "0.18.3",
+    "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml" % "0.18.3"
 )
 
 

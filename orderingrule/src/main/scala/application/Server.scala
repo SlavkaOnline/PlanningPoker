@@ -5,13 +5,15 @@ import akka.actor.typed.{ActorSystem, Behavior, PostStop}
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
-
+import akka.http.scaladsl.server.Directives._
 import scala.util.{Failure, Success}
 import scala.concurrent.Future
 import application.routing._
+import sttp.tapir._
+import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
+import sttp.tapir.openapi.circe.yaml._
+import sttp.tapir.swagger.akkahttp.SwaggerAkka
 
-
-case class User(name: String)
 
 object Server {
 
@@ -26,9 +28,15 @@ object Server {
         val sessionsStore = ctx.spawn(SessionStore(), "sessions")
         ctx.watch(sessionsStore)
 
-        val routes = new SessionRoutes(sessionsStore).routes
+        var sessionsRoutes = new SessionRoutes(sessionsStore);
+        val routes = sessionsRoutes.routes
 
-        val serverBinding: Future[Http.ServerBinding] = Http().newServerAt(host, port).bind(routes)
+        val myEndpoints: Seq[Endpoint[_, _, _, _]] = Seq(sessionsRoutes.createSessionRoute, sessionsRoutes.addStoryRoute)
+        val docsAsYaml: String = OpenAPIDocsInterpreter().toOpenAPI(myEndpoints, "My App", "1.0").toYaml
+        // add to your akka routes
+        val swagger = new SwaggerAkka(docsAsYaml).routes
+
+        val serverBinding: Future[Http.ServerBinding] = Http().newServerAt(host, port).bind(routes ~ swagger)
         ctx.pipeToSelf(serverBinding) {
             case Success(binding) => Started(binding)
             case Failure(ex)      => StartFailed(ex)

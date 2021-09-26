@@ -2,17 +2,16 @@ package application.routing
 
 import actors._
 import akka.actor.typed.{ActorRef, ActorSystem}
-import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import akka.http.scaladsl.server.Directives._
 import application.Requests
 import application.Views._
-
+import akka.http.scaladsl.server.Directives._
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 import sttp.tapir.{Endpoint, endpoint}
-import sttp.tapir.server.akkahttp.{AkkaHttpServerInterpreter, serverSentEventsBody}
+import sttp.tapir.server.akkahttp.{AkkaHttpServerInterpreter}
 import sttp.tapir._
+import akka.http.scaladsl.server.Route
 import sttp.tapir.json.circe._
 import sttp.tapir.generic.auto._
 import io.circe.generic.auto._
@@ -32,7 +31,7 @@ class SessionRoutes(sessionsStore: ActorRef[SessionStore.Message])(implicit syst
         endpoint.post.in("sessions").in(jsonBody[Requests.CreateSession]).out(jsonBody[SessionView])
 
     val addStoryRoute: Endpoint[(UUID, Requests.AddStory), Unit, SessionView, Any] =
-        endpoint.post.in("sessions").in(sttp.tapir.path[UUID]).in(jsonBody[Requests.AddStory]).out(jsonBody[SessionView])
+        endpoint.post.in("sessions").in(sttp.tapir.path[UUID]).in("stories").in(jsonBody[Requests.AddStory]).out(jsonBody[SessionView])
 
     val createSessionHandler: Route =
         AkkaHttpServerInterpreter().toRoute(createSessionRoute){request => {
