@@ -101,7 +101,7 @@ module EventsDeliveryHub =
         | Story.Event.Cleared dt ->
             create "Cleared"
             <| toJson {| startedAt = dt |}
-        | Story.Paused duration ->
+        | Story.Paused _ ->
             create "Paused" <| toJson {||}
 
 

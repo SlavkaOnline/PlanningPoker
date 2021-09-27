@@ -82,7 +82,7 @@ let ``The closed story for one group has one statistics`` () =
     let stats =
         Story.calculateStatisticsForGroups
             Map.empty
-            (Started DateTime.UtcNow)
+            DateTime.UtcNow
             [| { Id = Guid.NewGuid()
                  Participants = [||] } |]
 
@@ -94,7 +94,7 @@ let ``The closed story for more one group has statistics without Id`` () =
     let stats =
         Story.calculateStatisticsForGroups
             Map.empty
-            (Started DateTime.UtcNow)
+            DateTime.UtcNow
             [| { Id = Guid.NewGuid()
                  Participants = [||] }
                { Id = Guid.NewGuid()
@@ -113,7 +113,7 @@ let ``The closed story for more one group has statistics without Id with stats f
     let stats =
         Story.calculateStatisticsForGroups
             ([|user1; user2; user3|] |> Map.ofArray)
-            (Started DateTime.UtcNow)
+            DateTime.UtcNow
             [| { Id = Guid.NewGuid()
                  Participants = [| (fst user1).Id |] }
                { Id = Guid.NewGuid()
@@ -129,7 +129,7 @@ let ``The closed story for more one group has statistics without Id with stats f
 let ``The closed story for more one group has has one more group`` (groups: StatisticsGroup array) =
 
     let stats =
-        Story.calculateStatisticsForGroups Map.empty (Started DateTime.UtcNow) groups
+        Story.calculateStatisticsForGroups Map.empty DateTime.UtcNow groups
 
     test
         <@ if groups.Length > 1 then
@@ -146,7 +146,7 @@ let ``The statistics id equals groups id`` () =
     let stats =
         Story.calculateStatisticsForGroups
             Map.empty
-            (Started DateTime.UtcNow)
+            DateTime.UtcNow
             (groupsId
              |> Array.map (fun groupId -> { Id = groupId; Participants = [||] }))
         |> Array.toList
