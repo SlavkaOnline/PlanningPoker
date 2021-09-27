@@ -3,7 +3,6 @@ package application.endpoints
 import domain.Player
 import sttp.model.StatusCode
 import sttp.tapir._
-import sttp.tapir.server.{PartialServerEndpoint, ServerEndpoint, ServerEndpointInParts}
 
 import java.util.UUID
 import scala.concurrent.Future
@@ -16,8 +15,7 @@ trait BaseEndpoints {
     def currentEndpoint: String
     val error: EndpointOutput[Error] = stringBody.and(statusCode).mapTo[Error]
     val baseEndpoint: Endpoint[String, Error, Unit, Any] =
-        endpoint.in(
-            header[String]("Authorization"))
+        endpoint.in(auth.bearer[String]())
             .in("api")
             .in("1.0")
             .in(currentEndpoint)
