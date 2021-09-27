@@ -3,7 +3,7 @@ package domain
 import java.util.UUID
 
 
-case class Player(id: String, name: String, picture: String)
+case class Player(id: UUID, name: String, picture: String)
 
 sealed trait SessionEvent
 

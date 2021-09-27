@@ -6,9 +6,11 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.server.Directives._
+
 import scala.util.{Failure, Success}
 import scala.concurrent.Future
-import application.routing._
+import application.endpoints._
+import application.handlers.SessionHandlers
 import sttp.tapir._
 import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
 import sttp.tapir.openapi.circe.yaml._
@@ -28,15 +30,15 @@ object Server {
         val sessionsStore = ctx.spawn(SessionStore(), "sessions")
         ctx.watch(sessionsStore)
 
-        var sessionsRoutes = new SessionRoutes(sessionsStore);
-        val routes = sessionsRoutes.routes
+        val sessionsRoutes = new SessionHandlers(sessionsStore);
 
-        val myEndpoints: Seq[Endpoint[_, _, _, _]] = Seq(sessionsRoutes.createSessionRoute, sessionsRoutes.addStoryRoute)
+
+        val myEndpoints: Seq[Endpoint[_, _, _, _]] = Seq(SessionEndpoints.createSession.endpoint, SessionEndpoints.addStory.endpoint)
         val docsAsYaml: String = OpenAPIDocsInterpreter().toOpenAPI(myEndpoints, "My App", "1.0").toYaml
-        // add to your akka routes
-        val swagger = new SwaggerAkka(docsAsYaml).routes
+        val swagger = new SwaggerAkka(docsAsYaml)
 
-        val serverBinding: Future[Http.ServerBinding] = Http().newServerAt(host, port).bind(routes ~ swagger)
+
+        val serverBinding: Future[Http.ServerBinding] = Http().newServerAt(host, port).bind(sessionsRoutes.routes ~ swagger.routes)
         ctx.pipeToSelf(serverBinding) {
             case Success(binding) => Started(binding)
             case Failure(ex)      => StartFailed(ex)
