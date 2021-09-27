@@ -177,9 +177,9 @@ module Views =
                   | _ -> Unchecked.defaultof<DateTime Nullable>
 
               Duration =
-                  match (story.State, story.StartedAt)  with
-                  | ClosedStory(c), Started s -> (c.FinishedAt - s).ToString(@"hh\:mm\:ss")
-                  | _ -> Unchecked.defaultof<string>
+                  match story.State  with
+                  | ClosedStory _ -> story.Duration.ToString(@"hh\:mm\:ss")
+                  | _ -> TimeSpan.Zero.ToString(@"hh\:mm\:ss")
 
             }
 

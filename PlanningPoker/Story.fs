@@ -55,6 +55,7 @@ type StoryObj =
       State: StoryState
       Cards: Cards
       StartedAt: StartedState
+      Duration: TimeSpan
     }
 
     static member zero =
@@ -64,6 +65,7 @@ type StoryObj =
           State = StoryState.createActive
           Cards = [||]
           StartedAt = NotStarted
+          Duration = TimeSpan.Zero
         }
 
 [<RequireQualifiedAccess>]
@@ -230,6 +232,11 @@ module Story =
 
         | StoryClosed (stats, dt) ->
             { state with
+                  Duration =
+                         match state.StartedAt with
+                         | Started s -> dt - s
+                         | StartedState.Paused s -> s
+                         | NotStarted -> TimeSpan.Zero
                   State =
                       ClosedStory
                           { Result = snd stats.[0].Result
