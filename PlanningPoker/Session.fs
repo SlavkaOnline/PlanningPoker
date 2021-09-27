@@ -89,10 +89,9 @@ module Session =
               UserGroupMap = session.UserGroupMap.Add(participant.Id, groupId) }
 
     let removeParticipant (participant: User) session =
+        let participants = session.Participants.Remove participant.Id
         { session with
-              Participants =
-                  session.Participants.Remove participant.Id
-                  }
+              Participants = participants }
 
     let addStory story session =
         { session with
