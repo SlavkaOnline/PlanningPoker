@@ -37,11 +37,16 @@ trait BaseEndpoints {
             picture <- c.downField("picture").as[String]
         } yield Player(id, name, picture)
 
+        try {
+            JwtCirce.validate(token, key, Seq(JwtAlgorithm.HS512))
+            JwtCirce.decode(token, key, Seq(JwtAlgorithm.HS512))
+                .map(v => parse(v.content).flatMap(_.as[Player]))
+                .toEither
+                .joinRight
+                .left.flatMap(_ => Left(Error("Unauthorized", StatusCode.Unauthorized)))
+        } catch {
+            case _: Throwable => Left(Error("Unauthorized", StatusCode.Unauthorized))
+        }
 
-        JwtCirce.decode(token, key, Seq(JwtAlgorithm.HS512))
-            .map(v => parse(v.content).flatMap(_.as[Player]))
-            .toEither
-            .joinRight
-            .left.flatMap(_ => Left(Error("Unauthorized", StatusCode.Unauthorized)))
     }
 }
