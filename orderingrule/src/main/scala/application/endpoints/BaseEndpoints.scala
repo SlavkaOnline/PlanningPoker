@@ -1,15 +1,20 @@
 package application.endpoints
 
 import domain.Player
+import io.circe.{Decoder, HCursor}
 import sttp.model.StatusCode
 import sttp.tapir._
 
 import java.util.UUID
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import pdi.jwt.{JwtAlgorithm, JwtCirce}
+import io.circe.parser._
+
+import scala.util.{Failure, Success}
+
 trait BaseEndpoints {
 
-    private val id = UUID.randomUUID();
     case class AuthToken(token: String)
     case class Error(msg: String, statusCode: StatusCode) extends Exception
     def currentEndpoint: String
@@ -24,9 +29,19 @@ trait BaseEndpoints {
 
 
     def authorize(token: String): Future[Either[Error, Player]] = Future {
-        if (token == "secret")
-            Right(Player(id, "Spock", ""))
-        else
-            Left(Error("Not Access", StatusCode.Unauthorized)) // error code
+        val key = "48427F99-9A59-4506-914A-F826526210AE"
+
+        implicit val decode: Decoder[Player] = (c: HCursor) => for {
+            id <- c.downField("nameid").as[UUID]
+            name <- c.downField("given_name").as[String]
+            picture <- c.downField("picture").as[String]
+        } yield Player(id, name, picture)
+
+
+        JwtCirce.decode(token, key, Seq(JwtAlgorithm.HS512))
+            .map(v => parse(v.content).flatMap(_.as[Player]))
+            .toEither
+            .joinRight
+            .left.flatMap(_ => Left(Error("Unauthorized", StatusCode.Unauthorized)))
     }
 }

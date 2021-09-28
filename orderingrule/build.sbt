@@ -20,7 +20,8 @@ libraryDependencies ++= Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-akka-http" % "0.18.3" exclude("com.typesafe.akka", "akka-stream_2.12"),
     "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs" % "0.18.3",
     "com.softwaremill.sttp.tapir" %% "tapir-redoc-akka-http" % "0.18.3",
-    "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml" % "0.18.3"
+    "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml" % "0.18.3",
+    "com.github.jwt-scala" %% "jwt-circe" % "9.0.1"
 )
 
 

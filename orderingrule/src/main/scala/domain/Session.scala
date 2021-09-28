@@ -12,9 +12,9 @@ final case class PlayerLeft(player: Player) extends SessionEvent
 final case class GameSet(game: UUID) extends SessionEvent
 final case class StoryAdded(story: String) extends SessionEvent
 
-case class Session(id: UUID, owner: UUID, name: String, version: Long, players: List[Player], stories: List[String], game: Option[UUID]) {
+case class Session(id: UUID, owner: Player, name: String, version: Long, players: List[Player], stories: List[String], game: Option[UUID]) {
 
-    private def validationOwner(owner: UUID, playerId: UUID) = Either.cond(owner == playerId, playerId, UnauthorizedAccess)
+    private def validationOwner(owner: Player, playerId: UUID) = Either.cond(owner.id == playerId, playerId, UnauthorizedAccess)
 
     private def validateStoryName(story: String) = Either.cond(story.nonEmpty, story, InvalidStoryName)
 
@@ -32,7 +32,7 @@ case class Session(id: UUID, owner: UUID, name: String, version: Long, players: 
 
 
 object Session {
-    def createDefault(id: UUID, owner: UUID, name: String): Session = Session(id, owner, name, 0, List.empty, List.empty, None)
+    def createDefault(id: UUID, owner: Player, name: String): Session = Session(id, owner, name, 0, List.empty, List.empty, None)
 
     def applyEvent(session: Session, event: SessionEvent): Session = {
         event match {
