@@ -11,12 +11,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import pdi.jwt.{JwtAlgorithm, JwtCirce}
 import io.circe.parser._
 
-import scala.util.{Failure, Success}
-
 trait BaseEndpoints {
 
     case class AuthToken(token: String)
     case class Error(msg: String, statusCode: StatusCode) extends Exception
+
     def currentEndpoint: String
     val error: EndpointOutput[Error] = stringBody.and(statusCode).mapTo[Error]
     val baseEndpoint: Endpoint[String, Error, Unit, Any] =
@@ -25,8 +24,6 @@ trait BaseEndpoints {
             .in("1.0")
             .in(currentEndpoint)
             .errorOut(error)
-
-
 
     def authorize(token: String): Future[Either[Error, Player]] = Future {
         val key = "48427F99-9A59-4506-914A-F826526210AE"
@@ -45,8 +42,11 @@ trait BaseEndpoints {
                 .joinRight
                 .left.flatMap(_ => Left(Error("Unauthorized", StatusCode.Unauthorized)))
         } catch {
-            case _: Throwable => Left(Error("Unauthorized", StatusCode.Unauthorized))
+            case e: Throwable => Left(Error("Unauthorized", StatusCode.Unauthorized))
         }
+    }
 
+    def mapping[In, Out](result: Either[domain.Validation, In]) (implicit mapper: In => Out ): Either[Error, Out] = {
+        result.map(mapper).left.map(err => Error(err.errorMessage, StatusCode.BadRequest))
     }
 }

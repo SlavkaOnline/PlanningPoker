@@ -12,15 +12,15 @@ import java.util.UUID
 object SessionActor {
 
     sealed trait Command
-    final case class AddStory(playerId: UUID, story: String, replayTo: ActorRef[Session]) extends Command
+    final case class AddStory(playerId: UUID, story: String, replayTo: ActorRef[Either[Validation, Session]]) extends Command
     final case class GetSnapshot(replayTo: ActorRef[Session]) extends Command
 
 
     val commandHandler: (Session, Command) => Effect[SessionEvent, Session] = { (session, command) =>
         command match {
             case AddStory(playerId, story, replayTo) => session.addStory(playerId, story) match {
-                case Right(event) => Effect.persist(event).thenReply(replayTo)(state => state)
-                case Left(err) => Effect.unhandled
+                case Right(event) => Effect.persist(event).thenReply(replayTo)(state => Right(state))
+                case Left(err) => Effect.unhandled.thenReply(replayTo)(_ => Left(err))
             }
             case GetSnapshot(replayTo) =>
                 Effect.reply(replayTo)(session)

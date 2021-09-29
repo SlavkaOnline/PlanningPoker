@@ -17,16 +17,18 @@ import java.util.UUID
 import scala.concurrent.duration.DurationInt
 import akka.http.scaladsl.server.Route
 import application.endpoints.SessionEndpoints
+import domain.Session
+import sttp.model._
 import sttp.tapir.server.ServerEndpoint
-import sttp.tapir.server.akkahttp._
 
 import scala.concurrent.Future
 
 class SessionHandlers(sessionsStore: ActorRef[SessionStore.Message])(implicit system: ActorSystem[_]) {
 
     implicit val timeout: Timeout = 5.seconds
+    implicit val mapper: Session => Views.Session = sessionViewMap
 
-    val createSessionLogic: ServerEndpoint[(String, Requests.CreateSession), SessionEndpoints.Error, Views.Session, Any, Future] = createSession.andThen {
+    val createSessionLogic: ServerEndpoint[(String, Requests.CreateSession), Error, Views.Session, Any, Future] = createSession.andThen {
         case (player, Requests.CreateSession(name)) => {
             for {
                 result <- sessionsStore.ask(SessionStore.AddSession(UUID.randomUUID(), player, name, _))
@@ -34,12 +36,12 @@ class SessionHandlers(sessionsStore: ActorRef[SessionStore.Message])(implicit sy
         }
     }
 
-    val addStoryLogic: ServerEndpoint[(String, UUID, Requests.AddStory), SessionEndpoints.Error, Views.Session, Any, Future] = addStory.andThen {
+    val addStoryLogic: ServerEndpoint[(String, UUID, Requests.AddStory), Error, Views.Session, Any, Future] = addStory.andThen {
         case (player, (sessionId, Requests.AddStory(name))) => {
             for {
                 session <- sessionsStore.ask(SessionStore.GetSession(sessionId, _))
                 result <- session.ask(SessionActor.AddStory(player.id, name, _))
-            } yield Right(sessionViewMap(result))
+            } yield SessionEndpoints.mapping(result)
         }
     }
 

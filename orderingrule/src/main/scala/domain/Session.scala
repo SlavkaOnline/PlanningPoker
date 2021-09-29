@@ -17,6 +17,7 @@ case class Session(id: UUID, owner: Player, name: String, version: Long, players
     private def validationOwner(owner: Player, playerId: UUID) = Either.cond(owner.id == playerId, playerId, UnauthorizedAccess)
 
     private def validateStoryName(story: String) = Either.cond(story.nonEmpty, story, InvalidStoryName)
+    private def validateDuplicateStoryName(stories: List[String], story: String) = Either.cond(!stories.contains(story), story, StoryAlreadyExists)
 
     def joinPlayer(player: Player): Either[Validation, SessionEvent] = Right(PlayerJoined(player))
 
@@ -27,6 +28,7 @@ case class Session(id: UUID, owner: Player, name: String, version: Long, players
     def addStory(playerId: UUID, story: String): Either[Validation, SessionEvent] = for {
         _ <- validationOwner(owner, playerId)
         story <- validateStoryName(story)
+        story <- validateDuplicateStoryName(stories, story)
     } yield StoryAdded(story)
 }
 
