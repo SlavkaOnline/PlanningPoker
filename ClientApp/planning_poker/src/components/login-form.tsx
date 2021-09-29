@@ -46,7 +46,7 @@ export const LoginForm = () => {
                 />
             </div>
             <div className={styles.login}>
-                <Button className={styles.button} variant="contained" color="primary">
+                <Button type={'submit'} className={styles.button} variant="contained" color="primary">
                     Login
                 </Button>
                 <GoogleButton
