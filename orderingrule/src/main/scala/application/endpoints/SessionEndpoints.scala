@@ -8,7 +8,7 @@ import sttp.tapir._
 import sttp.tapir.json.circe._
 import sttp.tapir.generic.auto._
 import io.circe.generic.auto._
-import sttp.tapir.server.{ServerEndpointInParts}
+import sttp.tapir.server.ServerEndpointInParts
 
 import java.util.UUID
 import scala.concurrent.Future
