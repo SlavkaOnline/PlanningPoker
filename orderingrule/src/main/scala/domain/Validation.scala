@@ -55,3 +55,15 @@ case object UnauthorizedAccess extends Validation {
 case object StoryAlreadyExists extends Validation {
     val errorMessage = "A story with the same name already exists"
 }
+
+case object InvalidMoveDirection extends Validation {
+    val errorMessage = "Invalid move direction"
+}
+
+case object InvalidGameName extends Validation {
+    val errorMessage = "Invalid the game name"
+}
+
+case object GameNotExists extends Validation {
+    val errorMessage = "The game isn't exist"
+}

@@ -21,7 +21,7 @@ object SessionStore {
                 message match {
                     case AddSession(id, owner, name, replayTo) =>
                         val session = Session.createDefault(id, owner, name)
-                        val actor = context.spawn(SessionActor(session), id.toString)
+                        val actor = context.spawn(SessionActor(session, Map.empty), id.toString)
                         replayTo ! session
                         apply(sessions.updated(id, actor))
                     case RemoveSession(id) => apply(sessions.removed(id))

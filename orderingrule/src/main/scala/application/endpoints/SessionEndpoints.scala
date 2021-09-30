@@ -23,4 +23,5 @@ object SessionEndpoints extends BaseEndpoints {
     val addStory: ServerEndpointInParts[Player, (UUID, Requests.AddStory), (String, UUID, Requests.AddStory), Error, Session, Any, Future] =
         baseEndpoint.post.in(sttp.tapir.path[UUID]).in("stories").in(jsonBody[Requests.AddStory]).out(jsonBody[Session]).serverLogicPart(authorize)
 
+    
 }
