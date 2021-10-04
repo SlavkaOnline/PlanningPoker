@@ -35,8 +35,9 @@ axios.interceptors.response.use(
                 saveRedirect({ from: { pathname: history.location.pathname } });
             }
             history.push('/login');
+        } else {
+            alert(error.response.statusText);
         }
-        alert(error.response.statusText);
         return Promise.reject(error);
     },
 );
