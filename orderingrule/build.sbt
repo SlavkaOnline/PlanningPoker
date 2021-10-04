@@ -6,6 +6,8 @@ scalaVersion := "2.13.6"
 val AkkaVersion = "2.6.16"
 val AkkaHttpVersion = "10.2.6"
 
+scalacOptions += "-Ypartial-unification"
+
 libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % "3.2.9" % Test,
     "org.typelevel" %% "cats-core" % "2.6.1",

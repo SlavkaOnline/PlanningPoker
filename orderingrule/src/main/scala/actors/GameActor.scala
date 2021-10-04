@@ -9,7 +9,7 @@ import java.util.UUID
 object GameActor {
 
     sealed trait Command
-    final case class MoveCard(playerId: UUID, cardId: UUID, Direction: String, replayTo: ActorRef[Either[Validation, Game]]) extends Command
+    final case class MoveCard(playerId: UUID, gameId: UUID, cardId: UUID, Direction: String, replayTo: ActorRef[Either[Validation, Game]]) extends Command
     final case class Next(playerId: UUID, replayTo: ActorRef[Either[Validation, Game]]) extends Command
     final case class JoinPlayer(playerId: UUID, replayTo:  ActorRef[Either[Validation, Game]]) extends Command
     final case class LeftPlayer(playerId: UUID, replayTo:  ActorRef[Either[Validation, Game]]) extends Command
@@ -17,8 +17,8 @@ object GameActor {
     def apply(game: Game): Behavior[Command] = {
         Behaviors.receive { (context, cmd)  =>
             cmd match {
-                case MoveCard(playerId, cardId, direction, replayTo) =>
-                    val action = game.moveCard(playerId, cardId, _);
+                case MoveCard(playerId, gameId, cardId, direction, replayTo) =>
+                    val action = game.moveCard(playerId, gameId, cardId, _);
                     val result = direction.toLowerCase match {
                             case "left" => action(MoveDirection.Left)
                             case "right" => action(MoveDirection.Right)

@@ -16,24 +16,26 @@ object SessionActor {
     final case class LeftPlayer(player: Player) extends Command
 
     final case class GetSnapshot(replayTo: ActorRef[Session]) extends Command
-    final case class GetGame(gameId: UUID, replayTo: ActorRef[Either[Validation, ActorRef[GameActor.Command]]]) extends Command
+    final case class GetGame(replayTo: ActorRef[Either[Validation, ActorRef[GameActor.Command]]]) extends Command
 
 
-    def apply(session: Session, games: Map[UUID, ActorRef[GameActor.Command]]): Behavior[Command] = {
+    def apply(session: Session): Behavior[Command] = sessionActor(session, None)
+
+
+    def sessionActor(session: Session, gameActor: Option[ActorRef[GameActor.Command]]): Behavior[Command] = {
         Behaviors.receive { (context, cmd) =>
             cmd match {
                 case AddStory(playerId, story, replayTo) =>
                     replayTo ! session.addStory(playerId, story)
-                    apply(session, games)
+                    sessionActor(session, gameActor)
                 case StartGame(playerId, gameId, name, columnCount, cards, replayTo) =>
 
                     val game = Game.create(gameId, session.owner.id, name, session.players.map(_.id).toArray, columnCount, cards)
                     game match {
                         case Right(game) =>
-                            val actor = context.spawn(GameActor(game), game.name)
-                            val _games = games.updated(game.id, actor)
+                            val actor = context.spawn(GameActor(game), game.id.toString)
                             replayTo ! session.setGame(playerId, gameId)
-                            apply(session, _games)
+                            sessionActor(session, Some(actor))
                         case Left(err) =>
                             replayTo ! Left (err)
                             Behaviors.same
@@ -41,18 +43,18 @@ object SessionActor {
 
                 case JoinPlayer(player) =>
                     session.joinPlayer(player)
-                    apply(session, games)
+                    sessionActor(session, gameActor)
 
                 case LeftPlayer(player) =>
                     session.leftPlayer(player)
-                    apply(session, games)
+                    sessionActor(session, gameActor)
 
                 case GetSnapshot(replayTo) =>
                     replayTo ! session
                     Behaviors.same
 
-                case GetGame(gameId, replayTo) =>
-                    games.get(gameId) match {
+                case GetGame(replayTo) =>
+                    gameActor match {
                         case Some(actor) =>
                             replayTo ! Right (actor)
                             Behaviors.same
