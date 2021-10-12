@@ -5,14 +5,15 @@ import { Cards } from './cards';
 import { useStory } from '../contexts/story-context';
 import { useSession } from '../contexts/session-context';
 import { ISubscription } from '@microsoft/signalr';
-import { ActiveSet, Cleared, Event, StoryEventType, Voted } from '../models/events';
+import { Event, StoryEventType, Voted } from '../models/events';
 import { useHub } from '../contexts/hub-context';
 import { getStory } from '../models/Api';
 import { StoryResult } from './story-result';
 import { useSnackbar } from 'notistack';
 import { OwnerWrapper } from './owner-wrapper';
 import { StoryControl } from './story-control';
-import { clipText } from '../models/utils';
+import TimerIcon from '@material-ui/icons/Timer';
+import AccessAlarmIcon from '@material-ui/icons/AccessAlarm';
 import dayjs from 'dayjs';
 
 export const StoryPlayground = () => {
@@ -92,7 +93,14 @@ export const StoryPlayground = () => {
                 <Typography variant="h5">{story.title}</Typography>
             </div>
             <div className={styles.work_panel}>
-                {!story.isClosed ? <div className={styles.duration}>Duration: {duration}</div> : <></>}
+                {!story.isClosed ? (
+                    <div className={styles.duration}>
+                        <AccessAlarmIcon className={styles.clock} />
+                        <span>{duration}</span>
+                    </div>
+                ) : (
+                    <></>
+                )}
                 <div className={styles.action}>
                     <OwnerWrapper component={StoryControl()} />
                 </div>
