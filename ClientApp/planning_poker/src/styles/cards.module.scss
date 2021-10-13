@@ -15,12 +15,15 @@
 
         .card {
             border: 1px solid grey;
+            font-weight: bolder;
             border-radius: 15%;
             height: 150px;
             width: 100px;
             padding: 10px;
             box-sizing: border-box;
             margin-right: 5px;
+            cursor: pointer;
+            box-shadow: 2px 2px 2px 0 rgba(0, 0, 0, 0.5);
 
             @media screen and (max-height: 900px) {
                 height: 100px;
@@ -48,15 +51,23 @@
 
             &.select {
                 text-decoration: underline;
-                background: lightblue;
                 transform: rotate(5deg);
+                border-color: #178000;
+                color: #178000;
+                .inner {
+                    border-color: #178000;
+                    font-size: 20px;
+                }
             }
 
-            &:hover {
-                cursor: pointer;
-                text-decoration: underline;
-                background: azure;
+            &:not(.select):hover {
+                border-color: grey;
+                color: grey;
                 transform: rotate(5deg);
+
+                .inner {
+                    border-color: grey;
+                }
             }
         }
     }
