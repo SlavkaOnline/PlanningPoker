@@ -5,7 +5,7 @@ import styles from '../styles/session-page.module.scss';
 import { SessionControl } from '../components/session-control';
 import { StoriesTable } from '../components/stories-table';
 import { ISubscription } from '@microsoft/signalr';
-import { Event, ParticipantAdded, ParticipantRemoved, SessionEventType, StoryEventType, Voted } from '../models/events';
+import { Event, ParticipantAdded, ParticipantRemoved, SessionEventType } from '../models/events';
 import { useHub } from '../contexts/hub-context';
 import { useSession } from '../contexts/session-context';
 import { OwnerWrapper } from '../components/owner-wrapper';
@@ -22,17 +22,25 @@ export const SessionPage = () => {
     useEffect(() => {
         let subscriptions: ISubscription<any>;
         if (session.id && hub) {
-            subscriptions = hub.stream('Session', session.id, session.version).subscribe({
-                next: (e: Event<SessionEventType>) => {
-                    dispatch({
-                        tag: 'applyEvent',
-                        event: e,
-                        userId: user?.id || '',
-                    });
-                    handleEvent(e);
-                },
-                complete: () => console.log('complete'),
-                error: (e: any) => console.log(e),
+            const createSubscriptions = () =>
+                hub.stream('Session', session.id, session.version).subscribe({
+                    next: (e: Event<SessionEventType>) => {
+                        dispatch({
+                            tag: 'applyEvent',
+                            event: e,
+                            userId: user?.id || '',
+                        });
+                        handleEvent(e);
+                    },
+                    complete: () => console.log('complete'),
+                    error: (e: any) => console.log(e),
+                });
+
+            subscriptions = createSubscriptions();
+
+            hub.onreconnected((connectionId) => {
+                subscriptions.dispose();
+                subscriptions = createSubscriptions();
             });
         }
         return () => subscriptions?.dispose();

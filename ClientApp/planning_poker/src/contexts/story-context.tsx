@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useReducer } from 'react';
-import { Participant, Story } from '../models/models';
+import { Story } from '../models/models';
 import { ActiveSet, Cleared, Event, StoryEventType, Voted, VoteRemoved } from '../models/events';
 import axios from 'axios';
 import { getStory } from '../models/Api';
@@ -120,7 +120,7 @@ export const ProvideStory = ({ children }: { children: any }) => {
         } else {
             dispatch({ tag: 'init', story: defaultStory });
         }
-    }, [session.activeStory]);
+    }, [session, session.activeStory]);
 
     return <storyContext.Provider value={{ story, dispatch }}>{children}</storyContext.Provider>;
 };

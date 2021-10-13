@@ -26,16 +26,25 @@ export const StoryPlayground = () => {
     useEffect(() => {
         let subscriptions: ISubscription<any>;
         if (story.id && hub) {
-            subscriptions = hub.stream('Story', story.id, story.version).subscribe({
-                next: (e: Event<StoryEventType>) => {
-                    dispatch({
-                        tag: 'applyEvent',
-                        event: e,
-                    });
-                    handleEvent(e);
-                },
-                complete: () => console.log('complete'),
-                error: (e: any) => console.log(e),
+            const createSubscriptions = () => {
+                return hub.stream('Story', story.id, story.version).subscribe({
+                    next: (e: Event<StoryEventType>) => {
+                        dispatch({
+                            tag: 'applyEvent',
+                            event: e,
+                        });
+                        handleEvent(e);
+                    },
+                    complete: () => console.log('complete'),
+                    error: (e: any) => console.log(e),
+                });
+            };
+
+            subscriptions = createSubscriptions();
+
+            hub.onreconnected((connectionId) => {
+                subscriptions.dispose();
+                subscriptions = createSubscriptions();
             });
         }
         return () => subscriptions?.dispose();

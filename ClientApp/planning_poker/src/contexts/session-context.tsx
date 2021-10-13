@@ -14,6 +14,7 @@ import {
 import { getSession } from '../models/Api';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import { useHub } from './hub-context';
 
 const defaultSession: Session = {
     id: '',
@@ -136,7 +137,7 @@ export const sessionContext = createContext<{ session: Session; dispatch: React.
 
 export const ProvideSession = ({ children }: { children: any }) => {
     const [session, dispatch] = useReducer(reducer, defaultSession);
-
+    const hub = useHub();
     const { id } = useParams<{ id: string }>();
 
     useEffect(() => {
