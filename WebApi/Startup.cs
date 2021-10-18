@@ -138,11 +138,13 @@ namespace WebApi
 			services.AddSingleton<CardsTypeProvider>();
 			services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
 			services.AddSwaggerGen(c => { c.SwaggerDoc("v1", new OpenApiInfo {Title = "WebApi", Version = "v1"}); });
+			services.AddHealthChecks();
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
 		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 		{
+			app.UseHealthChecks("/health");
 			if (env.IsDevelopment())
 			{
 				app.UseDeveloperExceptionPage();
@@ -157,7 +159,6 @@ namespace WebApi
 			//app.UseHttpsRedirection();
 			app.UseCors("AllowAll");
 			app.UseRouting();
-
 			app.UseCookiePolicy();
 			app.UseAuthentication();
 			app.UseAuthorization();
@@ -179,7 +180,6 @@ namespace WebApi
 			{
 				endpoints.MapHub<EventsDeliveryHub.DomainEventHub>("/events",
 					options => { options.Transports = HttpTransportType.WebSockets; });
-
 				endpoints.MapControllers();
 			});
 		}
