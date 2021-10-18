@@ -53,22 +53,50 @@ class SessionHandlers(sessionsStore: ActorRef[SessionStore.Message])(implicit sy
         }
     }
 
-    val moveCardLogic: ServerEndpoint[(String, UUID, UUID, UUID, UUID, Requests.MoveCard), SessionEndpoints.Error, StatusCode, Any, Future] = moveCard.andThen {
+    val moveCardLogic: ServerEndpoint[(String, UUID, UUID, UUID, Requests.MoveCard), SessionEndpoints.Error, StatusCode, Any, Future] = moveCard.andThen {
         case (player, (sessionId, gameId, cardId, request)) =>
             for {
                 session <- sessionsStore.ask(SessionStore.GetSession(sessionId, _))
-                game <- session.ask(SessionActor.GetGame)
+                game <- session.ask(SessionActor.GetGame(gameId, _))
                 result <- game match {
-                    case Right(g) => g.ask(GameActor.MoveCard(player.id, gameId, cardId, request.direction, _))
+                    case Right(g) => g.ask(GameActor.MoveCard(player.id, cardId, request.direction, _))
                     case Left(err) => Future.successful(Left(err))
                 }
             } yield result.map(_ => StatusCode.Ok).left.map(err => Error(err.errorMessage, StatusCode.BadRequest))
     }
 
-    val nextPlayerLogic = nextPlayer.andThen {
-        case (player, (se))
+    val nextPlayerLogic: ServerEndpoint[(String, UUID, UUID), SessionEndpoints.Error, Game, Any, Future] = nextPlayer.andThen {
+        case (player, (sessionId, gameId)) =>
+            for {
+                session <- sessionsStore.ask(SessionStore.GetSession(sessionId, _))
+                game <- session.ask(SessionActor.GetGame(gameId, _))
+                result <- game match {
+                    case Right(g) => g.ask(GameActor.Next(player.id, _))
+                    case Left(err) => Future.successful(Left(err))
+                }
+            } yield SessionEndpoints.mapping(result)
     }
 
-    val routes: Route = AkkaHttpServerInterpreter().toRoute(List(createSessionLogic, addStoryLogic))
+    val getSessionLogic: ServerEndpoint[(String, UUID), SessionEndpoints.Error, Session, Any, Future] = getSession.andThen {
+        case (_, sessionId) =>
+        for {
+            session <- sessionsStore.ask(SessionStore.GetSession(sessionId, _))
+            result <- session.ask(SessionActor.Get)
+        } yield SessionEndpoints.mapping(Right(result))
+    }
+
+    val getGameLogic: ServerEndpoint[(String, UUID, UUID), SessionEndpoints.Error, Game, Any, Future] = getGame.andThen {
+        case (_, (sessionId, gameId)) =>
+            for {
+                session <- sessionsStore.ask(SessionStore.GetSession(sessionId, _))
+                game <- session.ask(SessionActor.GetGame(gameId, _))
+                result <- game match {
+                    case Right(g) => g.ask(GameActor.Get).map(Right(_))
+                    case Left(err) => Future.successful(Left(err))
+                }
+            } yield SessionEndpoints.mapping(result)
+    }
+
+    val routes: Route = AkkaHttpServerInterpreter().toRoute(List(createSessionLogic, addStoryLogic, createGameLogic, moveCardLogic, nextPlayerLogic, getSessionLogic, getGameLogic))
 
 }

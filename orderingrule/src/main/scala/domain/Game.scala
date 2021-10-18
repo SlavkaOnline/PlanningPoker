@@ -28,7 +28,7 @@ case class Game(id: UUID, owner: UUID, name:String, columnCount: Int, cards: Has
             case _ => Left(GameFinished)
         }
 
-    def moveCard(playerId: UUID, gameId: UUID, cardId: UUID, direction: MoveDirection.MoveDirection): Either[Validation, Game] = {
+    def moveCard(playerId: UUID, cardId: UUID, direction: MoveDirection.MoveDirection): Either[Validation, Game] = {
         def tryCardMoving(direction: MoveDirection.MoveDirection, card: Card) = {
             direction match {
                 case MoveDirection.Left => if (card.column - 1 >= 0) card.moveLeft() else Left(IncorrectCardMoving)
