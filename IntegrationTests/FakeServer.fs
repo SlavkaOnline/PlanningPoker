@@ -9,10 +9,6 @@ open Xunit
 module FakeServer =
     open Microsoft.AspNetCore.Mvc.Testing
 
-    //    type FakeServerFixture() =
-//            inherit WebApplicationFactory<WebApi.Program>()
-
-
     type RealServerFixture() =
         let host = WebApi.Program.CreateHostBuilder([||])
 

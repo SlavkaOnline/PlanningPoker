@@ -1,5 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "PlanningPoker", "PlanningPoker\PlanningPoker.fsproj", "{B7C985AA-1EAB-46C9-93EA-519369A77940}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Grains", "Grains\Grains.csproj", "{B94CF762-30FA-434F-B115-A6C450BB63D4}"
@@ -54,5 +57,11 @@ Global
 		{935A09D5-F9D2-4C7B-ACC8-62A24A8A3DEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{935A09D5-F9D2-4C7B-ACC8-62A24A8A3DEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{935A09D5-F9D2-4C7B-ACC8-62A24A8A3DEF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B99443E9-A75D-4322-A7F3-EB1CBFF44640}
 	EndGlobalSection
 EndGlobal
