@@ -11,6 +11,7 @@ open Gateway.Requests
 open Gateway.Views
 open Microsoft.AspNetCore.Http.Connections
 open Microsoft.AspNetCore.SignalR.Client
+open Microsoft.AspNetCore.TestHost
 open Microsoft.Extensions.Hosting
 open Newtonsoft.Json
 open WebApi.Application
@@ -19,8 +20,8 @@ open WebApi.Application
 [<RequireQualifiedAccess>]
 module Helper =
 
-    let login (client: HttpClient) (name: string) : Async<AuthUserModel> =
-        async {
+    let login (client: HttpClient) (name: string) : Task<AuthUserModel> =
+        task {
             let user = AuthUserRequest()
             user.Name <- name
             let request = new HttpRequestMessage()
@@ -28,12 +29,11 @@ module Helper =
             request.Method <- HttpMethod.Post
             request.Content <- new StringContent(JsonConvert.SerializeObject(user), Encoding.UTF8, "application/json")
 
-            let! response = client.SendAsync(request) |> Async.AwaitTask
+            let! response = client.SendAsync(request)
             response.EnsureSuccessStatusCode() |> ignore
 
             let! content =
                 response.Content.ReadAsStringAsync()
-                |> Async.AwaitTask
 
             return JsonConvert.DeserializeObject<AuthUserModel>(content)
         }
@@ -43,19 +43,18 @@ module Helper =
         (body: 'TBody)
         (token: string)
         (path: string)
-        : Async<'TResult> =
-        async {
+        : Task<'TResult> =
+        task {
             let request = new HttpRequestMessage()
             request.RequestUri <- Uri($"%s{client.BaseAddress.ToString()}api/%s{path}")
             request.Method <- HttpMethod.Post
             request.Content <- new StringContent(JsonConvert.SerializeObject(body), Encoding.UTF8, "application/json")
             request.Headers.Authorization <- AuthenticationHeaderValue("Bearer", token)
 
-            let! response = client.SendAsync(request) |> Async.AwaitTask
+            let! response = client.SendAsync(request)
             response.EnsureSuccessStatusCode() |> ignore
             let! content =
                 response.Content.ReadAsStringAsync()
-                |> Async.AwaitTask
 
             return JsonConvert.DeserializeObject<'TResult>(content)
         }
@@ -64,18 +63,17 @@ module Helper =
         (client: HttpClient)
         (token: string)
         (path: string)
-        : Async<'TResult> =
-        async {
+        : Task<'TResult> =
+        task {
             let request = new HttpRequestMessage()
             request.RequestUri <- Uri($"%s{client.BaseAddress.ToString()}api/%s{path}")
             request.Method <- HttpMethod.Delete
             request.Headers.Authorization <- AuthenticationHeaderValue("Bearer", token)
 
-            let! response = client.SendAsync(request) |> Async.AwaitTask
+            let! response = client.SendAsync(request)
             response.EnsureSuccessStatusCode() |> ignore
             let! content =
                 response.Content.ReadAsStringAsync()
-                |> Async.AwaitTask
 
             return JsonConvert.DeserializeObject<'TResult>(content)
         }
@@ -84,53 +82,54 @@ module Helper =
         (client: HttpClient)
         (token: string)
         (path: string)
-        : Async<'TResult> =
-        async {
+        : Task<'TResult> =
+        task {
             let request = new HttpRequestMessage()
             request.RequestUri <- Uri($"%s{client.BaseAddress.ToString()}api/%s{path}")
             request.Method <- HttpMethod.Post
             request.Headers.Authorization <- AuthenticationHeaderValue("Bearer", token)
 
-            let! response = client.SendAsync(request) |> Async.AwaitTask
+            let! response = client.SendAsync(request)
             response.EnsureSuccessStatusCode() |> ignore
-            let! content =
-                response.Content.ReadAsStringAsync()
-                |> Async.AwaitTask
+            let! content = response.Content.ReadAsStringAsync()
 
             return JsonConvert.DeserializeObject<'TResult>(content)
         }
 
-    let requestGet<'TResult> (client: HttpClient) (token: string) (path: string) : Async<'TResult> =
-        async {
+    let requestGet<'TResult> (client: HttpClient) (token: string) (path: string) : Task<'TResult> =
+        task {
             let request = new HttpRequestMessage()
             request.RequestUri <- Uri($"%s{client.BaseAddress.ToString()}api/%s{path}")
             request.Method <- HttpMethod.Get
             request.Headers.Authorization <- AuthenticationHeaderValue("Bearer", token)
 
-            let! response = client.SendAsync(request) |> Async.AwaitTask
+            let! response = client.SendAsync(request) 
             response.EnsureSuccessStatusCode() |> ignore
 
-            let! content =
-                response.Content.ReadAsStringAsync()
-                |> Async.AwaitTask
+            let! content = response.Content.ReadAsStringAsync()
 
             return JsonConvert.DeserializeObject<'TResult>(content)
         }
 
-    let createWebSocketConnection (client: HttpClient) (token: string) = async {
-         let connection =
-                HubConnectionBuilder()
-                    .WithUrl(
-                        $"%s{client.BaseAddress.ToString()}events",
-                        fun options ->
-                            options.AccessTokenProvider <- (fun _ -> Task.FromResult token)
-                            options.Transports <- HttpTransportType.WebSockets
-                            options.SkipNegotiation <- true
-                    )
-                    .Build()
-         do! connection.StartAsync() |> Async.AwaitTask
-         return connection
-         }
+    let createWebSocketConnection (testServer: TestServer) (token: string) = task {
+        let connection = HubConnectionBuilder()
+                             .WithUrl($"%s{testServer.BaseAddress.ToString()}events", fun options ->
+                                    options.AccessTokenProvider <- (fun _ -> Task.FromResult token)
+                                    options.SkipNegotiation <- true
+                                    options.Transports <- HttpTransportType.WebSockets
+                                    options.WebSocketFactory <- (fun ctx cancellationToken ->
+                                            let t = task {
+                                                let webSocketClient = testServer.CreateWebSocketClient()
+                                                let url = $"%s{ctx.Uri.ToString()}?access_token=%s{token}"
+                                                return! webSocketClient.ConnectAsync(Uri(url), cancellationToken)
+                                            }
+                                            ValueTask<Net.WebSockets.WebSocket>(t)
+                                        )
+                                    )
+                             .Build()
+        do! connection.StartAsync() 
+        return connection
+        }
 
     let createSession (client: HttpClient) (token: string) (title: string) =
         requestPost<_, SessionView> client { CreateSession.Title = title } token "sessions"

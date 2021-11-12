@@ -4,6 +4,7 @@ open System
 open System.Threading.Tasks
 open Microsoft.Extensions.Hosting
 open Microsoft.AspNetCore.Hosting
+open WebApi
 open Xunit
 
 module FakeServer =
@@ -37,4 +38,4 @@ module FakeServer =
 
     [<CollectionDefinition("Real Server Collection")>]
     type RealServerCollectionFixture() =
-        interface ICollectionFixture<RealServerFixture>
+        interface ICollectionFixture<WebApplicationFactory<Program>>
