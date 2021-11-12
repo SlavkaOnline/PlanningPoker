@@ -16,6 +16,9 @@ module Extensions =
 
         member inline this.MapPost(routerString, handler: Func<'a, 'b>) = this.MapPost(pattern = routerString, handler = handler)
         member inline this.MapPost(routerString, handler: Func<'a, 'b, 'c>) = this.MapPost(pattern = routerString, handler = handler)
+        member inline this.MapPost(routerString, handler: Func<'a, 'b, 'c, 'd>) = this.MapPost(pattern = routerString, handler = handler)
+        member inline this.MapPost(routerString, handler: Func<'a, 'b, 'c, 'd, 'e>) = this.MapPost(pattern = routerString, handler = handler)
+        member inline this.MapPost(routerString, handler: Func<'a, 'b, 'c, 'd, 'e, 'f>) = this.MapPost(pattern = routerString, handler = handler)
 
     type ClaimsPrincipal with
         member this.GetDomainUser() : User =

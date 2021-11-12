@@ -1,10 +1,10 @@
 namespace Api
 
 open System.Security.Claims
+open GrainInterfaces
 open Microsoft.AspNetCore.Authentication
 open Microsoft.AspNetCore.Authentication.OpenIdConnect
 open Microsoft.AspNetCore.Authentication.JwtBearer
-open Microsoft.AspNetCore.Routing
 open Microsoft.AspNetCore.Routing
 open Microsoft.IdentityModel.Tokens
 open System.Text
@@ -181,6 +181,14 @@ module Program =
                         return Results.Redirect($"{returnUrl}?access_token={token}")
                 }
             ).WithName("GoogleResponse")
+
+
+        app.MapGet("/api/sessions/{id:guid}", fun (id: Guid) ([<FromService>] silo: IClusterClient)  -> silo.GetGrain<ISessionGrain>(id).GetState())
+        app.MapPost("/api/sessions", fun ([<FromBody>] request: CreateSession) ([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) ->task {return! (silo.GetGrain<ISessionGrain> <| Guid.NewGuid()).Start(request.Title, ctx.User.GetDomainUser()) })
+        app.MapPost("/api/sessions/{id:guid}/stories", fun (id: Guid) ([<FromBody>] request: CreateStory) ([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) ([<FromServices>] cardsTypeProvider: CardsTypeProvider) -> task {return! (silo.GetGrain<ISessionGrain> id).AddStory(ctx.User.GetDomainUser(), request.Title, if String.IsNullOrEmpty(request.CardsId) then request.CustomCards else cardsTypeProvider.GetCardsByTypeId(request.CardsId))})
+        app.MapPost("/api/sessions/{id:guid}/activestory/{storyId:guid}", fun (id: Guid) (storyId: Guid) ([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) -> task {return! (silo.GetGrain<ISessionGrain> id).SetActiveStory(ctx.User.GetDomainUser(),storyId, DateTime.UtcNow)} )
+        app.MapGet("/api/sessions/cards_types", fun ([<FromServices>] cardsTypeProvider: CardsTypeProvider) -> cardsTypeProvider.CardsTypes |> Seq.map(fun c -> {Id = c.Id; Caption = c.Caption}))
+
 
         app.Run()
 

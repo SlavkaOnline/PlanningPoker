@@ -47,10 +47,13 @@ type JwtTokenProvider(configurations: IConfiguration) =
 
 
 type CardsTypeProvider(appSettings: IOptions<AppSettings>) =
+
     let cardsTypes = appSettings.Value.CardsTypes
                      |> Seq.groupBy(fun t -> t.Id)
                      |> Seq.map(fun (key, values) -> key, Seq.head values)
                      |> dict
+
+    member this.CardsTypes with get() = cardsTypes.Values
 
     member _.GetCardsByTypeId(id: string): string array =
         match cardsTypes.TryGetValue id with
