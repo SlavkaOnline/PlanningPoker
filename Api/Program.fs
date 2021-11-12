@@ -1,7 +1,11 @@
 namespace Api
 
+open System.Security.Claims
+open Microsoft.AspNetCore.Authentication
 open Microsoft.AspNetCore.Authentication.OpenIdConnect
 open Microsoft.AspNetCore.Authentication.JwtBearer
+open Microsoft.AspNetCore.Routing
+open Microsoft.AspNetCore.Routing
 open Microsoft.IdentityModel.Tokens
 open System.Text
 open Microsoft.AspNetCore.Http
@@ -16,6 +20,8 @@ open System.Net
 open Microsoft.AspNetCore.Http.Features
 open EventsDelivery.EventsDeliveryHub
 open Microsoft.AspNetCore.Http.Connections
+open Gateway.Requests
+open Gateway.Views
 
 #nowarn "20"
 open System
@@ -30,12 +36,9 @@ open Grains
 open Application
 open System.Text.Json
 
-
 module Program =
     let exitCode = 0
 
-    type Service() = 
-        member _.Hello() = "Hello world :)"
 
     [<EntryPoint>]
     let main args =
@@ -52,8 +55,8 @@ module Program =
                     .UseLocalhostClustering()
                     |> ignore
         )
-        
-        
+
+
         builder.Services.AddSingleton<JwtTokenProvider>()
         builder.Services.AddSingleton<CardsTypeProvider>()
 
@@ -72,10 +75,10 @@ module Program =
 
                 let events =  JwtBearerEvents()
                 events.OnMessageReceived <- (fun context ->
-                                let accessToken = context.Request.Query.["access_token"]
+                                let accessToken = context.Request.Query.["access_token"].ToString()
                                 let path = context.HttpContext.Request.Path
 
-                                if (String.IsNullOrEmpty(accessToken) |> not) && path.StartsWithSegments("/events") then
+                                if (String.IsNullOrEmpty(accessToken) |> not) && path.StartsWithSegments(PathString "/events") then
                                    context.Token <- accessToken
                                    Task.CompletedTask
                                 else
@@ -83,7 +86,7 @@ module Program =
                 )
 
                 events.OnAuthenticationFailed <- (fun context ->
-                    task {
+                    upcast task {
                         context.Response.StatusCode <- StatusCodes.Status401Unauthorized
                         context.Response.ContentType <- "application/json; charset=utf-8";
                         do! context.Response.WriteAsync(JsonSerializer.Serialize({|Message = "An error occurred processing your authentication."|}))
@@ -96,9 +99,9 @@ module Program =
          .AddOpenIdConnect(GoogleDefaults.AuthenticationScheme, GoogleDefaults.DisplayName, (fun options ->
             options.SignInScheme <- CookieAuthenticationDefaults.AuthenticationScheme;
             options.Authority <- "https://accounts.google.com";
-            options.ClientId <- builder.Configuration["Google:ClientId"];
-            options.ClientSecret <- builder.Configuration["Google:ClientSecret"];
-            options.CallbackPath <- "/signin-oidc";
+            options.ClientId <- builder.Configuration.["Google:ClientId"];
+            options.ClientSecret <- builder.Configuration.["Google:ClientSecret"];
+            options.CallbackPath <- PathString "/signin-oidc";
             options.ResponseType <- OpenIdConnectResponseType.CodeIdToken;
             options.GetClaimsFromUserInfoEndpoint <- true;
             options.SaveTokens <- true;
@@ -129,7 +132,6 @@ module Program =
 
         builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"))
 
-        builder.Services.AddSingleton<Service>()
 
         let app = builder.Build()
 
@@ -138,10 +140,10 @@ module Program =
         app.UseAuthentication()
         app.UseAuthorization()
         app.UseExceptionHandler(fun x -> x.Run(fun context ->
-            task {
+            upcast task {
                 let exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>()
                 let err = exceptionHandlerPathFeature.Error
-                let code, message = 
+                let code, message =
                     match err  with
                     | :? PlanningPokerDomainException as ex -> HttpStatusCode.BadRequest, ex.Data0
                     | _ -> HttpStatusCode.InternalServerError, err.Message
@@ -153,8 +155,32 @@ module Program =
 
         app.MapHub<DomainEventHub>("/events", fun options -> options.Transports <- HttpTransportType.WebSockets)
 
-        let handler(service: Service) = service.Hello() 
-        app.MapGet("/hello", handler).RequireAuthorization()
+        app.MapPost("/api/login", fun ([<FromServices>] jwtTokenProvider : JwtTokenProvider) ([<FromBody>] request: AuthUserRequest) ->
+            let id = Guid.NewGuid()
+            let token = jwtTokenProvider.CreateToken(id, request.Name, "")
+            {Id = id; Name = request.Name; Token = token; Picture = ""}
+        )
+
+        app.MapGet("/api/login/google-login", fun ([<FromQuery>] returnUrl: string) (linker: LinkGenerator) ->
+                let properties = AuthenticationProperties()
+                properties.RedirectUri <- linker.GetPathByName("GoogleResponse", {|returnUrl = returnUrl|})
+                Results.Challenge(properties, [|GoogleDefaults.AuthenticationScheme|])
+            )
+
+        app.MapGet("/api/login/google", fun ([<FromServices>] jwtTokenProvider : JwtTokenProvider) ( returnUrl: string) ([<FromServices>] ctx: HttpContext) ->
+                task {
+                    let! result = ctx.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme)
+                    if not result.Succeeded then
+                        return Results.BadRequest()
+                    else
+                        let name = $"{result.Ticket.Principal.FindFirst(ClaimTypes.GivenName).Value} {result.Ticket.Principal.FindFirst(ClaimTypes.Surname).Value}"
+                        let picture = result.Ticket.Principal.FindFirst("picture").Value
+                        let id = Guid.NewGuid()
+                        let token = jwtTokenProvider.CreateToken(id, name, picture)
+                        do! ctx.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme)
+                        return Results.Redirect($"{returnUrl}?access_token={token}")
+                }
+            ).WithName("GoogleResponse")
 
         app.Run()
 
