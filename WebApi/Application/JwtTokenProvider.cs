@@ -10,13 +10,11 @@ namespace WebApi.Application
 {
     public class JwtTokenProvider
     {
-        private readonly IConfiguration _configuration;
         private readonly SymmetricSecurityKey _key;
 
         public JwtTokenProvider(IConfiguration configuration)
         {
-            _configuration = configuration;
-            _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]));
         }
 
         public string CreateToken(Guid id, string userName, string picture)
