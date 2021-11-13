@@ -5,7 +5,9 @@ open GrainInterfaces
 open Microsoft.AspNetCore.Authentication
 open Microsoft.AspNetCore.Authentication.OpenIdConnect
 open Microsoft.AspNetCore.Authentication.JwtBearer
+open Microsoft.AspNetCore.HttpOverrides
 open Microsoft.AspNetCore.Routing
+open Microsoft.Extensions.Options
 open Microsoft.IdentityModel.Tokens
 open System.Text
 open Microsoft.AspNetCore.Http
@@ -15,6 +17,7 @@ open Microsoft.IdentityModel.Protocols.OpenIdConnect
 open Microsoft.AspNetCore.Authorization
 open Microsoft.AspNetCore.Cors.Infrastructure
 open Microsoft.AspNetCore.Diagnostics
+open Microsoft.OpenApi.Models
 open PlanningPoker.Domain
 open System.Net
 open Microsoft.AspNetCore.Http.Features
@@ -22,6 +25,7 @@ open EventsDelivery.EventsDeliveryHub
 open Microsoft.AspNetCore.Http.Connections
 open Gateway.Requests
 open Gateway.Views
+open Swashbuckle.AspNetCore.SwaggerGen
 
 #nowarn "20"
 
@@ -170,9 +174,25 @@ module Program =
                         |> ignore))
 
         builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"))
-
+        builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>()
+        builder.Services.AddEndpointsApiExplorer()
+        let openApiInfo = OpenApiInfo()
+        openApiInfo.Title <- "WebApi"
+        openApiInfo.Version <- "v1"
+        builder.Services.AddSwaggerGen(fun c -> (c.SwaggerDoc("v1", openApiInfo)))
 
         let app = builder.Build()
+
+        if app.Environment.IsDevelopment() then
+           app.UseDeveloperExceptionPage();
+           app.UseSwagger()
+           app.UseSwaggerUI(fun c -> c.SwaggerEndpoint("/swagger/v1/swagger.json", "WebApi v1")) |> ignore
+        else
+            ()
+
+        let forwardedHeadersOptions = ForwardedHeadersOptions()
+        forwardedHeadersOptions.ForwardedHeaders <- ForwardedHeaders.XForwardedFor ||| ForwardedHeaders.XForwardedProto
+        app.UseForwardedHeaders(forwardedHeadersOptions)
 
         app.UseCors()
         app.UseCookiePolicy()
