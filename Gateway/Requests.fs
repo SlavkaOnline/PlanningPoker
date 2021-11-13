@@ -29,3 +29,8 @@ module Requests =
     type CloseStory = {
         Groups: Dictionary<Guid, Guid[]>
     }
+
+    [<CLIMutable>]
+    type AuthUserRequest = {
+        Name: string
+    }

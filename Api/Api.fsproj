@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <UserSecretsId>1b339d5e-6536-4632-ae1d-af88448e2dde</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="Dockerfile" />
+    <Compile Include="Application.fs" />
+    <Compile Include="EventsDelivery.fs" />
+    <Compile Include="Extensions.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FSharp.Control.AsyncSeq" Version="3.2.1" />
+    <PackageReference Include="FSharp.UMX" Version="1.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Routing.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
+      <PackageReference Include="Google.Apis.Auth.AspNetCore3" Version="1.55.0" />
+      <PackageReference Include="GranDen.Orleans.NetCoreGenericHost.OrleansDashboard" Version="1.3.2" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="6.0.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="6.0.0" />
+      <PackageReference Include="Microsoft.Orleans.EventSourcing" Version="3.5.1" />
+      <PackageReference Include="Microsoft.Orleans.Server" Version="3.5.1" />
+      <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+  </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Gateway\Gateway.fsproj" />
+        <ProjectReference Include="..\GrainInterfaces\GrainInterfaces.csproj" />
+        <ProjectReference Include="..\Grains\Grains.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -1,82 +1,41 @@
 namespace IntegrationTests
 
-open System
 open System.Collections.Generic
-open System.Threading
 open System.Threading.Channels
-open System.Threading.Tasks
 open FSharp.Control
-open IntegrationTests.FakeServer
-open Microsoft.AspNetCore.Hosting
-open Microsoft.AspNetCore.Http.Connections
+open Microsoft.AspNetCore.Mvc.Testing
 open Xunit
-
-open WebApi
-open System.Net.Http
+open Api
 open Gateway.Requests
 open Gateway.Views
 open Microsoft.AspNetCore.SignalR.Client
-open EventsDelivery
-
 open Swensen.Unquote
 
-//will work on NET 6 https://github.com/dotnet/aspnetcore/issues/11888
-//type Test(factory: FakeServerFixture) =
-//
-//    [<Fact>]
-//    let ``The participant was added when SignalR connection has been the establishment`` () = async {
-//
-//           let apiClient = factory.CreateClient()
-//           let! user = Helper.login apiClient "test"
-//
-//           let connection = HubConnectionBuilder()
-//                                .WithUrl($"%s{apiClient.BaseAddress.ToString()}events", fun options ->
-//                                    options.AccessTokenProvider <- (fun _ -> Task.FromResult user.Token)
-//                                    options.WebSocketConfiguration
-//                                    options.HttpMessageHandlerFactory <- (fun _ -> factory.Server.CreateHandler())
-//                                    )
-//                                .Build()
-//
-//
-//           let! session = Helper.requestPost<_, SessionView> apiClient {CreateSession.Title = "Session"}  user.Token "Sessions"
-//           do! connection.StartAsync() |> Async.AwaitTask
-//           let subscription = connection.StreamAsChannelAsync<_>("Session", session.Id, 0)
-//
-//           let! updatedSession = Helper.requestGet<SessionView> apiClient user.Token $"Sessions/%s{session.Id.ToString()}"
-//
-//           test <@ updatedSession.Participants.Length = 1
-//                    @>
-//
-//       }
-//
-//    interface IClassFixture<FakeServerFixture>
-
 [<Collection("Real Server Collection")>]
-type EventsTests(server: RealServerFixture) =
+type EventsTests(fixture: WebApplicationFactory<Program>) =
 
-    let url = "http://localhost:5050"
-    do server.Start(url)
+    let server = fixture.Server
+    let apiClient = fixture.CreateClient()
     let cardsId = "66920B8F-3962-46FE-A2C1-434134B7F0FD"
 
     [<Fact>]
     let ``The participant was added when SignalR connection has been the establishment`` () =
-        async {
-            use apiClient = new HttpClient()
-            do apiClient.BaseAddress <- Uri(url)
+        task {
 
             let! user = Helper.login apiClient "test"
 
-            let! connection = Helper.createWebSocketConnection apiClient user.Token
+            let! connection = Helper.createWebSocketConnection server user.Token
 
             let! session = Helper.createSession apiClient user.Token "Session"
 
             let! subscription =
                 connection.StreamAsChannelAsync<_>("Session", session.Id, 0)
-                |> Async.AwaitTask
 
             do! Async.Sleep(1000);
 
             let! updatedSession = Helper.getSession apiClient user.Token session.Id
+
+            do! connection.StopAsync()
 
             test <@ updatedSession.Participants.Length = 1 @>
         }
@@ -84,19 +43,14 @@ type EventsTests(server: RealServerFixture) =
 
     [<Fact>]
     let ``The participant was removed when SignalR connection has been the closed`` () =
-        async {
-            use apiClient = new HttpClient()
-            do apiClient.BaseAddress <- Uri(url)
-
+        task {
             let! user = Helper.login apiClient "test"
-
-            let! connection = Helper.createWebSocketConnection apiClient user.Token
+            let! connection = Helper.createWebSocketConnection server user.Token
 
             let! session = Helper.createSession apiClient user.Token "Session"
 
             let! subscription =
                 connection.StreamAsChannelAsync<_>("Session", session.Id, 0)
-                |> Async.AwaitTask
 
             do! Async.Sleep(1000);
 
@@ -104,7 +58,7 @@ type EventsTests(server: RealServerFixture) =
 
             test <@ updatedSession.Participants.Length = 1 @>
 
-            do! connection.StopAsync() |> Async.AwaitTask
+            do! connection.StopAsync()
 
             do! Async.Sleep(1000)
 
@@ -115,14 +69,11 @@ type EventsTests(server: RealServerFixture) =
 
     [<Fact>]
     let ``Session events in stream equals completed actions`` () =
-        async {
-
-            use apiClient = new HttpClient()
-            do apiClient.BaseAddress <- Uri(url)
+        task {
 
             let! user = Helper.login apiClient "test"
 
-            let! connection = Helper.createWebSocketConnection apiClient user.Token
+            let! connection = Helper.createWebSocketConnection server user.Token
 
             //action 1 Started
             let! session = Helper.createSession apiClient user.Token "Session"
@@ -130,7 +81,7 @@ type EventsTests(server: RealServerFixture) =
             //action 3 "ParticipantAdded"
             let! subscription =
                 connection.StreamAsChannelAsync<EventsDeliveryHub.Event>("Session", session.Id, 0)
-                |> Async.AwaitTask
+
 
             let eventsBuffer = Channel.CreateUnbounded<EventsDeliveryHub.Event>()
             let subs =  subscription.ReadAllAsync()
@@ -146,12 +97,12 @@ type EventsTests(server: RealServerFixture) =
             let storyId = ses.Stories.[0]
 
             //action 4 ActiveStorySet
-            do! Helper.setActiveStory apiClient user.Token session.Id storyId |> Async.Ignore
+            do! Helper.setActiveStory apiClient user.Token session.Id storyId
 
             do! Async.Sleep(1000)
 
             //action 4 "ParticipantRemoved"
-            do! connection.StopAsync() |> Async.AwaitTask
+            do! connection.StopAsync()
 
             do! Async.Sleep(1000)
 
@@ -170,14 +121,11 @@ type EventsTests(server: RealServerFixture) =
 
     [<Fact>]
     let ``Session events in stream equals completed actions from non zero event`` () =
-        async {
-
-            use apiClient = new HttpClient()
-            do apiClient.BaseAddress <- Uri(url)
+        task {
 
             let! user = Helper.login apiClient "test"
 
-            let! connection = Helper.createWebSocketConnection apiClient user.Token
+            let! connection = Helper.createWebSocketConnection server user.Token
 
             //action 1 Started
             let! session = Helper.createSession apiClient user.Token "Session"
@@ -185,7 +133,6 @@ type EventsTests(server: RealServerFixture) =
            //action 2 "ParticipantAdded"
             let! subscription =
                 connection.StreamAsChannelAsync<EventsDeliveryHub.Event>("Session", session.Id, session.Version)
-                |> Async.AwaitTask
 
             let eventsBuffer = Channel.CreateUnbounded<EventsDeliveryHub.Event>()
             let subs =  subscription.ReadAllAsync()
@@ -205,7 +152,7 @@ type EventsTests(server: RealServerFixture) =
 
             do! Async.Sleep(1000)
 
-            do! connection.StopAsync() |> Async.AwaitTask
+            do! connection.StopAsync()
 
             let events = eventsBuffer.Reader.ReadAllAsync()
                          |> AsyncSeq.ofAsyncEnum
@@ -219,14 +166,11 @@ type EventsTests(server: RealServerFixture) =
 
     [<Fact>]
     let ``Story events in stream equals completed actions`` () =
-        async {
-
-            use apiClient = new HttpClient()
-            do apiClient.BaseAddress <- Uri(url)
+        task {
 
             let! user = Helper.login apiClient "test"
 
-            let! connection = Helper.createWebSocketConnection apiClient user.Token
+            let! connection = Helper.createWebSocketConnection server user.Token
             let! session = Helper.createSession apiClient user.Token "Session"
 
             //action1 StoryConfigured
@@ -238,7 +182,6 @@ type EventsTests(server: RealServerFixture) =
 
             let! subscription =
                 connection.StreamAsChannelAsync<EventsDeliveryHub.Event>("Story", storyId, 0)
-                |> Async.AwaitTask
 
             let eventsBuffer = Channel.CreateUnbounded<EventsDeliveryHub.Event>()
             let subs =  subscription.ReadAllAsync()
@@ -253,32 +196,32 @@ type EventsTests(server: RealServerFixture) =
             do! Helper.setActiveStory apiClient user.Token session.Id storyId
 
             //action3 Voted
-            do! Helper.vote apiClient user.Token storyId "XXS" |> Async.Ignore
+            let! _ = Helper.vote apiClient user.Token storyId "XXS"
 
             let groups = seq {(session.Groups.[0].Id, (session.Participants |> Array.map(fun p -> p.Id))) } |> dict |> Dictionary
 
             //action4 StoryClosed
-            do! Helper.closeStory apiClient user.Token storyId {Groups = groups} |> Async.Ignore
+            let! _ = Helper.closeStory apiClient user.Token storyId {Groups = groups}
 
             //action5  Paused
             do! Helper.setActiveStory apiClient user.Token session.Id anotherStoryId
-            do! Helper.vote apiClient user.Token anotherStoryId "XXS" |> Async.Ignore
-            do! Helper.closeStory apiClient user.Token anotherStoryId {Groups = groups} |> Async.Ignore
+            let! _ = Helper.vote apiClient user.Token anotherStoryId "XXS"
+            let! _ = Helper.closeStory apiClient user.Token anotherStoryId {Groups = groups}
 
             //action6  ActiveSet
             do! Helper.setActiveStory apiClient user.Token session.Id storyId
 
             //action7 Cleared
-            do! Helper.clearStory apiClient user.Token storyId |> Async.Ignore
+            let! _ = Helper.clearStory apiClient user.Token storyId
 
             //action8  Paused
-            do! Helper.setActiveStory apiClient user.Token session.Id anotherStoryId |> Async.Ignore
+            do! Helper.setActiveStory apiClient user.Token session.Id anotherStoryId
 
             let! s = Helper.getStory apiClient user.Token storyId
 
             do! Async.Sleep(1000)
 
-            do! connection.StopAsync() |> Async.AwaitTask
+            do! connection.StopAsync()
 
             let events = eventsBuffer.Reader.ReadAllAsync()
                          |> AsyncSeq.ofAsyncEnum
@@ -290,19 +233,16 @@ type EventsTests(server: RealServerFixture) =
         }
 
     [<Fact>]
-    let ``The workflow add group, move Participant, remove group works fine``() = async {
-
-            use apiClient = new HttpClient()
-            do apiClient.BaseAddress <- Uri(url)
+    let ``The workflow add group, move Participant, remove group works fine``() =
+        task {
 
             let! user = Helper.login apiClient "test"
 
-            let! connection = Helper.createWebSocketConnection apiClient user.Token
+            let! connection = Helper.createWebSocketConnection server user.Token
             let! session = Helper.createSession apiClient user.Token "Session"
 
             let! subscription =
                 connection.StreamAsChannelAsync<EventsDeliveryHub.Event>("Session", session.Id, 0)
-                |> Async.AwaitTask
 
             let eventsBuffer = Channel.CreateUnbounded<EventsDeliveryHub.Event>()
             let subs =  subscription.ReadAllAsync()
@@ -315,7 +255,7 @@ type EventsTests(server: RealServerFixture) =
 
             let! sessionWithGroup = Helper.addGroup apiClient user.Token session.Id "group"
             let group = sessionWithGroup.Groups |> Array.find (fun g -> g.Id <> session.DefaultGroupId)
-            do! Helper.moveParticipantToGroup apiClient user.Token session.Id user.Id group.Id |> Async.Ignore
+            let! _ = Helper.moveParticipantToGroup apiClient user.Token session.Id user.Id group.Id
             let! s = Helper.removeGroup apiClient user.Token session.Id group.Id
 
             do! Async.Sleep(1000)

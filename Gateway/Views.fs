@@ -1,4 +1,4 @@
-﻿namespace Gateway
+namespace Gateway
 
 open System
 open System.Collections.Generic
@@ -7,6 +7,14 @@ open FSharp.UMX
 open PlanningPoker.Domain.CommonTypes
 
 module Views =
+
+    type AuthUserModel = {
+        Id: Guid
+        Name: string
+        Token: string
+        Picture: string
+    }
+
 
     type ParticipantView =
         { Id: Guid
