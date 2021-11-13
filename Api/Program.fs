@@ -21,7 +21,7 @@ open Microsoft.OpenApi.Models
 open PlanningPoker.Domain
 open System.Net
 open Microsoft.AspNetCore.Http.Features
-open EventsDelivery.EventsDeliveryHub
+open EventsDeliveryHub
 open Microsoft.AspNetCore.Http.Connections
 open Gateway.Requests
 open Gateway.Views

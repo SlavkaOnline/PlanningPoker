@@ -1,4 +1,4 @@
-namespace EventsDelivery
+namespace Api
 
 open System
 open System.Runtime.CompilerServices

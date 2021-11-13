@@ -7,16 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="Dockerfile" />
     <Compile Include="Application.fs" />
+    <Compile Include="EventsDelivery.fs" />
     <Compile Include="Extensions.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Dockerfile" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="FSharp.Control.AsyncSeq" Version="3.2.1" />
     <PackageReference Include="FSharp.UMX" Version="1.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Routing.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
@@ -31,7 +30,6 @@
   </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\EventsDelivery\EventsDelivery.fsproj" />
         <ProjectReference Include="..\Gateway\Gateway.fsproj" />
         <ProjectReference Include="..\GrainInterfaces\GrainInterfaces.csproj" />
         <ProjectReference Include="..\Grains\Grains.csproj" />

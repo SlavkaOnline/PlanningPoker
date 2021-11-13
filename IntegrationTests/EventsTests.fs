@@ -1,8 +1,6 @@
 namespace IntegrationTests
 
-open System
 open System.Collections.Generic
-open System.Threading
 open System.Threading.Channels
 open FSharp.Control
 open Microsoft.AspNetCore.Mvc.Testing
@@ -11,11 +9,7 @@ open Api
 open Gateway.Requests
 open Gateway.Views
 open Microsoft.AspNetCore.SignalR.Client
-open EventsDelivery
-
 open Swensen.Unquote
-
-
 
 [<Collection("Real Server Collection")>]
 type EventsTests(fixture: WebApplicationFactory<Program>) =
