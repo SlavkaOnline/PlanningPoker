@@ -9,11 +9,12 @@ open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.Options
 
 
-
+[<CLIMutable>]
 type AppSettings = {
-     CardsTypes: CardType seq
+     CardTypes: CardType array
 }
-and CardType = {
+and [<CLIMutable>]
+CardType = {
      Id: string
      Caption: string
      Cards: string array
@@ -48,7 +49,7 @@ type JwtTokenProvider(configurations: IConfiguration) =
 
 type CardsTypeProvider(appSettings: IOptions<AppSettings>) =
 
-    let cardsTypes = appSettings.Value.CardsTypes
+    let cardsTypes = appSettings.Value.CardTypes
                      |> Seq.groupBy(fun t -> t.Id)
                      |> Seq.map(fun (key, values) -> key, Seq.head values)
                      |> dict

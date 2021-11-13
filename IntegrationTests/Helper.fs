@@ -6,7 +6,6 @@ open System.Net.Http
 open System.Net.Http.Headers
 open System.Text
 open System.Threading.Tasks
-open Gateway
 open Gateway.Requests
 open Gateway.Views
 open Microsoft.AspNetCore.Http.Connections
@@ -14,7 +13,6 @@ open Microsoft.AspNetCore.SignalR.Client
 open Microsoft.AspNetCore.TestHost
 open Microsoft.Extensions.Hosting
 open Newtonsoft.Json
-open WebApi.Application
 
 
 [<RequireQualifiedAccess>]
@@ -22,8 +20,7 @@ module Helper =
 
     let login (client: HttpClient) (name: string) : Task<AuthUserModel> =
         task {
-            let user = AuthUserRequest()
-            user.Name <- name
+            let user = { Name = name }
             let request = new HttpRequestMessage()
             request.RequestUri <- Uri($"%s{client.BaseAddress.ToString()}api/login")
             request.Method <- HttpMethod.Post
@@ -103,7 +100,7 @@ module Helper =
             request.Method <- HttpMethod.Get
             request.Headers.Authorization <- AuthenticationHeaderValue("Bearer", token)
 
-            let! response = client.SendAsync(request) 
+            let! response = client.SendAsync(request)
             response.EnsureSuccessStatusCode() |> ignore
 
             let! content = response.Content.ReadAsStringAsync()
@@ -127,7 +124,7 @@ module Helper =
                                         )
                                     )
                              .Build()
-        do! connection.StartAsync() 
+        do! connection.StartAsync()
         return connection
         }
 

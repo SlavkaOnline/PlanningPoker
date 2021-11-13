@@ -4,16 +4,10 @@ open System
 open System.Collections.Generic
 open System.Threading
 open System.Threading.Channels
-open System.Threading.Tasks
 open FSharp.Control
-open IntegrationTests.FakeServer
-open Microsoft.AspNetCore.Hosting
-open Microsoft.AspNetCore.Http.Connections
 open Microsoft.AspNetCore.Mvc.Testing
 open Xunit
-
-open WebApi
-open System.Net.Http
+open Api
 open Gateway.Requests
 open Gateway.Views
 open Microsoft.AspNetCore.SignalR.Client
@@ -25,7 +19,7 @@ open Swensen.Unquote
 
 [<Collection("Real Server Collection")>]
 type EventsTests(fixture: WebApplicationFactory<Program>) =
-    
+
     let server = fixture.Server
     let apiClient = fixture.CreateClient()
     let cardsId = "66920B8F-3962-46FE-A2C1-434134B7F0FD"
@@ -42,11 +36,12 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
 
             let! subscription =
                 connection.StreamAsChannelAsync<_>("Session", session.Id, 0)
-                |> Async.AwaitTask
 
             do! Async.Sleep(1000);
 
             let! updatedSession = Helper.getSession apiClient user.Token session.Id
+
+            do! connection.StopAsync()
 
             test <@ updatedSession.Participants.Length = 1 @>
         }
@@ -62,7 +57,6 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
 
             let! subscription =
                 connection.StreamAsChannelAsync<_>("Session", session.Id, 0)
-                |> Async.AwaitTask
 
             do! Async.Sleep(1000);
 
@@ -70,7 +64,7 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
 
             test <@ updatedSession.Participants.Length = 1 @>
 
-            do! connection.StopAsync() |> Async.AwaitTask
+            do! connection.StopAsync()
 
             do! Async.Sleep(1000)
 
@@ -93,7 +87,7 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
             //action 3 "ParticipantAdded"
             let! subscription =
                 connection.StreamAsChannelAsync<EventsDeliveryHub.Event>("Session", session.Id, 0)
-                |> Async.AwaitTask
+
 
             let eventsBuffer = Channel.CreateUnbounded<EventsDeliveryHub.Event>()
             let subs =  subscription.ReadAllAsync()
@@ -109,12 +103,12 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
             let storyId = ses.Stories.[0]
 
             //action 4 ActiveStorySet
-            do! Helper.setActiveStory apiClient user.Token session.Id storyId 
+            do! Helper.setActiveStory apiClient user.Token session.Id storyId
 
             do! Async.Sleep(1000)
 
             //action 4 "ParticipantRemoved"
-            do! connection.StopAsync() |> Async.AwaitTask
+            do! connection.StopAsync()
 
             do! Async.Sleep(1000)
 
@@ -145,7 +139,6 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
            //action 2 "ParticipantAdded"
             let! subscription =
                 connection.StreamAsChannelAsync<EventsDeliveryHub.Event>("Session", session.Id, session.Version)
-                |> Async.AwaitTask
 
             let eventsBuffer = Channel.CreateUnbounded<EventsDeliveryHub.Event>()
             let subs =  subscription.ReadAllAsync()
@@ -165,7 +158,7 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
 
             do! Async.Sleep(1000)
 
-            do! connection.StopAsync() |> Async.AwaitTask
+            do! connection.StopAsync()
 
             let events = eventsBuffer.Reader.ReadAllAsync()
                          |> AsyncSeq.ofAsyncEnum
@@ -195,7 +188,6 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
 
             let! subscription =
                 connection.StreamAsChannelAsync<EventsDeliveryHub.Event>("Story", storyId, 0)
-                |> Async.AwaitTask
 
             let eventsBuffer = Channel.CreateUnbounded<EventsDeliveryHub.Event>()
             let subs =  subscription.ReadAllAsync()
@@ -210,32 +202,32 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
             do! Helper.setActiveStory apiClient user.Token session.Id storyId
 
             //action3 Voted
-            let! _ = Helper.vote apiClient user.Token storyId "XXS" 
+            let! _ = Helper.vote apiClient user.Token storyId "XXS"
 
             let groups = seq {(session.Groups.[0].Id, (session.Participants |> Array.map(fun p -> p.Id))) } |> dict |> Dictionary
 
             //action4 StoryClosed
-            let! _ = Helper.closeStory apiClient user.Token storyId {Groups = groups} 
+            let! _ = Helper.closeStory apiClient user.Token storyId {Groups = groups}
 
             //action5  Paused
             do! Helper.setActiveStory apiClient user.Token session.Id anotherStoryId
-            let! _ = Helper.vote apiClient user.Token anotherStoryId "XXS" 
-            let! _ = Helper.closeStory apiClient user.Token anotherStoryId {Groups = groups} 
+            let! _ = Helper.vote apiClient user.Token anotherStoryId "XXS"
+            let! _ = Helper.closeStory apiClient user.Token anotherStoryId {Groups = groups}
 
             //action6  ActiveSet
             do! Helper.setActiveStory apiClient user.Token session.Id storyId
 
             //action7 Cleared
-            let! _ = Helper.clearStory apiClient user.Token storyId 
+            let! _ = Helper.clearStory apiClient user.Token storyId
 
             //action8  Paused
-            do! Helper.setActiveStory apiClient user.Token session.Id anotherStoryId 
+            do! Helper.setActiveStory apiClient user.Token session.Id anotherStoryId
 
             let! s = Helper.getStory apiClient user.Token storyId
 
             do! Async.Sleep(1000)
 
-            do! connection.StopAsync() |> Async.AwaitTask
+            do! connection.StopAsync()
 
             let events = eventsBuffer.Reader.ReadAllAsync()
                          |> AsyncSeq.ofAsyncEnum
@@ -257,7 +249,6 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
 
             let! subscription =
                 connection.StreamAsChannelAsync<EventsDeliveryHub.Event>("Session", session.Id, 0)
-                |> Async.AwaitTask
 
             let eventsBuffer = Channel.CreateUnbounded<EventsDeliveryHub.Event>()
             let subs =  subscription.ReadAllAsync()
@@ -270,7 +261,7 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
 
             let! sessionWithGroup = Helper.addGroup apiClient user.Token session.Id "group"
             let group = sessionWithGroup.Groups |> Array.find (fun g -> g.Id <> session.DefaultGroupId)
-            let! _ = Helper.moveParticipantToGroup apiClient user.Token session.Id user.Id group.Id 
+            let! _ = Helper.moveParticipantToGroup apiClient user.Token session.Id user.Id group.Id
             let! s = Helper.removeGroup apiClient user.Token session.Id group.Id
 
             do! Async.Sleep(1000)
