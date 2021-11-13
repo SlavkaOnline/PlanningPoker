@@ -14,9 +14,6 @@
         <Compile Include="EventsTests.fs" />
         <Compile Include="BehaviorTests.fs" />
         <Compile Include="Program.fs" />
-        <Content Include="appsettings.json">
-          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </Content>
     </ItemGroup>
 
     <ItemGroup>
