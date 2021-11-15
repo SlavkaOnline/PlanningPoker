@@ -70,18 +70,22 @@ namespace Grains
         {
             var currentStory = State.Session.ActiveStory.GetValue();
 
-            var lazy = new Lazy<Task>(() =>
+            if (id != currentStory)
             {
-                if (currentStory == default) return Task.CompletedTask;
-                var oldStory = GrainFactory.GetGrain<IStoryGrain>(currentStory);
-                return oldStory.Pause(user, timeStamp);
+                var lazySetPauseStory = new Lazy<Task>(() =>
+                {
+                    if (currentStory == default) return Task.CompletedTask;
+                    var oldStory = GrainFactory.GetGrain<IStoryGrain>(currentStory);
+                    return oldStory.Pause(user, timeStamp);
 
-            });
+                });
 
-            await _aggregate.Exec(State.Session, Session.Command.NewSetActiveStory(user, id));
-            var story = GrainFactory.GetGrain<IStoryGrain>(id);
+                await _aggregate.Exec(State.Session, Session.Command.NewSetActiveStory(user, id));
+                var story = GrainFactory.GetGrain<IStoryGrain>(id);
 
-            await Task.WhenAll(new []{story.SetActive(user, timeStamp), lazy.Value});
+                await Task.WhenAll(new[] { story.SetActive(user, timeStamp), lazySetPauseStory.Value });
+            }
+
             return Views.SessionView.create(this.GetPrimaryKey(), Version, State.Session);
         }
 

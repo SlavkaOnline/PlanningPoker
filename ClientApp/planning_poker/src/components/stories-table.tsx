@@ -38,7 +38,7 @@ export const StoriesTable = () => {
     }, [story]);
 
     function selectStory(id: string) {
-        if (session.ownerId === user?.id) {
+        if (session.ownerId === user?.id && session.activeStory !== id) {
             setActiveStory(session.id, id).then((s) => dispatch({ tag: 'init', session: s }));
         }
     }
