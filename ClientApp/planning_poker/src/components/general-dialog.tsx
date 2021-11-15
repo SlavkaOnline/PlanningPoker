@@ -12,7 +12,13 @@ export type CreateGroupDialogProps = Readonly<{
 
 export const GeneralDialog = (props: CreateGroupDialogProps) => {
     return (
-        <Dialog {...props} className={styles.wrapper} fullWidth={true} maxWidth="sm" aria-labelledby="simple-dialog-title">
+        <Dialog
+            {...props}
+            className={styles.wrapper}
+            fullWidth={true}
+            maxWidth="sm"
+            aria-labelledby="simple-dialog-title"
+        >
             <div className={styles.title}>
                 <DialogTitle id="simple-dialog-title">{props.title}</DialogTitle>
                 <CloseIcon className={styles.close} onClick={props.onClose} />
