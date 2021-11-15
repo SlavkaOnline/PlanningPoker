@@ -285,7 +285,7 @@ module Program =
         app.MapGet(
             "/api/sessions/{id:guid}",
             fun (id: Guid) ([<FromService>] silo: IClusterClient) -> silo.GetGrain<ISessionGrain>(id).GetState()
-        )
+        ).RequireAuthorization()
 
         app.MapPost(
             "/api/sessions",
@@ -295,7 +295,7 @@ module Program =
                         (silo.GetGrain<ISessionGrain> <| Guid.NewGuid())
                             .Start(request.Title, ctx.User.GetDomainUser())
                 }
-        )
+        ).RequireAuthorization()
 
         app.MapPost(
             "/api/sessions/{id:guid}/stories",
@@ -312,7 +312,7 @@ module Program =
                                     cardsTypeProvider.GetCardsByTypeId(request.CardsId)
                             )
                 }
-        )
+        ).RequireAuthorization()
 
         app.MapPost(
             "/api/sessions/{id:guid}/activestory/{storyId:guid}",
@@ -323,7 +323,7 @@ module Program =
                             .GetGrain<ISessionGrain>(id)
                             .SetActiveStory(ctx.User.GetDomainUser(), storyId, DateTime.UtcNow)
                 }
-        )
+        ).RequireAuthorization()
 
         app.MapGet(
             "/api/sessions/cards_types",
@@ -331,7 +331,7 @@ module Program =
                 cardsTypeProvider.CardsTypes
                 |> Seq.map (fun c -> { Id = c.Id; Caption = c.Caption })
                 |> Seq.toArray
-        )
+        ).RequireAuthorization()
 
         app.MapPost(
             "/api/sessions/{id:guid}/groups",
@@ -346,7 +346,7 @@ module Program =
                                   Name = request.Name }
                             )
                 }
-        )
+        ).RequireAuthorization()
 
         app.MapDelete(
             "/api/sessions/{id:guid}/groups/{groupId:guid}",
@@ -356,7 +356,7 @@ module Program =
                                 .GetGrain<ISessionGrain>(id)
                                 .RemoveGroup(ctx.User.GetDomainUser(), groupId)
                 }
-            )
+            ).RequireAuthorization()
 
         app.MapPost(
             "/api/sessions/{id:guid}/groups/{groupId:guid}/participants",
@@ -366,7 +366,7 @@ module Program =
                                 .GetGrain<ISessionGrain>(id)
                                 .MoveParticipantToGroup(ctx.User.GetDomainUser(), request.ParticipantId, groupId)
                 }
-            )
+            ).RequireAuthorization()
 
         app.MapGet(
             "/api/stories/{id:guid}",
@@ -376,7 +376,7 @@ module Program =
                                 .GetGrain<IStoryGrain>(id)
                                 .GetState(ctx.User.GetDomainUser())
                 }
-            )
+            ).RequireAuthorization()
 
         app.MapPost(
             "/api/stories/{id:guid}/vote",
@@ -386,7 +386,7 @@ module Program =
                                 .GetGrain<IStoryGrain>(id)
                                 .Vote(ctx.User.GetDomainUser(), request.Card, DateTime.UtcNow)
                 }
-            )
+            ).RequireAuthorization()
 
         app.MapDelete(
             "/api/stories/{id:guid}/vote",
@@ -396,7 +396,7 @@ module Program =
                                 .GetGrain<IStoryGrain>(id)
                                 .RemoveVote(ctx.User.GetDomainUser())
                 }
-            )
+            ).RequireAuthorization()
 
         app.MapPost(
             "/api/stories/{id:guid}/closed",
@@ -406,7 +406,7 @@ module Program =
                                 .GetGrain<IStoryGrain>(id)
                                 .Close(ctx.User.GetDomainUser(), DateTime.UtcNow, request.Groups)
                 }
-            )
+            ).RequireAuthorization()
 
         app.MapPost(
             "/api/stories/{id:guid}/cleared",
@@ -416,7 +416,7 @@ module Program =
                                 .GetGrain<IStoryGrain>(id)
                                 .Clear(ctx.User.GetDomainUser(), DateTime.UtcNow)
                 }
-            )
+            ).RequireAuthorization()
 
         app.Run()
 
