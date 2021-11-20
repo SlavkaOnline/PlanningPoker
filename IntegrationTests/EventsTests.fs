@@ -10,6 +10,9 @@ open Gateway.Requests
 open Gateway.Views
 open Microsoft.AspNetCore.SignalR.Client
 open Swensen.Unquote
+open System.IdentityModel.Tokens.Jwt
+open System.Security.Claims
+open System
 
 [<Collection("Real Server Collection")>]
 type EventsTests(fixture: WebApplicationFactory<Program>) =
@@ -237,6 +240,9 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
         task {
 
             let! user = Helper.login apiClient "test"
+            let tokenHandler = new JwtSecurityTokenHandler()
+            let token = tokenHandler.ReadJwtToken(user.Token)
+            let userId =  token.Claims |> Seq.filter(fun c -> c.Type = "nameid") |> Seq.tryHead |> Option.map(fun c -> c.Value |> Guid.Parse ) |> Option.defaultValue Guid.Empty
 
             let! connection = Helper.createWebSocketConnection server user.Token
             let! session = Helper.createSession apiClient user.Token "Session"
@@ -255,7 +261,7 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
 
             let! sessionWithGroup = Helper.addGroup apiClient user.Token session.Id "group"
             let group = sessionWithGroup.Groups |> Array.find (fun g -> g.Id <> session.DefaultGroupId)
-            let! _ = Helper.moveParticipantToGroup apiClient user.Token session.Id user.Id group.Id
+            let! _ = Helper.moveParticipantToGroup apiClient user.Token session.Id userId group.Id
             let! s = Helper.removeGroup apiClient user.Token session.Id group.Id
 
             do! Async.Sleep(1000)
