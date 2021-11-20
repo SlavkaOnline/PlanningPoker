@@ -6,14 +6,14 @@ import { useSnackbar } from 'notistack';
 export const hubContext = createContext<HubConnection | null>(null);
 
 export const ProvideHub = ({ children }: { children: any }) => {
-    const { user } = useAuth();
+    const { user, getAccessToken } = useAuth();
     const [hub, setHub] = useState<HubConnection | null>(null);
     const { enqueueSnackbar } = useSnackbar();
 
     useEffect(() => {
         if (user) {
             const hub = new HubConnectionBuilder()
-                .withUrl('/events', { accessTokenFactory: () => user?.token || '' })
+                .withUrl('/events', { accessTokenFactory: () => getAccessToken() || '' })
                 .withAutomaticReconnect()
                 .configureLogging('error')
                 .build();

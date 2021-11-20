@@ -1,16 +1,21 @@
 import React, { createContext, useContext, useState } from 'react';
 import { login, loginGoogle } from '../models/Api';
-import { User } from '../models/models';
+import { AuthUser, User } from '../models/models';
+import jwt_decode from 'jwt-decode';
 
 type AuthState = Readonly<{
     user: User | null;
     signin: (name: string) => void;
     signinGoogle: () => void;
     signout: () => void;
-    updateUser: (user: User) => void;
+    updateUser: (accessToken: string) => void;
+    getAccessToken: () => string | null;
 }>;
 
 const authPropsDefault: AuthState = {
+    getAccessToken(): string | null {
+        return null;
+    },
     user: null,
     signin: (name: string) => {
         return;
@@ -21,7 +26,7 @@ const authPropsDefault: AuthState = {
     signout: () => {
         return;
     },
-    updateUser: (user: User) => {
+    updateUser: (accessToken: string) => {
         return;
     },
 };
@@ -38,9 +43,34 @@ export function useAuth() {
 }
 
 function useProvideAuth() {
-    const [user, setUser] = useState<User | null>(
-        localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') || '') : null,
-    );
+    const decodeUser = (accessToken: string): User => {
+        const decodedHeader = jwt_decode(accessToken) as any;
+        return {
+            name: decodedHeader.given_name,
+            id: decodedHeader.nameid,
+            picture: decodedHeader.picture,
+        };
+    };
+
+    const getAccessToken = (): string | null => {
+        const value = localStorage.getItem('user');
+        if (value) {
+            return (JSON.parse(value) as AuthUser).token;
+        } else {
+            return null;
+        }
+    };
+
+    const receiveUser = (): User | null => {
+        const token = getAccessToken();
+        if (token) {
+            return decodeUser(token);
+        } else {
+            return null;
+        }
+    };
+
+    const [user, setUser] = useState<User | null>(receiveUser());
 
     const signin = async (name: string) => {
         const user = await login(name);
@@ -57,8 +87,10 @@ function useProvideAuth() {
         setUser(null);
     };
 
-    const updateUser = (user: User) => {
-        localStorage.setItem('user', JSON.stringify(user));
+    const updateUser = (accessToken: string) => {
+        const authUser: AuthUser = { token: accessToken };
+        const user = decodeUser(accessToken);
+        localStorage.setItem('user', JSON.stringify(authUser));
         setUser(user);
     };
 
@@ -68,5 +100,6 @@ function useProvideAuth() {
         signinGoogle,
         signout,
         updateUser,
+        getAccessToken,
     };
 }

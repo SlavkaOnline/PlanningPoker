@@ -1,8 +1,11 @@
 export type User = Readonly<{
     id: string;
     name: string;
-    token: string;
     picture: string | null;
+}>;
+
+export type AuthUser = Readonly<{
+    token: string;
 }>;
 
 export type Participant = Readonly<{

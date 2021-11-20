@@ -1,0 +1,15 @@
+[0m[[0m[0mdebug[0m] [0m[0m[zinc] IncrementalCompile -----------[0m
+[0m[[0m[0mdebug[0m] [0m[0mIncrementalCompile.incrementalCompile[0m
+[0m[[0m[0mdebug[0m] [0m[0mprevious = Stamps for: 0 products, 0 sources, 0 libraries[0m
+[0m[[0m[0mdebug[0m] [0m[0mcurrent source = Set(${BASE}/src/main/scala/application/endpoints/SessionEndpoints.scala, ${BASE}/src/main/scala/actors/GameActor.scala, ${BASE}/src/main/scala/domain/Validation.scala, ${BASE}/src/main/scala/domain/Session.scala, ${BASE}/src/main/scala/domain/Game.scala, ${BASE}/src/main/scala/application/dto/Requests.scala, ${BASE}/src/main/scala/actors/SessionActor.scala, ${BASE}/src/main/scala/application/dto/Views.scala, ${BASE}/src/main/scala/application/handlers/SessionHandlers.scala, ${BASE}/src/main/scala/application/Server.scala, ${BASE}/src/main/scala/domain/Card.scala, ${BASE}/src/main/scala/application/endpoints/BaseEndpoints.scala, ${BASE}/src/main/scala/actors/SessionStore.scala)[0m
+[0m[[0m[0mdebug[0m] [0m[0m> initialChanges = InitialChanges(Changes(added = Set(${BASE}/src/main/scala/application/handlers/SessionHandlers.scala, ${BASE}/src/main/scala/application/dto/Requests.scala, ${BASE}/src/main/scala/actors/GameActor.scala, ${BASE}/src/main/scala/domain/Session.scala, ${BASE}/src/main/scala/domain/Validation.scala, ${BASE}/src/main/scala/domain/Card.scala, ${BASE}/src/main/scala/domain/Game.scala, ${BASE}/src/main/scala/application/endpoints/BaseEndpoints.scala, ${BASE}/src/main/scala/application/endpoints/SessionEndpoints.scala, ${BASE}/src/main/scala/application/Server.scala, ${BASE}/src/main/scala/application/dto/Views.scala, ${BASE}/src/main/scala/actors/SessionActor.scala, ${BASE}/src/main/scala/actors/SessionStore.scala), removed = Set(), changed = Set(), unmodified = ...),Set(),Set(),API Changes: Set())[0m
+[0m[[0m[0mdebug[0m] [0m[0mFull compilation, no sources in previous analysis.[0m
+[0m[[0m[0mdebug[0m] [0m[0mall 13 sources are invalidated[0m
+[0m[[0m[0mdebug[0m] [0m[0mInitial set of included nodes: [0m
+[0m[[0m[0mdebug[0m] [0m[0mRecompiling all sources: number of invalidated sources > 50.0% of all sources[0m
+[0m[[0m[0mdebug[0m] [0m[0mcompilation cycle 1[0m
+[0m[[0m[0minfo[0m] [0m[0mcompiling 13 Scala sources to F:\Projects\MyProjects\PlanningPoker\PlanningPoker\orderingrule\target\scala-2.13\classes ...[0m
+[0m[[0m[0mdebug[0m] [0m[0mGetting org.scala-sbt:compiler-bridge_2.13:1.5.7:compile for Scala 2.13.6[0m
+[0m[[0m[31merror[0m] [0m[0mbad option: '-Ypartial-unification'[0m
+[0m[[0m[0mdebug[0m] [0m[0mCompilation failed (CompilerInterface)[0m
+[0m[[0m[31merror[0m] [0m[0m(Compile / [31mcompileIncremental[0m) Compilation failed[0m

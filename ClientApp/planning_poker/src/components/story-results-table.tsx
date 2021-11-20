@@ -22,7 +22,7 @@ export const StoryResultsTable = (props: StoryResultsTable) => {
                             {props.statistics[r].voters.map((voter) => (
                                 <div key={voter.name} className={styles.participant}>
                                     <span>-&nbsp;{voter.name}</span>
-                                    <span>&nbsp;{`(${voter.duration})`}</span>
+                                    <span className={styles.duration}>&nbsp;{`(${voter.duration})`}</span>
                                 </div>
                             ))}
                         </div>

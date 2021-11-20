@@ -3,6 +3,7 @@ import { Chart } from 'react-google-charts';
 import styles from '../styles/story-result.module.scss';
 import { StoryResultsTable } from './story-results-table';
 import { Statistics } from '../models/models';
+import { Durations } from './durations';
 
 type StoryResult = Readonly<{
     statistics: Statistics;
@@ -40,7 +41,7 @@ export const StoryResult = (props: StoryResult) => {
                 <></>
             )}
             <div className={styles.stats}>
-                <div className={styles.duration}>Duration: {props.duration}</div>
+                <Durations value={props.duration} />
                 <div className={styles.table}>
                     <StoryResultsTable statistics={props.statistics.result} />
                 </div>

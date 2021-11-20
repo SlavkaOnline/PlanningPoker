@@ -15,6 +15,7 @@ import { StoryControl } from './story-control';
 import TimerIcon from '@material-ui/icons/Timer';
 import AccessAlarmIcon from '@material-ui/icons/AccessAlarm';
 import dayjs from 'dayjs';
+import { Durations } from './durations';
 
 export const StoryPlayground = () => {
     const hub = useHub();
@@ -102,14 +103,7 @@ export const StoryPlayground = () => {
                 <Typography variant="h5">{story.title}</Typography>
             </div>
             <div className={styles.work_panel}>
-                {!story.isClosed ? (
-                    <div className={styles.duration}>
-                        <AccessAlarmIcon className={styles.clock} />
-                        <span>{duration}</span>
-                    </div>
-                ) : (
-                    <></>
-                )}
+                {!story.isClosed ? <Durations value={duration} /> : <></>}
                 <div className={styles.action}>
                     <OwnerWrapper component={StoryControl()} />
                 </div>

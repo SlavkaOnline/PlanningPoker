@@ -229,10 +229,7 @@ module Program =
                 let token =
                     jwtTokenProvider.CreateToken(id, request.Name, "")
 
-                { Id = id
-                  Name = request.Name
-                  Token = token
-                  Picture = "" }
+                { Token = token }
         )
 
         app.MapGet(

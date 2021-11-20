@@ -9,10 +9,7 @@ open PlanningPoker.Domain.CommonTypes
 module Views =
 
     type AuthUserModel = {
-        Id: Guid
-        Name: string
         Token: string
-        Picture: string
     }
 
 

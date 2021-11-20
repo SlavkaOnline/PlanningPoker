@@ -1,5 +1,5 @@
 import axios, { CancelToken } from 'axios';
-import { Cards, receiveRedirect, saveRedirect, Session, Story, User } from './models';
+import { AuthUser, Cards, receiveRedirect, saveRedirect, Session, Story, User } from './models';
 import { createBrowserHistory } from 'history';
 
 const history = createBrowserHistory({ forceRefresh: true });
@@ -11,7 +11,7 @@ axios.interceptors.request.use(
     (request) => {
         const localUser = localStorage.getItem('user');
         if (localUser) {
-            const { token } = JSON.parse(localUser) as User;
+            const { token } = JSON.parse(localUser) as AuthUser;
             request.headers.Authorization = `Bearer ${token}`;
         }
         return request;
