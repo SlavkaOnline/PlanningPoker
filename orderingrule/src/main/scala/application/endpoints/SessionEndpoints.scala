@@ -7,11 +7,19 @@ import sttp.tapir._
 import sttp.tapir.json.circe._
 import sttp.tapir.generic.auto._
 import io.circe.generic.auto._
+import sttp.capabilities.akka.AkkaStreams
 import sttp.model.StatusCode
-import sttp.tapir.server.ServerEndpointInParts
+import sttp.tapir.server.{ServerEndpoint, ServerEndpointInParts}
 
 import java.util.UUID
 import scala.concurrent.Future
+import akka.stream.scaladsl.{Flow, Source}
+import sttp.tapir._
+import sttp.capabilities.akka.AkkaStreams
+import sttp.capabilities.WebSockets
+import sttp.ws.WebSocketFrame
+
+
 
 object SessionEndpoints extends BaseEndpoints {
 
@@ -37,5 +45,4 @@ object SessionEndpoints extends BaseEndpoints {
 
     val getGame: ServerEndpointInParts[Player, (UUID, UUID), (String, UUID, UUID), Error, Game, Any, Future] =
         baseEndpoint.get.in(path[UUID]).in("games").in(path[UUID]).out(jsonBody[Game]).serverLogicPart(authorize)
-
 }

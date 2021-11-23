@@ -3,7 +3,7 @@ package application.handlers
 import actors.{GameActor, SessionActor, SessionStore}
 import akka.actor.typed.scaladsl.AskPattern.Askable
 import akka.actor.typed.{ActorRef, ActorSystem}
-import akka.util.Timeout
+import akka.util.{ByteString, Timeout}
 import application.dto.Views._
 import application.endpoints.SessionEndpoints._
 import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
@@ -14,8 +14,12 @@ import akka.actor.typed.scaladsl.AskPattern.schedulerFromActorSystem
 import java.util.UUID
 import scala.concurrent.duration.DurationInt
 import akka.http.scaladsl.server.Route
+import akka.stream.scaladsl.{Flow, Sink, Source}
 import application.dto.{Requests, Views}
 import application.endpoints.SessionEndpoints
+import sttp.capabilities
+import sttp.capabilities.WebSockets
+import sttp.capabilities.akka.AkkaStreams
 import sttp.tapir.server.ServerEndpoint
 import sttp.model.StatusCode
 

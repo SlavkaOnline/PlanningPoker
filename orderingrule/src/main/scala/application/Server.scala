@@ -32,7 +32,6 @@ object Server {
 
         val sessionsRoutes = new SessionHandlers(sessionsStore);
 
-
         val myEndpoints: Seq[Endpoint[_, _, _, _]] = Seq(SessionEndpoints.createSession.endpoint, SessionEndpoints.addStory.endpoint, SessionEndpoints.createGame.endpoint, SessionEndpoints.moveCard.endpoint, SessionEndpoints.nextPlayer.endpoint, SessionEndpoints.getGame.endpoint, SessionEndpoints.getSession.endpoint)
         val docsAsYaml: String = OpenAPIDocsInterpreter().toOpenAPI(myEndpoints, "My App", "1.0").toYaml
         val swagger = new SwaggerAkka(docsAsYaml)

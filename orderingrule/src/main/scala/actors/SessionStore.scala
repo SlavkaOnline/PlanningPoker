@@ -20,7 +20,7 @@ object SessionStore {
             Behaviors.receive { (context, message) =>
                 message match {
                     case AddSession(id, owner, name, replayTo) =>
-                        val session = Session.createDefault(id, owner, name)
+                        val session = Session.create(id, owner, name)
                         val actor = context.spawn(SessionActor(session), id.toString)
                         replayTo ! session
                         apply(sessions.updated(id, actor))
