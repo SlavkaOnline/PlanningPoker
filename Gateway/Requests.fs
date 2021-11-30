@@ -23,7 +23,7 @@ module Requests =
 
 
     [<CLIMutable>]
-    type MoveParticipantToGroup = { ParticipantId: Guid}
+    type MoveParticipantToGroup = { ParticipantId: Guid }
 
     [<CLIMutable>]
     type CloseStory = {

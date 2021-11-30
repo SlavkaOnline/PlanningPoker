@@ -11,7 +11,6 @@ open Gateway.Views
 open Microsoft.AspNetCore.SignalR.Client
 open Swensen.Unquote
 open System.IdentityModel.Tokens.Jwt
-open System.Security.Claims
 open System
 
 [<Collection("Real Server Collection")>]

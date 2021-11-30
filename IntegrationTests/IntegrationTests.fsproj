@@ -12,6 +12,7 @@
         <Compile Include="ClusterFixture.fs" />
         <Compile Include="Helper.fs" />
         <Compile Include="EventsTests.fs" />
+        <Compile Include="ChatTests.fs" />
         <Compile Include="BehaviorTests.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>

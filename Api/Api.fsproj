@@ -10,6 +10,7 @@
     <None Include="Dockerfile" />
     <Compile Include="Application.fs" />
     <Compile Include="EventsDelivery.fs" />
+    <Compile Include="Chat.fs" />
     <Compile Include="Extensions.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
