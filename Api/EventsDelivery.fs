@@ -156,20 +156,8 @@ module EventsDeliveryHub =
             task {
                 let session =
                     client.GetGrain<ISessionGrain>(Guid.Parse(id))
-
-                let userId =
-                    Seq.find (fun (c: Claim) -> c.Type = ClaimTypes.NameIdentifier) this.Context.User.Claims
-
-                let userName =
-                    Seq.find (fun (c: Claim) -> c.Type = ClaimTypes.GivenName) this.Context.User.Claims
-
-                let picture =
-                    Seq.tryFind (fun (c: Claim) -> c.Type = "picture") this.Context.User.Claims
-
-                let user =
-                    { User.Id = %(Guid.Parse(userId.Value))
-                      Name = userName.Value
-                      Picture = picture |> Option.map (fun c -> c.Value) }
+               
+                let user = this.Context.User.GetDomainUser()
 
                 cancellationToken.Register(fun () -> session.RemoveParticipant(%user.Id) |> ignore)
                 |> ignore

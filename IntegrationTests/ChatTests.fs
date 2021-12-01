@@ -44,7 +44,7 @@ type ChatTests(fixture: WebApplicationFactory<Program>) =
                         Task.CompletedTask)
                 )
 
-            do! userConnection1.SendAsync("SendMessage", group, userName1, message)
+            do! userConnection1.SendAsync("SendMessage", group, message)
 
             let! task =
                 Task.WhenAny(

@@ -11,6 +11,7 @@ module Chat =
         member this.Join(group: string): Task =
             this.Groups.AddToGroupAsync(this.Context.ConnectionId, group)
                 
-        member this.SendMessage(group: string, user: string, message: string): Task =
-            this.Clients.Group(group).SendAsync("chatMessage", user, message)
+        member this.SendMessage(group: string, message: string): Task =
+            let user = this.Context.User.GetDomainUser()
+            this.Clients.Group(group).SendAsync("chatMessage", user.Name, message)
 

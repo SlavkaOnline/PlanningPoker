@@ -107,7 +107,7 @@ module Program =
 
                             if
                                 (String.IsNullOrEmpty(accessToken) |> not)
-                                && path.StartsWithSegments(PathString "/events")
+                                && (path.StartsWithSegments(PathString "/events") || path.StartsWithSegments(PathString "/chat") )
                             then
                                 context.Token <- accessToken
                                 Task.CompletedTask
