@@ -18,7 +18,7 @@ open System.Security.Claims
 open PlanningPoker.Domain.CommonTypes
 open System.Threading.Tasks
 
-module EventsDeliveryHub =
+module rec EventsDeliveryHub =
 
     let private jsonSerializerSettings = JsonSerializerSettings()
     jsonSerializerSettings.ContractResolver <- CamelCasePropertyNamesContractResolver()
@@ -26,6 +26,12 @@ module EventsDeliveryHub =
     let private toJson arg =
         JsonConvert.SerializeObject(arg, jsonSerializerSettings)
 
+    type Message =
+        { Group: string
+          Id: string
+          UserName: string
+          Payload: string }
+    
     type Event =
         { EntityId: Guid
           Order: int32
@@ -88,10 +94,50 @@ module EventsDeliveryHub =
         | Story.Event.Cleared dt -> create "Cleared" <| toJson {| startedAt = dt |}
         | Story.Paused _ -> create "Paused" <| toJson {|  |}
 
+    
+    type MessageQueueChat(hub: IHubContext<DomainEventHub>) =
+        let queue = Channel.CreateUnbounded<Message>()
+        let cancellation = new CancellationTokenSource()
 
-    type DomainEventHub(client: IClusterClient) =
+        let backgroundReader =
+            queue.Reader.ReadAllAsync(cancellation.Token)
+            |> AsyncSeq.ofAsyncEnum
+            |> AsyncSeq.iterAsync
+                (fun m ->
+                    hub
+                        .Clients
+                        .Group(m.Group)
+                        .SendAsync("chatMessage", m.Id, m.UserName, m.Payload)
+                    |> Async.AwaitTask)
+
+        do
+            Async.StartAsTask(backgroundReader, cancellationToken = cancellation.Token)
+            |> ignore
+        
+        member _.Send message = queue.Writer.WriteAsync message
+            
+        interface IDisposable with
+            member this.Dispose() =
+                cancellation.Cancel()
+
+    type DomainEventHub(client: IClusterClient, queue: MessageQueueChat) =
         inherit Hub()
 
+        member this.Join(group: string) : Task =
+            this.Groups.AddToGroupAsync(this.Context.ConnectionId, group)
+
+        member this.SendMessage(group: string, message: string) : Task =
+            let user = this.Context.User.GetDomainUser()
+            
+            queue.Send(    
+                    { Group = group
+                      Id = Guid.NewGuid().ToString("N")
+                      UserName = user.Name
+                      Payload = message }
+                )
+                .AsTask()
+        
+        
         member private this.CreateSubscriptionsToEvent<'TEvent>
             (
                 id: string,

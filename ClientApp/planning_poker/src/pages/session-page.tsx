@@ -79,7 +79,7 @@ export const SessionPage = () => {
                         </div>
                     </div>
                     <div className={styles.right}>
-                        <OwnerWrapper component={<SessionControl />} />
+                        <SessionControl />
                         <div className={styles.users}>
                             <UsersList />
                         </div>

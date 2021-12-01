@@ -28,18 +28,17 @@ type ChatTests(fixture: WebApplicationFactory<Program>) =
             let! user1 = Helper.login apiClient userName1
             let! user2 = Helper.login apiClient userName1
 
-            let! userConnection1 = Helper.createChatConnection server user1.Token
-            let! userConnection2 = Helper.createChatConnection server user2.Token
+            let! userConnection1 = Helper.createEventsConnection server user1.Token
+            let! userConnection2 = Helper.createEventsConnection server user2.Token
 
             do! Task.WhenAll(userConnection1.SendAsync("Join", group), userConnection2.SendAsync("Join", group))
-            
             
             let tcs = TaskCompletionSource<string>()
 
             use _ =
-                userConnection2.On<string, string>(
+                userConnection2.On<string, string, string>(
                     "chatMessage",
-                    (fun _ message ->
+                    (fun _ _ message ->
                         tcs.SetResult message
                         Task.CompletedTask)
                 )

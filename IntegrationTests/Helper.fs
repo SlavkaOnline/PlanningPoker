@@ -132,10 +132,7 @@ module Helper =
     
     let createEventsConnection (testServer: TestServer) (token: string) =
         createWebSocketConnection testServer token "events"
-    
-    let createChatConnection (testServer: TestServer) (token: string) =
-        createWebSocketConnection testServer token "chat"
-    
+        
     let createSession (client: HttpClient) (token: string) (title: string) =
         requestPost<_, SessionView> client { CreateSession.Title = title } token "sessions"
 

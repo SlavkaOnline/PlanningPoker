@@ -1,7 +1,6 @@
 namespace Api
 
 open System.Security.Claims
-open Api.Chat
 open GrainInterfaces
 open Microsoft.AspNetCore.Authentication
 open Microsoft.AspNetCore.Authentication.OpenIdConnect
@@ -222,7 +221,6 @@ module Program =
                                }))
 
         app.MapHub<DomainEventHub>("/events", (fun options -> options.Transports <- HttpTransportType.WebSockets))
-        app.MapHub<ChatHub>("/chat", (fun options -> options.Transports <- HttpTransportType.WebSockets))
 
         app.MapPost(
             "/api/login",

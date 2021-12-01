@@ -1,0 +1,45 @@
+﻿.wrapper {
+  padding: 0 10px;
+  height: 500px;
+  display: flex;
+  flex-flow: column;
+  overflow: hidden;
+  justify-content: space-between;
+
+  .messages {
+    display: flex;
+    flex-direction: column-reverse;
+    height: 100%;
+    overflow: auto;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid grey;
+
+    .text {
+      overflow: hidden;
+      word-break: break-word;
+    }
+  }
+
+  .panel {
+    height: 100px;
+
+    .controls {
+      display: flex;
+      justify-content: flex-start;
+
+      .input {
+        padding: 10px;
+        width: 100%;
+        display: block;
+        resize: none;
+        font-size: 14px;
+      }
+
+      .action {
+        display: block;
+        vertical-align: center;
+      }
+    }
+  }
+}
