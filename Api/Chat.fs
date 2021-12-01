@@ -2,7 +2,6 @@
 
 open System.Threading.Tasks
 open Microsoft.AspNetCore.SignalR
-open PlanningPoker.Domain.CommonTypes
 
 module Chat =
     
@@ -12,6 +11,6 @@ module Chat =
         member this.Join(group: string): Task =
             this.Groups.AddToGroupAsync(this.Context.ConnectionId, group)
                 
-        member this.SendMessage(group: string, user: User, message: string): Task =
+        member this.SendMessage(group: string, user: string, message: string): Task =
             this.Clients.Group(group).SendAsync("chatMessage", user, message)
 

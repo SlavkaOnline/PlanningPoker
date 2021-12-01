@@ -7,7 +7,6 @@ module CommonTypes =
     [<Measure>]
     type UserId
 
-    [<CLIMutable>]
     type User = {
         Id: Guid<UserId>
         Name: string
