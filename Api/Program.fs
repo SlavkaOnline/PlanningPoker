@@ -76,6 +76,7 @@ module Program =
 
         builder.Services.AddSingleton<JwtTokenProvider>()
         builder.Services.AddSingleton<CardsTypeProvider>()
+        builder.Services.AddSingleton<MessageQueueChat>()
 
         builder
             .Services
