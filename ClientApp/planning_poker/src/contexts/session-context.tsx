@@ -137,7 +137,6 @@ export const sessionContext = createContext<{ session: Session; dispatch: React.
 
 export const ProvideSession = ({ children }: { children: any }) => {
     const [session, dispatch] = useReducer(reducer, defaultSession);
-    const hub = useHub();
     const { id } = useParams<{ id: string }>();
 
     useEffect(() => {

@@ -1,6 +1,7 @@
 ﻿namespace IntegrationTests
 
 open System
+open System.Collections.Concurrent
 open System.Threading
 open Swensen.Unquote
 open System.Threading.Tasks
@@ -59,4 +60,38 @@ type ChatTests(fixture: WebApplicationFactory<Program>) =
                 <@ match result with
                    | Some m -> m = message
                    | None -> false @>
+        }
+        
+    [<Fact>]
+    let ``Every users has one message`` () =
+        task {
+
+            let userName1 = "User1"
+            let userName2 = "User2"
+            let group = "group"
+            let message = "simple message"
+            
+            let! user1 = Helper.login apiClient userName1
+            let! user2 = Helper.login apiClient userName1
+
+            let! userConnection1 = Helper.createEventsConnection server user1.Token
+            let! userConnection2 = Helper.createEventsConnection server user2.Token
+
+            do! Task.WhenAll(userConnection1.SendAsync("Join", group), userConnection2.SendAsync("Join", group))
+            
+            let messages = ConcurrentBag();
+
+            use _ =
+                userConnection2.On<string, string, string>(
+                    "chatMessage",
+                    (fun _ _ message ->
+                        messages.Add(message)
+                        Task.CompletedTask)
+                )
+            
+            do! userConnection1.SendAsync("SendMessage", group, message)
+            do! Task.Delay(TimeSpan.FromSeconds 1.)
+            
+            test <@ messages.Count = 1 @>
+          
         }

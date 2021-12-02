@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useReducer, useState } from 'react';
+﻿import React, { useEffect, useReducer, useRef, useState } from 'react';
 import ChatIcon from '@material-ui/icons/Chat';
 import SendIcon from '@material-ui/icons/Send';
 import { GeneralDialog } from './general-dialog';
@@ -8,7 +8,6 @@ import Badge from '@material-ui/core/Badge';
 
 import styles from '../styles/chat.module.scss';
 import { Button } from '@material-ui/core';
-import { Session } from '../models/models';
 
 type Message = Readonly<{
     id: string;
@@ -24,24 +23,33 @@ type ChatDialogProps = Readonly<{
 const ChatDialog = (props: ChatDialogProps) => {
     const [text, setText] = useState('');
 
+    const messagesView = useRef<any>();
     const onEnterPress = (e: any) => {
         if (e.keyCode == 13 && e.shiftKey == false) {
             e.preventDefault();
             send();
+            messagesView.current.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest',
+                inline: 'start',
+            });
         }
     };
 
     function send() {
-        props.onSend(text);
-        setText('');
+        const msg = text.trim();
+        if (msg) {
+            props.onSend(text);
+            setText('');
+        }
     }
 
     return (
         <div className={styles.wrapper}>
-            <div className={styles.messages}>
+            <div ref={messagesView} className={styles.messages}>
                 {props.messages.map((m) => (
-                    <div key={m.id}>
-                        <div>{m.user}</div>
+                    <div className={styles.message} key={m.id}>
+                        <div className={styles.name}>{m.user}</div>
                         <div className={styles.text}>{m.payload}</div>
                     </div>
                 ))}
@@ -56,7 +64,7 @@ const ChatDialog = (props: ChatDialogProps) => {
                         onChange={(e) => setText(e.target.value)}
                     />
                     <Button className={styles.action} color={'default'} onClick={send}>
-                        <SendIcon />
+                        <SendIcon className={styles.send} />
                     </Button>
                 </div>
             </div>
@@ -65,7 +73,7 @@ const ChatDialog = (props: ChatDialogProps) => {
 };
 
 type ChatState = Readonly<{
-    messages: Message[];
+    messages: readonly Message[];
     isOpenDialog: boolean;
     unread: number;
 }>;
@@ -86,12 +94,14 @@ const reducer = (state: ChatState, action: Action) => {
     switch (action.tag) {
         case 'openDialog':
             return { ...state, isOpenDialog: action.state, unread: 0 };
-        case 'receiveMessage':
-            state.messages.unshift(action.message);
+        case 'receiveMessage': {
+            const messages = [action.message, ...state.messages];
             return {
                 ...state,
+                messages: messages,
                 unread: state.isOpenDialog ? state.unread : state.unread + 1,
             };
+        }
     }
 };
 
@@ -101,11 +111,12 @@ export const Chat = () => {
     const { session } = useSession();
 
     useEffect(() => {
-        hub?.send('Join', session.id);
-        hub?.on('chatMessage', (id, user, message) => {
-            dispatch({ tag: 'receiveMessage', message: { id: id, user: user, payload: message } });
+        hub?.send('Join', session.id).then(() => {
+            hub?.on('chatMessage', (id, user, message) => {
+                dispatch({ tag: 'receiveMessage', message: { id: id, user: user, payload: message } });
+            });
         });
-    }, [hub]);
+    }, [session.id, hub]);
 
     function send(text: string) {
         hub?.send('SendMessage', session.id, text);
@@ -113,9 +124,9 @@ export const Chat = () => {
 
     return (
         <div>
-            <div onClick={() => dispatch({ tag: 'openDialog', state: true })}>
-                <Badge color="secondary" badgeContent={state.unread}>
-                    <ChatIcon />
+            <div className={styles.chat} onClick={() => dispatch({ tag: 'openDialog', state: true })}>
+                <Badge color="secondary" badgeContent={state.unread} max={9}>
+                    <ChatIcon className={styles.icon} />
                 </Badge>
                 <div>Chat</div>
             </div>
