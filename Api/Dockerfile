@@ -7,13 +7,30 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
+COPY *.sln ./
+COPY IntegrationTests/IntegrationTests.fsproj ./IntegrationTests/
+COPY PlanningPoker/PlanningPoker.fsproj ./PlanningPoker/
+COPY Tests/Tests.fsproj ./Tests/
+COPY Api/Api.fsproj ./Api/
+COPY Gateway/Gateway.fsproj ./Gateway/
+COPY GrainInterfaces/GrainInterfaces.csproj ./GrainInterfaces/
+COPY Grains/Grains.csproj ./Grains/
+RUN dotnet restore
 COPY . .
-RUN dotnet restore PlanningPoker.sln
+RUN dotnet build
+RUN dotnet test --no-build --logger:trx
 
-WORKDIR "/src/Api"
-RUN dotnet build "Api.fsproj" -c Release -o /app/build
+FROM build as Tests
+WORKDIR "/src/Tests"
+ENTRYPOINT ["dotnet", "test", "--logger:trx"]
+
+FROM build as IntegrationTests
+WORKDIR "/src/IntegrationTests"
+ENTRYPOINT ["dotnet", "test", "--logger:trx"]
+
 
 FROM build AS publish
+WORKDIR "/src/Api"
 RUN dotnet publish "Api.fsproj" -c Release -o /app/publish
 
 FROM base AS final
