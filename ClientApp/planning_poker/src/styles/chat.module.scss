@@ -1,0 +1,112 @@
+﻿.wrapper {
+  padding: 0 10px;
+  height: 500px;
+  box-sizing: border-box;
+  display: flex;
+  flex-flow: column;
+  overflow: hidden;
+  justify-content: space-between;
+
+  .messages {
+    display: flex;
+    flex-direction: column-reverse;
+    height: 100%;
+    overflow: scroll;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid grey;
+
+    .message {
+      max-width: 80%;
+      position: relative;
+      background: rgba(181, 194, 255, .32);
+      padding: 10px;
+      border-bottom-right-radius: 5px;
+      border-top-right-radius: 5px;
+      border-top-left-radius: 5px;
+      margin: 10px 0 10px 20px;
+
+      &::before {
+        position: absolute;
+        display: block;
+        top: 0;
+        left: -15px;
+        width: 15px;
+        height: 100%;
+        content: '';
+        background: rgba(181, 194, 255, .32);
+      }
+
+      &::after {
+        position: absolute;
+        display: block;
+        top: 0;
+        left: -15px;
+        width: 15px;
+        height: 100%;
+        content: '';
+        background-color: white;
+        border-bottom-right-radius: 5px;
+      }
+      
+      .name {
+        font-weight: bolder;
+      }
+      
+      .text {
+        overflow: hidden;
+        word-break: break-word;
+      }
+    }
+  }
+
+  .panel {
+    height: 100px;
+
+    .controls {
+      display: flex;
+      justify-content: flex-start;
+
+      .input {
+        padding: 10px;
+        width: 100%;
+        display: block;
+        resize: none;
+        font-size: 14px;
+      }
+
+      .action {
+        display: block;
+        vertical-align: center;
+        .send {
+          height: 100%;
+          display: flex;
+          justify-content: center;
+          margin: auto;
+        }
+      }
+    }
+  }
+}
+
+.chat {
+  cursor: pointer;
+  position: relative;
+  width: 50px;
+
+  &::before {
+    position: absolute;
+    top: 20px;
+    left: 25px;
+    font-size: 10px;
+    font-weight: bolder;
+    z-index: 2;
+    color: dodgerblue;
+    content: 'beta';
+  }
+  
+  .icon {
+    color: grey;
+  }
+}
+

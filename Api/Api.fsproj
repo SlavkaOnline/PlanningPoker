@@ -8,9 +8,9 @@
 
   <ItemGroup>
     <None Include="Dockerfile" />
+    <Compile Include="Extensions.fs" />
     <Compile Include="Application.fs" />
     <Compile Include="EventsDelivery.fs" />
-    <Compile Include="Extensions.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

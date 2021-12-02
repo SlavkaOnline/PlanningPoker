@@ -75,6 +75,7 @@ module Program =
 
         builder.Services.AddSingleton<JwtTokenProvider>()
         builder.Services.AddSingleton<CardsTypeProvider>()
+        builder.Services.AddSingleton<MessageQueueChat>()
 
         builder
             .Services
@@ -106,7 +107,7 @@ module Program =
 
                             if
                                 (String.IsNullOrEmpty(accessToken) |> not)
-                                && path.StartsWithSegments(PathString "/events")
+                                && (path.StartsWithSegments(PathString "/events"))
                             then
                                 context.Token <- accessToken
                                 Task.CompletedTask

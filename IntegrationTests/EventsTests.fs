@@ -11,7 +11,6 @@ open Gateway.Views
 open Microsoft.AspNetCore.SignalR.Client
 open Swensen.Unquote
 open System.IdentityModel.Tokens.Jwt
-open System.Security.Claims
 open System
 
 [<Collection("Real Server Collection")>]
@@ -27,7 +26,7 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
 
             let! user = Helper.login apiClient "test"
 
-            let! connection = Helper.createWebSocketConnection server user.Token
+            let! connection = Helper.createEventsConnection server user.Token
 
             let! session = Helper.createSession apiClient user.Token "Session"
 
@@ -48,7 +47,7 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
     let ``The participant was removed when SignalR connection has been the closed`` () =
         task {
             let! user = Helper.login apiClient "test"
-            let! connection = Helper.createWebSocketConnection server user.Token
+            let! connection = Helper.createEventsConnection server user.Token
 
             let! session = Helper.createSession apiClient user.Token "Session"
 
@@ -76,7 +75,7 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
 
             let! user = Helper.login apiClient "test"
 
-            let! connection = Helper.createWebSocketConnection server user.Token
+            let! connection = Helper.createEventsConnection server user.Token
 
             //action 1 Started
             let! session = Helper.createSession apiClient user.Token "Session"
@@ -128,7 +127,7 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
 
             let! user = Helper.login apiClient "test"
 
-            let! connection = Helper.createWebSocketConnection server user.Token
+            let! connection = Helper.createEventsConnection server user.Token
 
             //action 1 Started
             let! session = Helper.createSession apiClient user.Token "Session"
@@ -173,7 +172,7 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
 
             let! user = Helper.login apiClient "test"
 
-            let! connection = Helper.createWebSocketConnection server user.Token
+            let! connection = Helper.createEventsConnection server user.Token
             let! session = Helper.createSession apiClient user.Token "Session"
 
             //action1 StoryConfigured
@@ -244,7 +243,7 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
             let token = tokenHandler.ReadJwtToken(user.Token)
             let userId =  token.Claims |> Seq.filter(fun c -> c.Type = "nameid") |> Seq.tryHead |> Option.map(fun c -> c.Value |> Guid.Parse ) |> Option.defaultValue Guid.Empty
 
-            let! connection = Helper.createWebSocketConnection server user.Token
+            let! connection = Helper.createEventsConnection server user.Token
             let! session = Helper.createSession apiClient user.Token "Session"
 
             let! subscription =

@@ -108,26 +108,31 @@ module Helper =
             return JsonConvert.DeserializeObject<'TResult>(content)
         }
 
-    let createWebSocketConnection (testServer: TestServer) (token: string) = task {
-        let connection = HubConnectionBuilder()
-                             .WithUrl($"%s{testServer.BaseAddress.ToString()}events", fun options ->
-                                    options.AccessTokenProvider <- (fun _ -> Task.FromResult token)
-                                    options.SkipNegotiation <- true
-                                    options.Transports <- HttpTransportType.WebSockets
-                                    options.WebSocketFactory <- (fun ctx cancellationToken ->
-                                            let t = task {
-                                                let webSocketClient = testServer.CreateWebSocketClient()
-                                                let url = $"%s{ctx.Uri.ToString()}?access_token=%s{token}"
-                                                return! webSocketClient.ConnectAsync(Uri(url), cancellationToken)
-                                            }
-                                            ValueTask<Net.WebSockets.WebSocket>(t)
+    
+    let private createWebSocketConnection (testServer: TestServer) (token:string) (path: string) =
+        task {
+            let connection = HubConnectionBuilder()
+                                 .WithUrl($"%s{testServer.BaseAddress.ToString()}%s{path}", fun options ->
+                                        options.AccessTokenProvider <- (fun _ -> Task.FromResult token)
+                                        options.SkipNegotiation <- true
+                                        options.Transports <- HttpTransportType.WebSockets
+                                        options.WebSocketFactory <- (fun ctx cancellationToken ->
+                                                let t = task {
+                                                    let webSocketClient = testServer.CreateWebSocketClient()
+                                                    let url = $"%s{ctx.Uri.ToString()}?access_token=%s{token}"
+                                                    return! webSocketClient.ConnectAsync(Uri(url), cancellationToken)
+                                                }
+                                                ValueTask<Net.WebSockets.WebSocket>(t)
+                                            )
                                         )
-                                    )
-                             .Build()
-        do! connection.StartAsync()
-        return connection
-        }
-
+                                 .Build()
+            do! connection.StartAsync()
+            return connection
+        }        
+    
+    let createEventsConnection (testServer: TestServer) (token: string) =
+        createWebSocketConnection testServer token "events"
+        
     let createSession (client: HttpClient) (token: string) (title: string) =
         requestPost<_, SessionView> client { CreateSession.Title = title } token "sessions"
 
