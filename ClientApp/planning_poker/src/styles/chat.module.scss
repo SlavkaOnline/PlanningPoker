@@ -13,49 +13,80 @@
     height: 100%;
     overflow: scroll;
     margin-bottom: 10px;
-    padding-bottom: 5px;
+    padding: 15px 15px 5px;
     border-bottom: 1px solid grey;
 
-    .message {
-      max-width: 80%;
-      position: relative;
-      background: rgba(181, 194, 255, .32);
-      padding: 10px;
-      border-bottom-right-radius: 5px;
-      border-top-right-radius: 5px;
-      border-top-left-radius: 5px;
-      margin: 10px 0 10px 20px;
+    .messageBlock {
 
-      &::before {
-        position: absolute;
-        display: block;
-        top: 0;
-        left: -15px;
-        width: 15px;
-        height: 100%;
-        content: '';
+      display: flex;
+      align-items: end;
+      margin-bottom: 10px;
+      
+      &.my {
+        flex-direction: row-reverse;
+      }
+      
+      .message {
+        max-width: 80%;
+        position: relative;
         background: rgba(181, 194, 255, .32);
-      }
+        padding: 10px;
+        border-bottom-right-radius: 5px;
+        border-top-right-radius: 5px;
+        border-top-left-radius: 5px;
+        margin-bottom: 5px;
+        margin-left: 20px;
 
-      &::after {
-        position: absolute;
-        display: block;
-        top: 0;
-        left: -15px;
-        width: 15px;
-        height: 100%;
-        content: '';
-        background-color: white;
-        border-bottom-right-radius: 15px;
-      }
+        &::before {
+          position: absolute;
+          display: block;
+          top: 0;
+          left: -15px;
+          width: 15px;
+          height: 100%;
+          content: '';
+          background: rgba(181, 194, 255, .32);
+        }
 
-      .name {
-        font-weight: bolder;
-      }
+        &::after {
+          position: absolute;
+          display: block;
+          top: 0;
+          left: -15px;
+          width: 15px;
+          height: 100%;
+          content: '';
+          background-color: white;
+          border-bottom-right-radius: 15px;
+        }
 
-      .text {
-        overflow: hidden;
-        word-break: break-word;
+        &.my {
+          border-radius: 5px 5px 0 5px;
+          margin-bottom: 5px;
+          margin-right: 20px;
+          
+            &::before {
+              left: auto;
+              right: -15px;
+            }
+  
+            &::after {
+              left: auto;
+              right: -15px;
+              border-bottom-left-radius: 15px;
+              border-bottom-right-radius: 0;
+            }
+        }
+        
+        
+        .name {
+          font-weight: bolder;
+        }
+
+        .text {
+          overflow: hidden;
+          word-break: break-word;
+        }
       }
     }
   }
@@ -78,6 +109,7 @@
       .action {
         display: block;
         vertical-align: center;
+
         .send {
           height: 100%;
           display: flex;
@@ -88,6 +120,7 @@
     }
   }
 }
+
 
 .chat {
   cursor: pointer;
@@ -109,4 +142,5 @@
     color: grey;
   }
 }
+
 

@@ -8,6 +8,6 @@ namespace GrainInterfaces
 {
     public interface IDomainGrain<TEvent>: IGrainWithGuidKey
     {
-        Task<IReadOnlyList<Views.EventView<TEvent>>> GetEventsAfter(int version);
+        Task<IReadOnlyList<Views.Event<TEvent>>> GetEventsAfter(int version);
     }
 }

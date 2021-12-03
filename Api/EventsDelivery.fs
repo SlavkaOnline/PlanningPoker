@@ -26,12 +26,6 @@ module rec EventsDeliveryHub =
     let private toJson arg =
         JsonConvert.SerializeObject(arg, jsonSerializerSettings)
 
-    type Message =
-        { Group: string
-          Id: string
-          UserName: string
-          Payload: string }
-    
     type Event =
         { EntityId: Guid
           Order: int32
@@ -44,7 +38,7 @@ module rec EventsDeliveryHub =
           Type = _type
           Payload = payload }
 
-    let convertSessionEvent (entityId: Guid) (domainEvent: EventView<Session.Event>) : Event =
+    let convertSessionEvent (entityId: Guid) (domainEvent: Event<Session.Event>) : Event =
         let create = createEvent entityId domainEvent.Order
 
         match domainEvent.Payload with
@@ -78,7 +72,7 @@ module rec EventsDeliveryHub =
             <| toJson {| group = group; user = user |}
 
 
-    let convertStoryEvent (entityId: Guid) (domainEvent: EventView<Story.Event>) : Event =
+    let convertStoryEvent (entityId: Guid) (domainEvent: Event<Story.Event>) : Event =
         let create = createEvent entityId domainEvent.Order
 
         match domainEvent.Payload with
@@ -94,55 +88,50 @@ module rec EventsDeliveryHub =
         | Story.Event.Cleared dt -> create "Cleared" <| toJson {| startedAt = dt |}
         | Story.Paused _ -> create "Paused" <| toJson {|  |}
 
-    
-    type MessageQueueChat(hub: IHubContext<DomainEventHub>) =
-        let queue = Channel.CreateUnbounded<Message>()
-        let cancellation = new CancellationTokenSource()
-
-        let backgroundReader =
-            queue.Reader.ReadAllAsync(cancellation.Token)
-            |> AsyncSeq.ofAsyncEnum
-            |> AsyncSeq.iterAsync
-                (fun m ->
-                    hub
-                        .Clients
-                        .Group(m.Group)
-                        .SendAsync("chatMessage", m.Id, m.UserName, m.Payload)
-                    |> Async.AwaitTask)
-
-        do
-            Async.StartAsTask(backgroundReader, cancellationToken = cancellation.Token)
-            |> ignore
-        
-        member _.Send message = queue.Writer.WriteAsync message
-            
-        interface IDisposable with
-            member this.Dispose() =
-                cancellation.Cancel()
-
-    type DomainEventHub(client: IClusterClient, queue: MessageQueueChat) =
+    type DomainEventHub(client: IClusterClient) =
         inherit Hub()
 
-        member this.Join(group: string) : Task =
-            this.Groups.AddToGroupAsync(this.Context.ConnectionId, group)
-
-        member this.SendMessage(group: string, message: string) : Task =
+        member this.SendMessage(group: string, text: string) : Task =
             let user = this.Context.User.GetDomainUser()
-            
-            queue.Send(    
-                    { Group = group
-                      Id = Guid.NewGuid().ToString("N")
-                      UserName = user.Name
-                      Payload = message }
-                )
-                .AsTask()
-        
+
+            let message =
+                { Id = Guid.NewGuid().ToString("N")
+                  Group = group
+                  User =
+                      { Id = %user.Id
+                        Name = user.Name
+                        Picture = user.Picture |> Option.defaultValue "" }
+                  Text = text }
+
+            client
+                .GetStreamProvider("SMS")
+                .GetStream<ChatMessage>(Guid.Parse(group), "Chat")
+                .OnNextAsync message
+
+
+        member this.Chat(group: string, cancellationToken: CancellationToken) =
+            task {
+                let channel = Channel.CreateUnbounded()
+                let! sub = client
+                               .GetStreamProvider("SMS")
+                               .GetStream<ChatMessage>(Guid.Parse(group), "Chat")
+                               .SubscribeAsync(fun msg _ -> channel.Writer.WriteAsync(msg).AsTask())
+
+                cancellationToken.Register
+                        (fun _ ->
+                            sub.UnsubscribeAsync()
+                            |> Async.AwaitTask
+                            |> Async.RunSynchronously)
+                    |> ignore
+                   
+                return channel.Reader.ReadAllAsync(cancellationToken)    
+          }
         
         member private this.CreateSubscriptionsToEvent<'TEvent>
             (
                 id: string,
                 version: int32,
-                eventConverter: Guid -> EventView<'TEvent> -> Event,
+                eventConverter: Guid -> Event<'TEvent> -> Event,
                 [<EnumeratorCancellation>] cancellationToken: CancellationToken
             ) : Task<System.Collections.Generic.IAsyncEnumerable<Event>> =
             task {
@@ -152,14 +141,13 @@ module rec EventsDeliveryHub =
                     client.GetGrain<IDomainGrain<'TEvent>>(guid)
 
                 let bufferChannel =
-                    Channel.CreateUnbounded<EventView<'TEvent>>()
+                    Channel.CreateUnbounded<Event<'TEvent>>()
 
                 let! sub =
                     client
                         .GetStreamProvider("SMS")
-                        .GetStream<EventView<'TEvent>>(guid, "DomainEvents")
+                        .GetStream<Event<'TEvent>>(guid, "DomainEvents")
                         .SubscribeAsync(fun event token -> bufferChannel.Writer.WriteAsync(event).AsTask())
-                    |> Async.AwaitTask
 
                 cancellationToken.Register
                     (fun _ ->
@@ -202,7 +190,7 @@ module rec EventsDeliveryHub =
             task {
                 let session =
                     client.GetGrain<ISessionGrain>(Guid.Parse(id))
-               
+
                 let user = this.Context.User.GetDomainUser()
 
                 cancellationToken.Register(fun () -> session.RemoveParticipant(%user.Id) |> ignore)

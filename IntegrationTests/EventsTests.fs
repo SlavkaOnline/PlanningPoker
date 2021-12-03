@@ -239,7 +239,7 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
         task {
 
             let! user = Helper.login apiClient "test"
-            let tokenHandler = new JwtSecurityTokenHandler()
+            let tokenHandler = JwtSecurityTokenHandler()
             let token = tokenHandler.ReadJwtToken(user.Token)
             let userId =  token.Claims |> Seq.filter(fun c -> c.Type = "nameid") |> Seq.tryHead |> Option.map(fun c -> c.Value |> Guid.Parse ) |> Option.defaultValue Guid.Empty
 

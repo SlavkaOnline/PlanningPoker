@@ -18,7 +18,6 @@ COPY Grains/Grains.csproj ./Grains/
 RUN dotnet restore
 COPY . .
 RUN dotnet build
-RUN dotnet test --no-build --logger:trx
 
 FROM build as Tests
 WORKDIR "/src/Tests"
@@ -30,6 +29,7 @@ ENTRYPOINT ["dotnet", "test", "--logger:trx"]
 
 
 FROM build AS publish
+RUN dotnet test --no-build --logger:trx
 WORKDIR "/src/Api"
 RUN dotnet publish "Api.fsproj" -c Release -o /app/publish
 

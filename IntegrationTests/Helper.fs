@@ -18,7 +18,7 @@ open Newtonsoft.Json
 [<RequireQualifiedAccess>]
 module Helper =
 
-    let login (client: HttpClient) (name: string) : Task<AuthUserModel> =
+    let login (client: HttpClient) (name: string) : Task<AuthUser> =
         task {
             let user = { Name = name }
             let request = new HttpRequestMessage()
@@ -32,7 +32,7 @@ module Helper =
             let! content =
                 response.Content.ReadAsStringAsync()
 
-            return JsonConvert.DeserializeObject<AuthUserModel>(content)
+            return JsonConvert.DeserializeObject<AuthUser>(content)
         }
 
     let requestPost<'TBody, 'TResult>
@@ -134,13 +134,13 @@ module Helper =
         createWebSocketConnection testServer token "events"
         
     let createSession (client: HttpClient) (token: string) (title: string) =
-        requestPost<_, SessionView> client { CreateSession.Title = title } token "sessions"
+        requestPost<_, Session> client { CreateSession.Title = title } token "sessions"
 
     let getStory (client: HttpClient) (token: string) (id:Guid) =
-        requestGet<StoryView> client token $"stories/%s{id.ToString()}"
+        requestGet<Story> client token $"stories/%s{id.ToString()}"
 
-    let addStoryToSession (client: HttpClient) (token: string) (session: SessionView) (arg: CreateStory) =
-        requestPost<_, SessionView>
+    let addStoryToSession (client: HttpClient) (token: string) (session: Session) (arg: CreateStory) =
+        requestPost<_, Session>
                                             client
                                             arg
                                             token
@@ -155,22 +155,22 @@ module Helper =
                     $"sessions/%s{sessionId.ToString()}/activestory/%s{id.ToString()}"
 
     let getSession  (client: HttpClient) (token: string) (id: Guid) =
-        requestGet<SessionView> client token $"sessions/%s{id.ToString()}"
+        requestGet<Session> client token $"sessions/%s{id.ToString()}"
 
     let vote  (client: HttpClient) (token: string) (id: Guid) (card: string) =
-        requestPost<_, StoryView> client {Card = card} token $"stories/%s{id.ToString()}/vote"
+        requestPost<_, Story> client {Card = card} token $"stories/%s{id.ToString()}/vote"
 
     let closeStory  (client: HttpClient) (token: string) (id: Guid) (arg: CloseStory) =
-        requestPost<_,StoryView> client arg token $"stories/%s{id.ToString()}/closed"
+        requestPost<_,Story> client arg token $"stories/%s{id.ToString()}/closed"
 
     let clearStory  (client: HttpClient) (token: string) (id: Guid)  =
-        requestPostWithoutBody<StoryView> client token $"stories/%s{id.ToString()}/cleared"
+        requestPostWithoutBody<Story> client token $"stories/%s{id.ToString()}/cleared"
 
     let addGroup (client: HttpClient) (token: string) (id: Guid) (name: string) =
-        requestPost<_, SessionView> client { CreateGroup.Name = name } token $"sessions/%s{id.ToString()}/groups"
+        requestPost<_, Session> client { CreateGroup.Name = name } token $"sessions/%s{id.ToString()}/groups"
 
     let removeGroup (client: HttpClient) (token: string) (id: Guid) (groupId: Guid) =
-        requestDelete<SessionView> client token $"sessions/%s{id.ToString()}/groups/%s{groupId.ToString()}"
+        requestDelete<Session> client token $"sessions/%s{id.ToString()}/groups/%s{groupId.ToString()}"
 
     let moveParticipantToGroup (client: HttpClient) (token: string) (id: Guid) (userId: Guid) (groupId: Guid) =
-        requestPost<_,SessionView> client {MoveParticipantToGroup.ParticipantId = userId} token $"sessions/%s{id.ToString()}/groups/%s{groupId.ToString()}/participants"
+        requestPost<_,Session> client {MoveParticipantToGroup.ParticipantId = userId} token $"sessions/%s{id.ToString()}/groups/%s{groupId.ToString()}/participants"
