@@ -7,12 +7,20 @@ import { useHub } from '../contexts/hub-context';
 import Badge from '@material-ui/core/Badge';
 
 import styles from '../styles/chat.module.scss';
-import { Button } from '@material-ui/core';
+import { Avatar, Button } from '@material-ui/core';
+import { ISubscription } from '@microsoft/signalr';
+import { useAuth } from '../contexts/auth-context';
+
+type ChatUser = Readonly<{
+    id: string;
+    name: string;
+    picture: string;
+}>;
 
 type Message = Readonly<{
     id: string;
-    user: string;
-    payload: string;
+    user: ChatUser;
+    text: string;
 }>;
 
 type ChatDialogProps = Readonly<{
@@ -22,7 +30,7 @@ type ChatDialogProps = Readonly<{
 
 const ChatDialog = (props: ChatDialogProps) => {
     const [text, setText] = useState('');
-
+    const { user } = useAuth();
     const messagesView = useRef<any>();
     const onEnterPress = (e: any) => {
         if (e.keyCode == 13 && e.shiftKey == false) {
@@ -44,13 +52,18 @@ const ChatDialog = (props: ChatDialogProps) => {
         }
     }
 
+    const getMessageTypeStyle = (id: string) => (id === user?.id ? styles.my : '');
+
     return (
         <div className={styles.wrapper}>
             <div ref={messagesView} className={styles.messages}>
                 {props.messages.map((m) => (
-                    <div className={styles.message} key={m.id}>
-                        <div className={styles.name}>{m.user}</div>
-                        <div className={styles.text}>{m.payload}</div>
+                    <div className={styles.messageBlock + ' ' + getMessageTypeStyle(m.user.id)} key={m.id}>
+                        <Avatar src={m.user.picture} />
+                        <div className={styles.message + ' ' + getMessageTypeStyle(m.user.id)}>
+                            <div className={styles.name}>{m.user.name}</div>
+                            <div className={styles.text}>{m.text}</div>
+                        </div>
                     </div>
                 ))}
             </div>
@@ -111,11 +124,23 @@ export const Chat = () => {
     const { session } = useSession();
 
     useEffect(() => {
-        hub?.send('Join', session.id).then(() => {
-            hub?.on('chatMessage', (id, user, message) => {
-                dispatch({ tag: 'receiveMessage', message: { id: id, user: user, payload: message } });
-            });
+        let subscriptions: ISubscription<any> | null;
+        const createSubscriptions = () =>
+            hub?.stream('Chat', session.id).subscribe({
+                next: (message: Message) => {
+                    dispatch({ tag: 'receiveMessage', message });
+                },
+                complete: () => console.log('complete'),
+                error: (e: any) => console.log(e),
+            }) || null;
+
+        subscriptions = createSubscriptions();
+
+        hub?.onreconnected((connectionId) => {
+            subscriptions?.dispose();
+            subscriptions = createSubscriptions();
         });
+        return () => subscriptions?.dispose();
     }, [session.id, hub]);
 
     function send(text: string) {
