@@ -22,6 +22,6 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
     - name: Tests
-      run: dotnet test ./Tests/Tests.fsproj --no-build --logger:trx
+      run: dotnet test ./Tests/Tests.fsproj --no-build --verbosity normal
     - name: Integration Tests
-      run: dotnet test ./IntegrationTests/IntegrationTests.fsproj --no-build --logger:trx
+      run: dotnet test ./IntegrationTests/IntegrationTests.fsproj --no-build --verbosity normal
