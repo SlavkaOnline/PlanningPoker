@@ -137,7 +137,7 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
             let! events =  seq {subs; delay} |> Async.Choice
             let! s = Helper.getSession apiClient user.Token session.Id
 
-            test <@ events = Some [|1,"Started"; 2,"ParticipantAdded"; 3,"StoryAdded"; 4,"ActiveStorySet"; |] @>
+            test <@ events = Some [|1,"Started"; 2,"ParticipantAdded"; 3,"StoryAdded"; 4,"ActiveStorySet"; |] || events = Some [|1,"Started";  2,"StoryAdded"; 3,"ParticipantAdded"; 4,"ActiveStorySet"; |]  @>
             test <@ s.Version = 4 @>
         }
 
@@ -182,7 +182,7 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
             let! events =  seq {subs; delay} |> Async.Choice
             let! s = Helper.getSession apiClient user.Token session.Id
 
-            test <@ events = Some [|2,"ParticipantAdded"; 3,"StoryAdded"; 4,"ActiveStorySet"|] @>
+            test <@ events = Some [|2,"ParticipantAdded"; 3,"StoryAdded"; 4,"ActiveStorySet"|] || events = Some [|2,"StoryAdded"; 3,"ParticipantAdded"; 4,"ActiveStorySet"|] @>
             test <@ s.Version = 4 @>
         }
 
@@ -293,7 +293,7 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
             let! events =  seq {subs; delay} |> Async.Choice
             do! connection.StopAsync()
 
-            test <@ events = Some [|1,"Started"; 2,"ParticipantAdded"; 3,"GroupAdded"; 4,"ParticipantMovedToGroup"; 5,"GroupRemoved" |] @>
+            test <@ events = Some [|1,"Started"; 2,"ParticipantAdded"; 3,"GroupAdded"; 4,"ParticipantMovedToGroup"; 5,"GroupRemoved" |] || events = Some [|1,"Started"; 2,"GroupAdded"; 3,"ParticipantAdded"; 4,"ParticipantMovedToGroup"; 5,"GroupRemoved" |] @>
             test <@ s.Version = 5 @>
 
             }
