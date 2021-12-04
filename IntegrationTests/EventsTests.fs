@@ -102,8 +102,6 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
             //action 4 ActiveStorySet
             do! Helper.setActiveStory apiClient user.Token session.Id storyId
 
-            do! Task.Delay(pause)
-
             //action 4 "ParticipantRemoved"
             do! connection.StopAsync()
 
@@ -218,6 +216,7 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
 
             let! s = Helper.getStory apiClient user.Token storyId
 
+            do! Task.Delay(pause)
             do! connection.StopAsync()
 
             let events = eventsBuffer.Reader.ReadAllAsync()
