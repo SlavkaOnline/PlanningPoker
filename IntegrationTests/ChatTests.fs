@@ -18,7 +18,7 @@ type ChatTests(fixture: WebApplicationFactory<Program>) =
 
     let server = fixture.Server
     let apiClient = fixture.CreateClient()
-    let pause = TimeSpan.FromSeconds 0.5
+    let pause = TimeSpan.FromSeconds 1
 
     [<Fact>]
     let ``Send simple message works fine`` () =

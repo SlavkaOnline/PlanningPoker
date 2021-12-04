@@ -29,7 +29,7 @@ ENTRYPOINT ["dotnet", "test", "--logger:trx"]
 
 
 FROM build AS publish
-RUN dotnet test --no-build --logger:trx
+RUN dotnet test --no-build --verbosity normal
 WORKDIR "/src/Api"
 RUN dotnet publish "Api.fsproj" -c Release -o /app/publish
 
