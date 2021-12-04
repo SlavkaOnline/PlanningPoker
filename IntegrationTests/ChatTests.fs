@@ -38,30 +38,30 @@ type ChatTests(fixture: WebApplicationFactory<Program>) =
             
             let! userConnection1 = Helper.createEventsConnection server user1.Token
             let! userConnection2 = Helper.createEventsConnection server user2.Token
-            
-            let tcs = TaskCompletionSource<ChatMessage>()
-            let cts = new CancellationTokenSource()
-            
-            let! stream = userConnection2.StreamAsChannelAsync<ChatMessage>("Chat", group)
-            do stream.ReadAllAsync(cts.Token)
-                |> AsyncSeq.ofAsyncEnum
-                |> AsyncSeq.iterAsync(fun m -> async { return tcs.SetResult m })
-                |> Async.StartAsTask
-                |> ignore
 
+            let! stream = userConnection2.StreamAsChannelAsync<ChatMessage>("Chat", group)
+
+            do! Task.Delay(pause)
             do! userConnection1.SendAsync("SendMessage", group, message)
 
-            let! task =
-                Task.WhenAny(
-                    tcs.Task.ContinueWith(fun (t: Task<ChatMessage>) -> Some t.Result),
-                    Task
-                        .Delay(pause)
-                        .ContinueWith(fun _ -> None)
-                )
-                
-            let! result = task
+            let subs = async {
+                                 let! arr = stream.ReadAllAsync()
+                                             |> AsyncSeq.ofAsyncEnum
+                                             |> AsyncSeq.take(1)
+                                             |> AsyncSeq.toArrayAsync
+                                 return arr|> Some 
+                                 }
+                         
 
-            do cts.Cancel()
+            let delay = async {
+                do! Async.Sleep pause
+                return Some [||]
+            }
+
+            let! events =  seq {subs; delay} |> Async.Choice
+
+            let result = events |> Option.bind(fun arr -> arr |> Array.tryHead)
+
             do! userConnection1.StopAsync()
             do! userConnection2.StopAsync()
             
@@ -69,40 +69,4 @@ type ChatTests(fixture: WebApplicationFactory<Program>) =
                 <@ match result with
                    | Some m -> m.Text = message && Guid.Parse m.Group = group && m.User.Id = user1Id
                    | None -> false @>
-        }
-        
-    [<Fact>]
-    let ``Every users has one message`` () =
-        task {
-
-            let userName1 = "User1"
-            let userName2 = "User2"
-            let group = Guid.NewGuid()
-            let message = "simple message"
-            
-            let! user1 = Helper.login apiClient userName1
-            let! user2 = Helper.login apiClient userName1
-
-            let! userConnection1 = Helper.createEventsConnection server user1.Token
-            let! userConnection2 = Helper.createEventsConnection server user2.Token
-            
-            let messages = ConcurrentBag();
-            let cts = new CancellationTokenSource()
-            
-            let! stream = userConnection2.StreamAsChannelAsync<ChatMessage>("Chat", group)
-            do stream.ReadAllAsync(cts.Token)
-                |> AsyncSeq.ofAsyncEnum
-                |> AsyncSeq.iterAsync(fun m -> async { return messages.Add m })
-                |> Async.StartAsTask
-                |> ignore
-
-            do! userConnection1.SendAsync("SendMessage", group, message)
-
-            do! Task.Delay(pause + pause)
-            do cts.Cancel()
-            do! userConnection1.StopAsync()
-            do! userConnection2.StopAsync()
-            
-            test <@ messages.Count = 1 @>
-          
         }

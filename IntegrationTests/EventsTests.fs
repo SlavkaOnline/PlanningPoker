@@ -33,11 +33,24 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
             let! session = Helper.createSession apiClient user.Token "Session"
 
             let! subscription =
-                connection.StreamAsChannelAsync<_>("Session", session.Id, 0)
-
-            do! Task.Delay(pause)
+                connection.StreamAsChannelAsync<_>("Session", session.Id, session.Version)
 
             let! updatedSession = Helper.getSession apiClient user.Token session.Id
+            let subs = async {
+                                 let! arr = subscription.ReadAllAsync()
+                                             |> AsyncSeq.ofAsyncEnum
+                                             |> AsyncSeq.take(1)
+                                             |> AsyncSeq.toArrayAsync
+                                 return arr |> Some 
+                                 }
+                         
+
+            let delay = async {
+                do! Async.Sleep pause
+                return Some [||]
+            }
+
+            let! _ =  seq {subs; delay} |> Async.Choice
 
             do! connection.StopAsync()
 
@@ -54,17 +67,30 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
             let! session = Helper.createSession apiClient user.Token "Session"
 
             let! subscription =
-                connection.StreamAsChannelAsync<_>("Session", session.Id, 0)
+                connection.StreamAsChannelAsync<_>("Session", session.Id, session.Version)
 
-            do! Task.Delay(pause)
+            let subs = async {
+                                 let! arr = subscription.ReadAllAsync()
+                                             |> AsyncSeq.ofAsyncEnum
+                                             |> AsyncSeq.take(1)
+                                             |> AsyncSeq.toArrayAsync
+                                 return arr |> Some 
+                                 }
+                         
 
+            let delay = async {
+                do! Async.Sleep pause
+                return Some [||]
+            }
+
+            let! _ =  seq {subs; delay} |> Async.Choice
             let! updatedSession = Helper.getSession apiClient user.Token session.Id
 
             test <@ updatedSession.Participants.Length = 1 @>
 
             do! connection.StopAsync()
 
-            do! Task.Delay(pause)
+            do! Task.Delay pause
 
             let! finallySession = Helper.getSession apiClient user.Token session.Id
 
@@ -86,14 +112,6 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
             let! subscription =
                 connection.StreamAsChannelAsync<EventsDeliveryHub.Event>("Session", session.Id, 0)
 
-
-            let eventsBuffer = Channel.CreateUnbounded<EventsDeliveryHub.Event>()
-            let subs =  subscription.ReadAllAsync()
-                       |> AsyncSeq.ofAsyncEnum
-                       |> AsyncSeq.iterAsync(fun e -> eventsBuffer.Writer.WriteAsync(e).AsTask() |> Async.AwaitTask)
-            let complete _ = eventsBuffer.Writer.Complete();
-            Async.StartWithContinuations (subs, complete, complete, complete)
-
             //action 3 StoryAdded
             let! ses = Helper.addStoryToSession apiClient user.Token session { CreateStory.Title = "Story 1"; CardsId = cardsId; CustomCards = [|"1"; "2"|] }
 
@@ -102,20 +120,25 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
             //action 4 ActiveStorySet
             do! Helper.setActiveStory apiClient user.Token session.Id storyId
 
-            //action 4 "ParticipantRemoved"
-            do! connection.StopAsync()
+            let subs = async {
+                                 let! arr = subscription.ReadAllAsync()
+                                             |> AsyncSeq.ofAsyncEnum
+                                             |> AsyncSeq.take(4)
+                                             |> AsyncSeq.toArrayAsync
+                                 return arr |> Array.map(fun e -> (e.Order, e.Type)) |> Some 
+                                 }
+                         
 
-            do! Task.Delay(pause)
+            let delay = async {
+                do! Async.Sleep pause
+                return Some [||]
+            }
 
+            let! events =  seq {subs; delay} |> Async.Choice
             let! s = Helper.getSession apiClient user.Token session.Id
 
-            let events = eventsBuffer.Reader.ReadAllAsync()
-                         |> AsyncSeq.ofAsyncEnum
-                         |> AsyncSeq.toArraySynchronously
-                         |> Array.map(fun e -> (e.Order, e.Type))
-
-            test <@ events = [|1,"Started"; 2,"ParticipantAdded"; 3,"StoryAdded"; 4,"ActiveStorySet"; |] @>
-            test <@ s.Version = 5 @>
+            test <@ events = Some [|1,"Started"; 2,"ParticipantAdded"; 3,"StoryAdded"; 4,"ActiveStorySet"; |] @>
+            test <@ s.Version = 4 @>
         }
 
 
@@ -135,13 +158,6 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
             let! subscription =
                 connection.StreamAsChannelAsync<EventsDeliveryHub.Event>("Session", session.Id, session.Version)
 
-            let eventsBuffer = Channel.CreateUnbounded<EventsDeliveryHub.Event>()
-            let subs =  subscription.ReadAllAsync()
-                       |> AsyncSeq.ofAsyncEnum
-                       |> AsyncSeq.iterAsync(fun e -> eventsBuffer.Writer.WriteAsync(e).AsTask() |> Async.AwaitTask)
-            let complete _ = eventsBuffer.Writer.Complete();
-            Async.StartWithContinuations (subs, complete, complete, complete)
-
             //action 3 StoryAdded
             let! ses = Helper.addStoryToSession apiClient user.Token session { CreateStory.Title = "Story 1"; CardsId = cardsId; CustomCards = [|"1"; "2"|] }
 
@@ -149,16 +165,24 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
 
             //action 4 ActiveStorySet
             let! s = Helper.setActiveStory apiClient user.Token session.Id storyId
+            let subs = async {
+                                 let! arr = subscription.ReadAllAsync()
+                                             |> AsyncSeq.ofAsyncEnum
+                                             |> AsyncSeq.take(3)
+                                             |> AsyncSeq.toArrayAsync
+                                 return arr |> Array.map(fun e -> (e.Order, e.Type)) |> Some 
+                                 }
+             
 
-            do! Task.Delay(pause)
-            do! connection.StopAsync()
+            let delay = async {
+                do! Async.Sleep pause
+                return Some [||]
+            }
 
-            let events = eventsBuffer.Reader.ReadAllAsync()
-                         |> AsyncSeq.ofAsyncEnum
-                         |> AsyncSeq.toArraySynchronously
-                         |> Array.map(fun e -> (e.Order, e.Type))
+            let! events =  seq {subs; delay} |> Async.Choice
+            let! s = Helper.getSession apiClient user.Token session.Id
 
-            test <@ events = [|2,"ParticipantAdded"; 3,"StoryAdded"; 4,"ActiveStorySet"|] @>
+            test <@ events = Some [|2,"ParticipantAdded"; 3,"StoryAdded"; 4,"ActiveStorySet"|] @>
             test <@ s.Version = 4 @>
         }
 
@@ -182,12 +206,6 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
             let! subscription =
                 connection.StreamAsChannelAsync<EventsDeliveryHub.Event>("Story", storyId, 0)
 
-            let eventsBuffer = Channel.CreateUnbounded<EventsDeliveryHub.Event>()
-            let subs =  subscription.ReadAllAsync()
-                       |> AsyncSeq.ofAsyncEnum
-                       |> AsyncSeq.iterAsync(fun e -> eventsBuffer.Writer.WriteAsync(e).AsTask() |> Async.AwaitTask)
-            let complete _ = eventsBuffer.Writer.Complete();
-            Async.StartWithContinuations (subs, complete, complete, complete)
 
             //action2  ActiveSet
             do! Helper.setActiveStory apiClient user.Token session.Id storyId
@@ -216,15 +234,25 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
 
             let! s = Helper.getStory apiClient user.Token storyId
 
-            do! Task.Delay(pause)
+            let subs = async {
+                                 let! arr = subscription.ReadAllAsync()
+                                             |> AsyncSeq.ofAsyncEnum
+                                             |> AsyncSeq.take(8)
+                                             |> AsyncSeq.toArrayAsync
+                                 return arr |> Array.map(fun e -> (e.Order, e.Type)) |> Some 
+                                 }
+ 
+
+            let delay = async {
+                do! Async.Sleep pause
+                return Some [||]
+            }
+
+            let! events =  seq {subs; delay} |> Async.Choice
+
             do! connection.StopAsync()
 
-            let events = eventsBuffer.Reader.ReadAllAsync()
-                         |> AsyncSeq.ofAsyncEnum
-                         |> AsyncSeq.toArraySynchronously
-                         |> Array.map(fun e -> (e.Order, e.Type))
-
-            test <@ events = [|1,"StoryConfigured"; 2,"ActiveSet"; 3,"Voted"; 4,"StoryClosed"; 5,"Paused"; 6,"ActiveSet"; 7,"Cleared"; 8,"Paused" |] @>
+            test <@ events = Some [|1,"StoryConfigured"; 2,"ActiveSet"; 3,"Voted"; 4,"StoryClosed"; 5,"Paused"; 6,"ActiveSet"; 7,"Cleared"; 8,"Paused" |] @>
             test <@ s.Version = 8 @>
         }
 
@@ -243,27 +271,29 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
             let! subscription =
                 connection.StreamAsChannelAsync<EventsDeliveryHub.Event>("Session", session.Id, 0)
 
-            let eventsBuffer = Channel.CreateUnbounded<EventsDeliveryHub.Event>()
-            let subs =  subscription.ReadAllAsync()
-                       |> AsyncSeq.ofAsyncEnum
-                       |> AsyncSeq.iterAsync(fun e -> eventsBuffer.Writer.WriteAsync(e).AsTask() |> Async.AwaitTask)
-            let complete _ = eventsBuffer.Writer.Complete();
-            Async.StartWithContinuations (subs, complete, complete, complete)
-
             let! sessionWithGroup = Helper.addGroup apiClient user.Token session.Id "group"
             let group = sessionWithGroup.Groups |> Array.find (fun g -> g.Id <> session.DefaultGroupId)
             let! _ = Helper.moveParticipantToGroup apiClient user.Token session.Id userId group.Id
             let! s = Helper.removeGroup apiClient user.Token session.Id group.Id
 
-            do! Task.Delay(pause)
-            do! connection.StopAsync() |> Async.AwaitTask
+            let subs = async {
+                                 let! arr = subscription.ReadAllAsync()
+                                             |> AsyncSeq.ofAsyncEnum
+                                             |> AsyncSeq.take(5)
+                                             |> AsyncSeq.toArrayAsync
+                                 return arr |> Array.map(fun e -> (e.Order, e.Type)) |> Some 
+                                 }
+ 
 
-            let events = eventsBuffer.Reader.ReadAllAsync()
-                         |> AsyncSeq.ofAsyncEnum
-                         |> AsyncSeq.toArraySynchronously
-                         |> Array.map(fun e -> (e.Order, e.Type))
+            let delay = async {
+                do! Async.Sleep pause
+                return Some [||]
+            }
 
-            test <@ events = [|1,"Started"; 2,"ParticipantAdded"; 3,"GroupAdded"; 4,"ParticipantMovedToGroup"; 5,"GroupRemoved" |] @>
+            let! events =  seq {subs; delay} |> Async.Choice
+            do! connection.StopAsync()
+
+            test <@ events = Some [|1,"Started"; 2,"ParticipantAdded"; 3,"GroupAdded"; 4,"ParticipantMovedToGroup"; 5,"GroupRemoved" |] @>
             test <@ s.Version = 5 @>
 
             }
