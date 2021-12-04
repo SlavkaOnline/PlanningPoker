@@ -20,7 +20,7 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
     let server = fixture.Server
     let apiClient = fixture.CreateClient()
     let cardsId = "66920B8F-3962-46FE-A2C1-434134B7F0FD"
-    let pause = TimeSpan.FromSeconds 1
+    let pause = TimeSpan.FromSeconds 5
 
     [<Fact>]
     let ``The participant was added when SignalR connection has been the establishment`` () =
@@ -90,7 +90,7 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
 
             do! connection.StopAsync()
 
-            do! Task.Delay pause
+            do! Task.Delay(TimeSpan.FromSeconds 1.)
 
             let! finallySession = Helper.getSession apiClient user.Token session.Id
 
