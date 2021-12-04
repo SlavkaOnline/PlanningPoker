@@ -5,7 +5,6 @@ open FSharp.UMX
 open GrainInterfaces
 open PlanningPoker.Domain
 open Xunit
-open FSharp.Control.Tasks
 open System
 open Swensen.Unquote
 open CommonTypes
