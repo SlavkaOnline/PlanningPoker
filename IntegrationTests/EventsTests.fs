@@ -12,6 +12,7 @@ open Microsoft.AspNetCore.SignalR.Client
 open Swensen.Unquote
 open System.IdentityModel.Tokens.Jwt
 open System
+open System.Threading.Tasks
 
 [<Collection("Real Server Collection")>]
 type EventsTests(fixture: WebApplicationFactory<Program>) =
@@ -19,6 +20,7 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
     let server = fixture.Server
     let apiClient = fixture.CreateClient()
     let cardsId = "66920B8F-3962-46FE-A2C1-434134B7F0FD"
+    let pause = TimeSpan.FromSeconds 0.5
 
     [<Fact>]
     let ``The participant was added when SignalR connection has been the establishment`` () =
@@ -33,7 +35,7 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
             let! subscription =
                 connection.StreamAsChannelAsync<_>("Session", session.Id, 0)
 
-            do! Async.Sleep(1000);
+            do! Task.Delay(pause)
 
             let! updatedSession = Helper.getSession apiClient user.Token session.Id
 
@@ -54,7 +56,7 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
             let! subscription =
                 connection.StreamAsChannelAsync<_>("Session", session.Id, 0)
 
-            do! Async.Sleep(1000);
+            do! Task.Delay(pause)
 
             let! updatedSession = Helper.getSession apiClient user.Token session.Id
 
@@ -62,7 +64,7 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
 
             do! connection.StopAsync()
 
-            do! Async.Sleep(1000)
+            do! Task.Delay(pause)
 
             let! finallySession = Helper.getSession apiClient user.Token session.Id
 
@@ -91,7 +93,6 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
                        |> AsyncSeq.iterAsync(fun e -> eventsBuffer.Writer.WriteAsync(e).AsTask() |> Async.AwaitTask)
             let complete _ = eventsBuffer.Writer.Complete();
             Async.StartWithContinuations (subs, complete, complete, complete)
-            do! Async.Sleep(1000)
 
             //action 3 StoryAdded
             let! ses = Helper.addStoryToSession apiClient user.Token session { CreateStory.Title = "Story 1"; CardsId = cardsId; CustomCards = [|"1"; "2"|] }
@@ -101,12 +102,12 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
             //action 4 ActiveStorySet
             do! Helper.setActiveStory apiClient user.Token session.Id storyId
 
-            do! Async.Sleep(1000)
+            do! Task.Delay(pause)
 
             //action 4 "ParticipantRemoved"
             do! connection.StopAsync()
 
-            do! Async.Sleep(1000)
+            do! Task.Delay(pause)
 
             let! s = Helper.getSession apiClient user.Token session.Id
 
@@ -143,7 +144,6 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
             let complete _ = eventsBuffer.Writer.Complete();
             Async.StartWithContinuations (subs, complete, complete, complete)
 
-            do! Async.Sleep(1000)
             //action 3 StoryAdded
             let! ses = Helper.addStoryToSession apiClient user.Token session { CreateStory.Title = "Story 1"; CardsId = cardsId; CustomCards = [|"1"; "2"|] }
 
@@ -152,8 +152,7 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
             //action 4 ActiveStorySet
             let! s = Helper.setActiveStory apiClient user.Token session.Id storyId
 
-            do! Async.Sleep(1000)
-
+            do! Task.Delay(pause)
             do! connection.StopAsync()
 
             let events = eventsBuffer.Reader.ReadAllAsync()
@@ -192,8 +191,6 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
             let complete _ = eventsBuffer.Writer.Complete();
             Async.StartWithContinuations (subs, complete, complete, complete)
 
-            do! Async.Sleep(1000)
-
             //action2  ActiveSet
             do! Helper.setActiveStory apiClient user.Token session.Id storyId
 
@@ -220,8 +217,6 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
             do! Helper.setActiveStory apiClient user.Token session.Id anotherStoryId
 
             let! s = Helper.getStory apiClient user.Token storyId
-
-            do! Async.Sleep(1000)
 
             do! connection.StopAsync()
 
@@ -256,14 +251,12 @@ type EventsTests(fixture: WebApplicationFactory<Program>) =
             let complete _ = eventsBuffer.Writer.Complete();
             Async.StartWithContinuations (subs, complete, complete, complete)
 
-            do! Async.Sleep(1000)
-
             let! sessionWithGroup = Helper.addGroup apiClient user.Token session.Id "group"
             let group = sessionWithGroup.Groups |> Array.find (fun g -> g.Id <> session.DefaultGroupId)
             let! _ = Helper.moveParticipantToGroup apiClient user.Token session.Id userId group.Id
             let! s = Helper.removeGroup apiClient user.Token session.Id group.Id
 
-            do! Async.Sleep(1000)
+            do! Task.Delay(pause)
             do! connection.StopAsync() |> Async.AwaitTask
 
             let events = eventsBuffer.Reader.ReadAllAsync()

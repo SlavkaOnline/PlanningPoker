@@ -1,4 +1,4 @@
-﻿namespace IntegrationTests
+namespace IntegrationTests
 
 open System
 open System.Collections.Concurrent
@@ -18,6 +18,7 @@ type ChatTests(fixture: WebApplicationFactory<Program>) =
 
     let server = fixture.Server
     let apiClient = fixture.CreateClient()
+    let pause = TimeSpan.FromSeconds 0.5
 
     [<Fact>]
     let ``Send simple message works fine`` () =
@@ -54,7 +55,7 @@ type ChatTests(fixture: WebApplicationFactory<Program>) =
                 Task.WhenAny(
                     tcs.Task.ContinueWith(fun (t: Task<ChatMessage>) -> Some t.Result),
                     Task
-                        .Delay(TimeSpan.FromSeconds 1.)
+                        .Delay(pause)
                         .ContinueWith(fun _ -> None)
                 )
                 
@@ -97,7 +98,7 @@ type ChatTests(fixture: WebApplicationFactory<Program>) =
 
             do! userConnection1.SendAsync("SendMessage", group, message)
 
-            do! Task.Delay(TimeSpan.FromSeconds 1.)
+            do! Task.Delay(pause + pause)
             do cts.Cancel()
             do! userConnection1.StopAsync()
             do! userConnection2.StopAsync()
