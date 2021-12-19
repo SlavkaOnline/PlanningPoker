@@ -3,6 +3,9 @@ import ReactDOM from 'react-dom';
 import './styles/index.scss';
 import { App } from './App';
 import reportWebVitals from './reportWebVitals';
+import Snowflakes from 'magic-snowflakes';
+const snowflakes = new Snowflakes();
+snowflakes.start();
 
 ReactDOM.render(
     <React.StrictMode>
