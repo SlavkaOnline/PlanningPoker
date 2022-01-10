@@ -4,8 +4,11 @@ import './styles/index.scss';
 import { App } from './App';
 import reportWebVitals from './reportWebVitals';
 import Snowflakes from 'magic-snowflakes';
-const snowflakes = new Snowflakes();
-snowflakes.start();
+const date = new Date();
+if (date.getMonth() === 11 && date.getDate() >= 15) {
+    const snowflakes = new Snowflakes();
+    snowflakes.start();
+}
 
 ReactDOM.render(
     <React.StrictMode>

@@ -9,7 +9,6 @@ services:
     ports:
       - "8080:80"
 
-
   api:
     container_name: planning_poker_api
     build:
