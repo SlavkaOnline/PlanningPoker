@@ -17,7 +17,7 @@ case class ActiveGame(currentPlayer: UUID, activePlayers: List[UUID], finishedPl
 }
 case object FinishedGame extends GameProcess
 
-case class Game(id: UUID, owner: UUID, name:String, columnCount: Int, cards: HashMap[UUID,Card], process: GameProcess) {
+case class Game private (id: UUID, owner: UUID, name:String, columnCount: Int, cards: HashMap[UUID,Card], process: GameProcess) {
 
     private def validateOwner(owner: UUID, player: UUID) = Either.cond(owner == player, player, NotYourTurn)
     private def validateCurrentPlayer(current: UUID, player: UUID) = Either.cond(current == player, player, NotYourTurn)
