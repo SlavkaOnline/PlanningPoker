@@ -3,6 +3,7 @@ namespace IntegrationTests
 open System.Collections.Generic
 open System.Threading.Channels
 open FSharp.Control
+open IntegrationTests.FakeServer
 open Microsoft.AspNetCore.Mvc.Testing
 open Xunit
 open Api
@@ -15,7 +16,7 @@ open System
 open System.Threading.Tasks
 
 [<Collection("Real Server Collection")>]
-type EventsTests(fixture: WebApplicationFactory<Program>) =
+type EventsTests(fixture: CustomWebApplicationFactory<Program>) =
 
     let server = fixture.Server
     let apiClient = fixture.CreateClient()

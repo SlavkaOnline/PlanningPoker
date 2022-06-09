@@ -4,3 +4,6 @@ obj/
 riderModule.iml
 /_ReSharper.Caches/
 *.log
+.idea/
+.vs/
+PlanningPoker.sln.DotSettings.user

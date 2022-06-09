@@ -2,6 +2,7 @@ namespace IntegrationTests
 
 open System
 open GrainInterfaces
+open Microsoft.Extensions.Configuration
 open Orleans.Configuration
 open Orleans.Hosting
 open Orleans.TestingHost
@@ -16,9 +17,9 @@ open Xunit
 type AddApplicationParts () =
 
         interface ISiloConfigurator with
-          member _.Configure (hostBuilder: ISiloBuilder) =
+          member _.Configure (hostBuilder: ISiloBuilder) = 
              hostBuilder
-               .AddMemoryGrainStorage("InMemory")
+               .AddMemoryGrainStorage("Database")
                .AddMemoryGrainStorage("PubSubStore")
                .AddLogStorageBasedLogConsistencyProvider()
                .ConfigureApplicationParts(fun parts ->

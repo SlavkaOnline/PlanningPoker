@@ -41,6 +41,7 @@ open Grains
 open Application
 open System.Text.Json
 open FSharp.UMX
+open Databases
 
 type Program = class end
 
@@ -56,7 +57,11 @@ module Program =
         builder.Host.UseOrleans
             (fun siloBuilder ->
                 siloBuilder
-                    .AddMemoryGrainStorage("InMemory")
+                    .AddAdoNetGrainStorage("Database", fun (options: AdoNetGrainStorageOptions) ->
+                        options.Invariant <- "Npgsql"
+                        options.ConnectionString <- builder.Configuration.["ConnectionStrings:Default"]
+                        options.UseJsonFormat <- true
+                        )
                     .AddMemoryGrainStorage("PubSubStore")
                     .AddLogStorageBasedLogConsistencyProvider()
                     .AddSimpleMessageStreamProvider(
@@ -78,6 +83,7 @@ module Program =
 
         builder
             .Services
+            .AddDatabase(builder.Configuration)
             .AddAuthentication(fun x ->
                 x.DefaultAuthenticateScheme <- JwtBearerDefaults.AuthenticationScheme
                 x.DefaultChallengeScheme <- OpenIdConnectDefaults.AuthenticationScheme)
@@ -189,7 +195,8 @@ module Program =
            app.UseSwaggerUI(fun c -> c.SwaggerEndpoint("/swagger/v1/swagger.json", "WebApi v1")) |> ignore
         else
             ()
-
+            
+        app.CreateDataBaseIfNotExist()
         let forwardedHeadersOptions = ForwardedHeadersOptions()
         forwardedHeadersOptions.ForwardedHeaders <- ForwardedHeaders.XForwardedFor ||| ForwardedHeaders.XForwardedProto
         app.UseForwardedHeaders(forwardedHeadersOptions)
