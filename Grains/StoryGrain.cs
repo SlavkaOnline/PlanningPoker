@@ -22,7 +22,7 @@ namespace Grains
         }
     }
 
-    [StorageProvider(ProviderName = "InMemory")]
+    [StorageProvider(ProviderName = "Database")]
     [LogConsistencyProvider(ProviderName = "LogStorage")]
     public class StoryGrain : JournaledGrain<StoryGrainState, Story.Event>, IStoryGrain
     {

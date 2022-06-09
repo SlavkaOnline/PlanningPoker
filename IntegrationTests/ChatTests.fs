@@ -6,6 +6,7 @@ open System.IdentityModel.Tokens.Jwt
 open System.Threading
 open FSharp.Control
 open Gateway.Views
+open IntegrationTests.FakeServer
 open Swensen.Unquote
 open System.Threading.Tasks
 open Api
@@ -14,7 +15,7 @@ open Microsoft.AspNetCore.SignalR.Client
 open Xunit
 
 [<Collection("Real Server Collection")>]
-type ChatTests(fixture: WebApplicationFactory<Program>) =
+type ChatTests(fixture: CustomWebApplicationFactory<Program>) =
 
     let server = fixture.Server
     let apiClient = fixture.CreateClient()
