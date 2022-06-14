@@ -25,14 +25,7 @@ public static class DataBasesExtensions
         var context = scope.ServiceProvider.GetRequiredService<DataBaseContext>();
 
         context.Database.Migrate();
-        using var fileProvider =
-            new PhysicalFileProvider(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
-        var sql = File.ReadAllText(fileProvider.GetFileInfo("orleans.sql").PhysicalPath);
-        using var tran = context.Database.BeginTransaction();
-        context.Database.ExecuteSqlRaw(sql);
-        tran.Commit();
-
-
+        context.CreateOrleansTables();
         return app;
     }
 }
@@ -44,10 +37,19 @@ public class DataBaseContext : IdentityDbContext<Account, IdentityRole<Guid>, Gu
         LinqToDBForEFTools.Initialize();
     }
 
+    public void CreateOrleansTables()
+    {
+        using var fileProvider =
+            new PhysicalFileProvider(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+        var sql = File.ReadAllText(fileProvider.GetFileInfo("orleans.sql").PhysicalPath);
+        using var tran = Database.BeginTransaction();
+        Database.ExecuteSqlRaw(sql);
+        tran.Commit();
+    }
+    
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-        builder.HasDefaultSchema("Identity");
         builder.Entity<Account>(entity => { entity.ToTable(name: "user"); });
         builder.Entity<IdentityRole<Guid>>(entity => { entity.ToTable(name: "role"); });
         builder.Entity<IdentityUserRole<Guid>>(entity => { entity.ToTable("user_roles"); });

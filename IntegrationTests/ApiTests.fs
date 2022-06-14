@@ -1,6 +1,7 @@
 namespace IntegrationTests
 
 open System
+open System.Threading.Tasks
 open Api
 open Api.Application
 open Api.Commands
@@ -10,10 +11,9 @@ open Xunit
 open Swensen.Unquote
 open Microsoft.EntityFrameworkCore
 
-
-[<Collection("Real Server Collection")>]
 type ApiTests(fixture: CustomWebApplicationFactory<Program>) =
-
+    inherit TestServerBase(fixture)
+    
     let seeder = fixture.Seeder
 
     [<Fact>]
@@ -48,7 +48,7 @@ type ApiTests(fixture: CustomWebApplicationFactory<Program>) =
         task {
 
             let id = Guid.NewGuid()
-            let email = "test1@gmail.com"
+            let email = "test@gmail.com"
             let name = "test"
             let pic = "pic"
         
@@ -70,3 +70,8 @@ type ApiTests(fixture: CustomWebApplicationFactory<Program>) =
                    | Error _ -> false
                    | Ok _ -> true @>
         }
+    interface IAsyncLifetime with
+            member this.DisposeAsync() =
+                Task.CompletedTask
+            member this.InitializeAsync() =
+                fixture.ResetAsync()

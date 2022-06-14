@@ -10,11 +10,32 @@ open LinqToDB.Data
 open Microsoft.AspNetCore.Hosting
 open Microsoft.Extensions.DependencyInjection
 open LinqToDB.EntityFrameworkCore
+open Microsoft.FSharp.Core
 open Xunit
+open Microsoft.EntityFrameworkCore
 
 module FakeServer =
     open Microsoft.AspNetCore.Mvc.Testing
 
+    
+    [<RequireQualifiedAccess>]
+    module DBHelper =
+        [<Literal>]
+        let clearTablesSql = """
+            CREATE OR REPLACE FUNCTION truncate_tables() RETURNS void AS $$
+            DECLARE
+                statements CURSOR FOR
+                    SELECT tablename FROM pg_tables
+                    WHERE schemaname = 'public' and tablename not in ('__EFMigrationsHistory', 'orleansquery', 'orleansstorage');
+            BEGIN
+                FOR stmt IN statements LOOP
+                    EXECUTE 'TRUNCATE TABLE ' || quote_ident(stmt.tablename) || ' CASCADE;';
+                END LOOP;
+            END;
+            $$ LANGUAGE plpgsql;
+            SELECT truncate_tables()
+    """
+    
     type Seeder(db: DataConnection) =
 
         member _.Seed<'TEntity when 'TEntity: not struct>(entity: 'TEntity) : Task<'TEntity> =
@@ -34,8 +55,7 @@ module FakeServer =
     type CustomWebApplicationFactory<'TStartup when 'TStartup: not struct>() as this =
         inherit WebApplicationFactory<'TStartup>()
 
-        member this.Seeder =
-            Seeder(this.Db.CreateLinq2DbConnectionDetached())
+        member this.Seeder = Seeder(this.Db.CreateLinq2DbConnectionDetached())
 
         member private this.Scope =
             this
@@ -49,22 +69,22 @@ module FakeServer =
         member this.GetService<'TService>() =
             this.Scope.ServiceProvider.GetRequiredService<'TService>()
 
+
+        member this.InitAsync(): Task =
+            task {
+                do! this.Db.Database.MigrateAsync()
+                do this.Db.CreateOrleansTables()
+            }
         
-        override this.ConfigureWebHost(builder: IWebHostBuilder) =                
-                builder.ConfigureServices(fun (services: IServiceCollection) ->
-                    let sp = services.BuildServiceProvider()
-                    use scope = sp.CreateScope()
-                    let scopedServices = scope.ServiceProvider
-                    let context = scopedServices.GetRequiredService<DataBaseContext>()
-                    context.Database.EnsureDeleted() |> ignore
-                    ) |> ignore        
+        member this.ResetAsync(): Task =
+            this.Db.Database.ExecuteSqlRawAsync(DBHelper.clearTablesSql)
+       
 
         override this.DisposeAsync() =
             let b = base.DisposeAsync()
 
             task {
                 let! _ = (this.Seeder :> IAsyncDisposable).DisposeAsync()
-                let! _ = this.Db.Database.EnsureDeletedAsync()
                 let! _ = this.Db.DisposeAsync()
                 this.Scope.Dispose()
                 return! b
@@ -72,7 +92,14 @@ module FakeServer =
             |> ValueTask
 
 
-
     [<CollectionDefinition("Real Server Collection")>]
     type RealServerCollectionFixture() =
         interface ICollectionFixture<CustomWebApplicationFactory<Program>>
+
+
+    [<Collection("Real Server Collection")>]
+    type TestServerBase(fixture: CustomWebApplicationFactory<Program>) =
+        interface IAsyncLifetime with
+            member this.DisposeAsync() = Task.CompletedTask
+
+            member this.InitializeAsync() = fixture.ResetAsync()

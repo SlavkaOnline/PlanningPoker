@@ -12,8 +12,8 @@ open Swensen.Unquote
 open System.IdentityModel.Tokens.Jwt
 open System
 
-[<Collection("Real Server Collection")>]
 type EventsTests(fixture: CustomWebApplicationFactory<Program>) =
+    inherit TestServerBase(fixture)
 
     let server = fixture.Server
     let apiClient = fixture.CreateClient()
