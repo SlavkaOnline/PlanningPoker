@@ -45,7 +45,7 @@ module Session =
          
          type Started = {
              Id: Guid<SessionId>
-             Name: string
+             Title: string
              UserId: Guid<UserId>
              }  
     

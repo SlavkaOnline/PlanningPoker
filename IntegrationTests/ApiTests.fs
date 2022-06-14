@@ -12,6 +12,7 @@ open Microsoft.AspNetCore.SignalR.Client
 open Swensen.Unquote
 open System.IdentityModel.Tokens.Jwt
 open System
+open FSharp.UMX
 
 type ApiTests(fixture: CustomWebApplicationFactory<Program>) =
   inherit TestServerBase(fixture)

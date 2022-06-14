@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Databases.Migrations
 {
     [DbContext(typeof(DataBaseContext))]
-    [Migration("20220614215712_AddAccountSession")]
+    [Migration("20220614221525_AddAccountSession")]
     partial class AddAccountSession
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
