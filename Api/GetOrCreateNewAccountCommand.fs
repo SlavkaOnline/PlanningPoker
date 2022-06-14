@@ -12,6 +12,7 @@ module Commands =
     type GetOrCreateNewAccountCommandArgs =
         { Id: Guid
           Email: string
+          UserName: string
           Name: string
           Picture: string }
 
@@ -20,15 +21,19 @@ module Commands =
         interface ICommand<GetOrCreateNewAccountCommandArgs, AuthUser> with
             member _.Execute(arg) =
                 task {
-                    let! account = userManager.Users.SingleOrDefaultAsync(fun x -> x.Email = arg.Email)
+                    let! account = userManager.FindByEmailAsync(arg.Email)
 
                     match Option.ofObj account with
-                    | Some u ->
+                    | Some acc ->
+                        acc.Name <- arg.Name
+                        acc.UserName <- arg.UserName
+                        let! _ = userManager.UpdateAsync(acc)
+                        let! _ = userManager.UpdateNormalizedUserNameAsync(acc)
                         return
                             Ok
-                            <| { Token = jwtTokenProvider.CreateToken(u.Id, u.UserName, u.Email, arg.Picture) }
+                            <| { Token = jwtTokenProvider.CreateToken(acc.Id, acc.UserName, acc.Email, arg.Picture) }
                     | None ->
-                        let! newUserResult = userManager.CreateAsync(Account(arg.Id, arg.Name, arg.Email))
+                        let! newUserResult = userManager.CreateAsync(Account(arg.Id, arg.UserName, arg.Email, arg.Name))
 
                         if newUserResult.Succeeded then
                             return

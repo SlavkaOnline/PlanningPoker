@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="FakeServer.fs" />
+        <Compile Include="TastServer.fs" />
         <Compile Include="ClusterFixture.fs" />
         <Compile Include="Helper.fs" />
         <Compile Include="EventsTests.fs" />

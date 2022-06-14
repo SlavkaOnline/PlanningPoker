@@ -59,8 +59,7 @@ module Program =
     [<EntryPoint>]
     let main args =
 
-        let builder =
-            WebApplication.CreateBuilder(args)
+        let builder = WebApplication.CreateBuilder(args)
 
         builder.Host.UseOrleans (fun siloBuilder ->
             siloBuilder
@@ -93,7 +92,7 @@ module Program =
         builder.Services.AddSingleton<CardsTypeProvider>()
 
         builder.Services.AddDatabase(builder.Configuration)
-        
+
         builder
             .Services
             .AddIdentity<Account, IdentityRole<Guid>>()
@@ -112,8 +111,7 @@ module Program =
                 JwtBearerDefaults.AuthenticationScheme,
                 fun x ->
 
-                    let tokenValidationParameters =
-                        TokenValidationParameters()
+                    let tokenValidationParameters = TokenValidationParameters()
 
                     tokenValidationParameters.ValidateIssuerSigningKey <- true
 
@@ -127,8 +125,7 @@ module Program =
 
                     events.OnMessageReceived <-
                         (fun context ->
-                            let accessToken =
-                                context.Request.Query.["access_token"].ToString()
+                            let accessToken = context.Request.Query.["access_token"].ToString()
 
                             let path = context.HttpContext.Request.Path
 
@@ -177,8 +174,7 @@ module Program =
 
         builder.Services.AddAuthorization (fun options ->
 
-            let policy =
-                AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
+            let policy = AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
 
             policy.RequireAuthenticatedUser()
             options.DefaultPolicy <- policy.Build())
@@ -218,8 +214,7 @@ module Program =
 
         app.CreateDataBaseIfNotExist()
 
-        let forwardedHeadersOptions =
-            ForwardedHeadersOptions()
+        let forwardedHeadersOptions = ForwardedHeadersOptions()
 
         forwardedHeadersOptions.ForwardedHeaders <-
             ForwardedHeaders.XForwardedFor
@@ -258,8 +253,7 @@ module Program =
             fun ([<FromServices>] jwtTokenProvider: JwtTokenProvider) ([<FromBody>] request: AuthUserRequest) ->
                 let id = Guid.NewGuid()
 
-                let token =
-                    jwtTokenProvider.CreateToken(id, request.Name, "", "")
+                let token = jwtTokenProvider.CreateToken(id, request.Name, "", "")
 
                 { Token = token }
         )
@@ -285,19 +279,23 @@ module Program =
                             let id = Guid.NewGuid()
 
                             let name =
-                                $"{result
-                                       .Ticket
-                                       .Principal
-                                       .FindFirst(
-                                           ClaimTypes.GivenName
-                                       )
-                                       .Value} {result
-                                                    .Ticket
-                                                    .Principal
-                                                    .FindFirst(
-                                                        ClaimTypes.Surname
-                                                    )
-                                                    .Value}"
+                                result
+                                    .Ticket
+                                    .Principal
+                                    .FindFirst(
+                                        ClaimTypes.GivenName
+                                    )
+                                    .Value.Trim()
+
+                            let surname =
+                                result
+                                    .Ticket
+                                    .Principal
+                                    .FindFirst(
+                                        ClaimTypes.Surname
+                                    )
+                                    .Value.Trim()
+
                             let email =
                                 result
                                     .Ticket
@@ -307,15 +305,16 @@ module Program =
                                     )
                                     .Value
 
-                            let picture =
-                                result.Ticket.Principal.FindFirst("picture").Value
+                            let picture = result.Ticket.Principal.FindFirst("picture").Value
 
                             let! userResult =
                                 getOrCreateNewAccountCommand.Execute(
                                     { Id = id
                                       Email = email
-                                      Name = name
-                                      Picture = picture }
+                                      UserName = $"{name}_{surname}"
+                                      Picture = picture
+                                      Name = result.Ticket.Principal.Identity.Name
+                                       }
                                 )
 
                             do! ctx.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme)

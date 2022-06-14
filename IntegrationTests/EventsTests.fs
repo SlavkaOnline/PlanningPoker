@@ -2,7 +2,7 @@ namespace IntegrationTests
 
 open System.Collections.Generic
 open FSharp.Control
-open IntegrationTests.FakeServer
+open IntegrationTests.TestServer
 open Xunit
 open Api
 open Gateway.Requests

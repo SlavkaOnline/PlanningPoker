@@ -6,7 +6,7 @@ open System.IdentityModel.Tokens.Jwt
 open System.Threading
 open FSharp.Control
 open Gateway.Views
-open IntegrationTests.FakeServer
+open IntegrationTests.TestServer
 open Swensen.Unquote
 open System.Threading.Tasks
 open Api

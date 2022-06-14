@@ -8,20 +8,22 @@ open Databases.Models
 open LinqToDB
 open LinqToDB.Data
 open Microsoft.AspNetCore.Hosting
+open Microsoft.AspNetCore.Identity
 open Microsoft.Extensions.DependencyInjection
 open LinqToDB.EntityFrameworkCore
 open Microsoft.FSharp.Core
 open Xunit
 open Microsoft.EntityFrameworkCore
 
-module FakeServer =
+module TestServer =
     open Microsoft.AspNetCore.Mvc.Testing
 
-    
+
     [<RequireQualifiedAccess>]
     module DBHelper =
         [<Literal>]
-        let clearTablesSql = """
+        let clearTablesSql =
+            """
             CREATE OR REPLACE FUNCTION truncate_tables() RETURNS void AS $$
             DECLARE
                 statements CURSOR FOR
@@ -35,8 +37,8 @@ module FakeServer =
             $$ LANGUAGE plpgsql;
             SELECT truncate_tables()
     """
-    
-    type Seeder(db: DataConnection) =
+
+    type Seeder(db: DataConnection, userManager: UserManager<Account>) =
 
         member _.Seed<'TEntity when 'TEntity: not struct>(entity: 'TEntity) : Task<'TEntity> =
             db
@@ -46,7 +48,8 @@ module FakeServer =
         member _.Seed<'TEntity when 'TEntity: not struct>(entity: 'TEntity array) : Task<BulkCopyRowsCopied> =
             db.BulkCopyAsync(entity)
 
-        member this.Account(id: Guid, name: string, email: string) = this.Seed(Account(id, name, email))
+        member this.Account(id: Guid, userName: string, email: string, name: string) =
+            userManager.CreateAsync(Account(id, userName, email, name))
 
         interface IAsyncDisposable with
             member this.DisposeAsync() = db.DisposeAsync()
@@ -55,7 +58,8 @@ module FakeServer =
     type CustomWebApplicationFactory<'TStartup when 'TStartup: not struct>() as this =
         inherit WebApplicationFactory<'TStartup>()
 
-        member this.Seeder = Seeder(this.Db.CreateLinq2DbConnectionDetached())
+        member this.Seeder =
+            Seeder(this.Db.CreateLinq2DbConnectionDetached(), this.UserManager)
 
         member private this.Scope =
             this
@@ -63,6 +67,8 @@ module FakeServer =
                 .GetRequiredService<IServiceScopeFactory>()
                 .CreateScope()
 
+        member private this.UserManager = this.Scope.ServiceProvider.GetRequiredService<UserManager<Account>>()
+        
         member this.Db: DataBaseContext =
             this.Scope.ServiceProvider.GetRequiredService<DataBaseContext>()
 
@@ -70,16 +76,26 @@ module FakeServer =
             this.Scope.ServiceProvider.GetRequiredService<'TService>()
 
 
-        member this.InitAsync(): Task =
+        member this.InitAsync() : Task =
             task {
                 do! this.Db.Database.MigrateAsync()
                 do this.Db.CreateOrleansTables()
             }
-        
-        member this.ResetAsync(): Task =
-            this.Db.Database.ExecuteSqlRawAsync(DBHelper.clearTablesSql)
-       
 
+        member this.ResetAsync() : Task =
+            this.Db.Database.ExecuteSqlRawAsync(DBHelper.clearTablesSql)
+
+        override this.ConfigureWebHost(builder: IWebHostBuilder) =
+            builder.ConfigureServices (fun (services: IServiceCollection) ->
+                let sp = services.BuildServiceProvider()
+                use scope = sp.CreateScope()
+                let scopedServices = scope.ServiceProvider
+
+                let context =
+                    scopedServices.GetRequiredService<DataBaseContext>()
+
+                context.Database.EnsureDeleted() |> ignore)
+            |> ignore
         override this.DisposeAsync() =
             let b = base.DisposeAsync()
 

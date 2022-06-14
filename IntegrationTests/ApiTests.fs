@@ -6,7 +6,7 @@ open Api
 open Api.Application
 open Api.Commands
 open Gateway.Views
-open IntegrationTests.FakeServer
+open IntegrationTests.TestServer
 open Xunit
 open Swensen.Unquote
 open Microsoft.EntityFrameworkCore
@@ -25,6 +25,7 @@ type ApiTests(fixture: CustomWebApplicationFactory<Program>) =
             let arg =
                 { Id = Guid.NewGuid()
                   Email = "test@gmail.com"
+                  UserName = "test_"
                   Name = "test"
                   Picture = "pic" }
 
@@ -39,8 +40,8 @@ type ApiTests(fixture: CustomWebApplicationFactory<Program>) =
 
             test <@ arg.Id = account.Id @>
             test <@ arg.Email = account.Email @>
-            test <@ arg.Name = account.UserName @>
-
+            test <@ arg.UserName = account.UserName @>
+            test <@ arg.Name = account.Name @>
         }
 
     [<Fact>]
@@ -49,10 +50,11 @@ type ApiTests(fixture: CustomWebApplicationFactory<Program>) =
 
             let id = Guid.NewGuid()
             let email = "test@gmail.com"
+            let userName = "test"
             let name = "test"
             let pic = "pic"
         
-            let! _ = seeder.Account(id, name, email)
+            let! _ = seeder.Account(id, userName, email, name)
 
             let cmd =
                 fixture.GetService<ICommand<GetOrCreateNewAccountCommandArgs, AuthUser>>()
@@ -60,6 +62,7 @@ type ApiTests(fixture: CustomWebApplicationFactory<Program>) =
             let arg =
                 { Id = id
                   Email = email
+                  UserName = "test_"
                   Name = name
                   Picture = pic }
 
@@ -70,8 +73,38 @@ type ApiTests(fixture: CustomWebApplicationFactory<Program>) =
                    | Error _ -> false
                    | Ok _ -> true @>
         }
-    interface IAsyncLifetime with
-            member this.DisposeAsync() =
-                Task.CompletedTask
-            member this.InitializeAsync() =
-                fixture.ResetAsync()
+        
+    [<Fact>]
+    let ``Update account name`` () =
+        task {
+
+            let id = Guid.NewGuid()
+            let email = "test@gmail.com"
+            let name = "test"
+            let userName = "test_"
+            let pic = "pic"
+        
+            let! _ = seeder.Account(id, userName, email, name)
+
+            let cmd =
+                fixture.GetService<ICommand<GetOrCreateNewAccountCommandArgs, AuthUser>>()
+
+            let arg =
+                { Id = id
+                  Email = email
+                  UserName = "test__"
+                  Name = "__test"
+                  Picture = pic }
+
+            let! _ = cmd.Execute arg
+
+            let! account =
+                fixture
+                    .Db
+                    .Users
+                    .AsNoTracking()
+                    .SingleAsync(fun x -> x.Email = arg.Email)
+                    
+            test <@ arg.UserName = account.UserName @>        
+            test <@ arg.Name = account.Name @>        
+        }

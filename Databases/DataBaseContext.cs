@@ -49,12 +49,13 @@ public class DataBaseContext : IdentityDbContext<Account, IdentityRole<Guid>, Gu
     
     protected override void OnModelCreating(ModelBuilder builder)
     {
+        builder.ApplyConfigurationsFromAssembly(typeof(DataBaseContext).Assembly);
         base.OnModelCreating(builder);
         builder.Entity<Account>(entity => { entity.ToTable(name: "user"); });
         builder.Entity<IdentityRole<Guid>>(entity => { entity.ToTable(name: "role"); });
         builder.Entity<IdentityUserRole<Guid>>(entity => { entity.ToTable("user_roles"); });
         builder.Entity<IdentityUserClaim<Guid>>(entity => { entity.ToTable("user_claims"); });
-        builder.Entity<IdentityUserLogin<Guid>>(entity => { entity.ToTable("User_logins"); });
+        builder.Entity<IdentityUserLogin<Guid>>(entity => { entity.ToTable("user_logins"); });
         builder.Entity<IdentityRoleClaim<Guid>>(entity => { entity.ToTable("role_claims"); });
         builder.Entity<IdentityUserToken<Guid>>(entity => { entity.ToTable("user_tokens"); });
     }
