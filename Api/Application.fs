@@ -4,6 +4,7 @@ open System.Threading.Tasks
 open Api.Errors
 open Microsoft.AspNetCore.Authentication.JwtBearer
 open Microsoft.AspNetCore.SignalR
+open Microsoft.Extensions.Hosting
 open Microsoft.IdentityModel.Tokens
 open System.Text
 open System
@@ -12,6 +13,7 @@ open System.Security.Claims
 open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.Options
 open Microsoft.OpenApi.Models
+open Orleans
 open Swashbuckle.AspNetCore.SwaggerGen
 open Microsoft.Extensions.DependencyInjection
 
@@ -105,3 +107,4 @@ module Application =
                 
     type ICommand<'TArg, 'TResult> =
         abstract member Execute: 'TArg -> Task<Result<'TResult, AppErrors>>
+        

@@ -1,10 +1,13 @@
 namespace IntegrationTests
 
 open System
+open System.Threading.Channels
 open System.Threading.Tasks
 open Api
+open Api.DomainEventsHandler
 open Databases
 open Databases.Models
+open FSharp.Control
 open LinqToDB
 open LinqToDB.Data
 open Microsoft.AspNetCore.Hosting
@@ -12,8 +15,12 @@ open Microsoft.AspNetCore.Identity
 open Microsoft.Extensions.DependencyInjection
 open LinqToDB.EntityFrameworkCore
 open Microsoft.FSharp.Core
+open Orleans
+open PlanningPoker.Domain
 open Xunit
 open Microsoft.EntityFrameworkCore
+open System.Collections.Generic
+open Orleans.Streams
 
 module TestServer =
     open Microsoft.AspNetCore.Mvc.Testing
@@ -54,8 +61,23 @@ module TestServer =
         interface IAsyncDisposable with
             member this.DisposeAsync() = db.DisposeAsync()
 
+    type EventWaiter<'TEvent>(stream: ChannelReader<'TEvent>) =
+        
+        member _.WaitMessages() =
+            async {
+                let! arr =
+                    stream.ReadAllAsync()
+                    |> AsyncSeq.ofAsyncEnum
+                    |> AsyncSeq.bufferByCountAndTime 1 2000 
+                    |> AsyncSeq.take 1
+                    |> AsyncSeq.toArrayAsync
+                return arr.[0] 
+            }
+            |> Async.StartAsTask
+            
+            
 
-    type CustomWebApplicationFactory<'TStartup when 'TStartup: not struct>() as this =
+    type CustomWebApplicationFactory<'TStartup when 'TStartup: not struct>() =
         inherit WebApplicationFactory<'TStartup>()
 
         member this.Seeder =
@@ -76,6 +98,18 @@ module TestServer =
             this.Scope.ServiceProvider.GetRequiredService<'TService>()
 
 
+        member this.CreateEventHandler<'TEvent>(stream: CommonTypes.Streams.Stream) =
+            task {
+            let client = this.Scope.ServiceProvider.GetRequiredService<IClusterClient>()
+            let channel = Channel.CreateUnbounded<'TEvent>()
+            let! eventStream = client
+                                  .GetStreamProvider("SMS")
+                                  .GetStream<'TEvent>(stream.Id, stream.Namespace)
+                                  .SubscribeAsync(fun event t -> channel.Writer.WriteAsync(event).AsTask())
+            return EventWaiter(channel.Reader)
+            }
+        
+        
         member this.InitAsync() : Task =
             task {
                 do! this.Db.Database.MigrateAsync()

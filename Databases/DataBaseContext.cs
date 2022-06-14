@@ -32,6 +32,8 @@ public static class DataBasesExtensions
 
 public class DataBaseContext : IdentityDbContext<Account, IdentityRole<Guid>, Guid>
 {
+    public DbSet<AccountSession> AccountSession { get; set; } = null!;
+    
     public DataBaseContext(DbContextOptions<DataBaseContext> options) : base(options)
     {
         LinqToDBForEFTools.Initialize();

@@ -2,6 +2,7 @@ namespace Api
 
 open System.Security.Claims
 open Api.Commands
+open Api.DomainEventsHandlers
 open Api.Errors
 open GrainInterfaces
 open Microsoft.AspNetCore.Authentication
@@ -47,6 +48,7 @@ open System.Text.Json
 open FSharp.UMX
 open Databases
 open Databases.Models
+open DomainEventsHandler
 
 type Program =
     class
@@ -185,6 +187,10 @@ module Program =
             .AddJsonProtocol(fun options ->
                 options.PayloadSerializerOptions.PropertyNamingPolicy <- JsonNamingPolicy.CamelCase)
 
+        
+        builder.Services.AddEventHandlers<Session.DomainEvent.Started>(fun builder ->
+            builder.AddHandler<SessionStartSaveToAccountHandler>(CommonTypes.Streams.SessionDomainEvents))
+        
         builder.Services.AddCors (fun options ->
             options.AddDefaultPolicy (fun (builder: CorsPolicyBuilder) ->
                 builder

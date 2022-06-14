@@ -3,6 +3,7 @@
 open System
 open CommonTypes
 open FSharp.UMX
+open PlanningPoker.Domain.CommonTypes
 
 [<Measure>]
 type GroupId
@@ -39,6 +40,15 @@ type SessionObj =
 [<RequireQualifiedAccess>]
 module Session =
 
+    [<RequireQualifiedAccess>]
+    module DomainEvent =
+         
+         type Started = {
+             Id: Guid<SessionId>
+             Name: string
+             UserId: Guid<UserId>
+             }  
+    
     module Validation =
 
          let validateOwnerAccess user session =
@@ -82,7 +92,7 @@ module Session =
         | GroupAdded of Group
         | GroupRemoved of Group
         | ParticipantMovedToGroup of user: User * group: Group
-
+    
     let addParticipant (participant: User) groupId session =
         { session with
               Participants = session.Participants.Add(participant.Id, participant)

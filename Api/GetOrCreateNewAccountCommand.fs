@@ -7,7 +7,7 @@ open Gateway.Views
 open Microsoft.AspNetCore.Identity
 open Microsoft.EntityFrameworkCore
 
-module Commands = 
+module Commands =
 
     type GetOrCreateNewAccountCommandArgs =
         { Id: Guid
@@ -29,6 +29,7 @@ module Commands =
                         acc.UserName <- arg.UserName
                         let! _ = userManager.UpdateAsync(acc)
                         let! _ = userManager.UpdateNormalizedUserNameAsync(acc)
+
                         return
                             Ok
                             <| { Token = jwtTokenProvider.CreateToken(acc.Id, acc.UserName, acc.Email, arg.Picture) }
