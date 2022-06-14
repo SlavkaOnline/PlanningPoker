@@ -1,10 +1,8 @@
 namespace IntegrationTests
 
 open System.Collections.Generic
-open System.Threading.Channels
 open FSharp.Control
 open IntegrationTests.FakeServer
-open Microsoft.AspNetCore.Mvc.Testing
 open Xunit
 open Api
 open Gateway.Requests
@@ -13,7 +11,6 @@ open Microsoft.AspNetCore.SignalR.Client
 open Swensen.Unquote
 open System.IdentityModel.Tokens.Jwt
 open System
-open System.Threading.Tasks
 
 [<Collection("Real Server Collection")>]
 type EventsTests(fixture: CustomWebApplicationFactory<Program>) =

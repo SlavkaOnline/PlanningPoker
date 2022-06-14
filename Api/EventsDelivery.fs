@@ -14,7 +14,6 @@ open Newtonsoft.Json.Serialization
 open Orleans
 open Orleans.Streams
 open PlanningPoker.Domain
-open System.Security.Claims
 open PlanningPoker.Domain.CommonTypes
 open System.Threading.Tasks
 
