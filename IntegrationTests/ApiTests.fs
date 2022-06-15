@@ -12,9 +12,8 @@ open Microsoft.AspNetCore.SignalR.Client
 open Swensen.Unquote
 open System.IdentityModel.Tokens.Jwt
 open System
-open FSharp.UMX
 
-type ApiTests(fixture: CustomWebApplicationFactory<Program>) =
+type ApiTests(fixture: CustomWebApplicationFactory<Program>) as this =
   inherit TestServerBase(fixture)
 
   let server = fixture.Server
@@ -389,7 +388,7 @@ type ApiTests(fixture: CustomWebApplicationFactory<Program>) =
   [<Fact>]
   let ``Started session generate events`` () =
     task {
-      let! handler = fixture.CreateEventHandler<Session.DomainEvent.Started>(CommonTypes.Streams.SessionDomainEvents)
+      let! handler = this.CreateEventHandler<Session.DomainEvent.Started>(CommonTypes.Streams.SessionDomainEvents)
 
       let! user = Helper.login apiClient "test"
 

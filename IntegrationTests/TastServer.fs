@@ -131,25 +131,36 @@ module TestServer =
                 context.Database.EnsureDeleted() |> ignore)
             |> ignore
         override this.DisposeAsync() =
-            let b = base.DisposeAsync()
-
             task {
                 let! _ = (this.Seeder :> IAsyncDisposable).DisposeAsync()
                 let! _ = this.Db.DisposeAsync()
                 this.Scope.Dispose()
-                return! b
+                return! this.DisposeAsync()
             }
             |> ValueTask
 
 
-    [<CollectionDefinition("Real Server Collection")>]
+    [<CollectionDefinition("TestServer")>]
     type RealServerCollectionFixture() =
         interface ICollectionFixture<CustomWebApplicationFactory<Program>>
 
 
-    [<Collection("Real Server Collection")>]
+    [<Collection("TestServer")>]
     type TestServerBase(fixture: CustomWebApplicationFactory<Program>) =
+      
+        member this.CreateEventHandler<'TEvent>(stream: CommonTypes.Streams.Stream) =
+            task {
+                let client = fixture.GetService<IClusterClient>()
+                let channel = Channel.CreateUnbounded<'TEvent>()
+                let! eventStream = client
+                                      .GetStreamProvider("SMS")
+                                      .GetStream<'TEvent>(stream.Id, stream.Namespace)
+                                      .SubscribeAsync(fun event t -> channel.Writer.WriteAsync(event).AsTask())
+                return EventWaiter(channel.Reader)
+            }
+        
         interface IAsyncLifetime with
+           
             member this.DisposeAsync() = Task.CompletedTask
 
             member this.InitializeAsync() = fixture.ResetAsync()
