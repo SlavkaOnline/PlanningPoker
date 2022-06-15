@@ -9,9 +9,8 @@ open System
 open Swensen.Unquote
 open CommonTypes
 
-[<Collection("silo")>]
-type BehaviorTests(fixture: ClusterFixture) =
-
+type DurationsTests(fixture: OrleansClusterFixture) =
+    inherit OrleansTestServer(fixture)
     let cluster = fixture.Cluster
 
     let getUser() = {Id = %Guid.NewGuid(); Name = ""; Picture = Some ""}

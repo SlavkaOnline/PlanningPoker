@@ -29,7 +29,8 @@ namespace Grains
     public class SessionGrain : JournaledGrain<SessionGrainState, Session.Event>, ISessionGrain
     {
         private readonly Aggregate<SessionObj, Session.Command, Session.Event> _aggregate = null;
-        private IAsyncStream<Views.Event<Session.Event>> _domainEventStream = null;
+        private IAsyncStream<Views.Event<Session.Event>> _eventStream = null;
+        private IAsyncStream<Session.DomainEvent.Started> _domainEventStream = null;
 
         public SessionGrain()
         {
@@ -38,9 +39,12 @@ namespace Grains
 
         public override Task OnActivateAsync()
         {
+            _eventStream =
+                GetStreamProvider("SMS")
+                    .GetStream<Views.Event<Session.Event>>(this.GetPrimaryKey(), CommonTypes.Streams.SessionEvents.Namespace);
             _domainEventStream =
                 GetStreamProvider("SMS")
-                    .GetStream<Views.Event<Session.Event>>(this.GetPrimaryKey(), "DomainEvents");
+                    .GetStream<Session.DomainEvent.Started>(CommonTypes.Streams.SessionDomainEvents.Id, CommonTypes.Streams.SessionDomainEvents.Namespace);
             return base.OnActivateAsync();
         }
 
@@ -48,12 +52,13 @@ namespace Grains
         {
             RaiseEvent(e);
             await ConfirmEvents();
-            await _domainEventStream.OnNextAsync(new Views.Event<Session.Event>(Version, e));
+            await _eventStream.OnNextAsync(new Views.Event<Session.Event>(Version, e));
         }
 
         public async Task<Views.Session> Start(string title, CommonTypes.User user)
         {
             await _aggregate.Exec(State.Session, Session.Command.NewStart(title, user));
+            await _domainEventStream.OnNextAsync(new Session.DomainEvent.Started(this.GetPrimaryKey(), title, user.Id));
             return Views.Session.create(this.GetPrimaryKey(), Version, State.Session);
         }
 

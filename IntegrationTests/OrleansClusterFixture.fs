@@ -7,9 +7,6 @@ open Orleans.Configuration
 open Orleans.Hosting
 open Orleans.TestingHost
 open Orleans
-open Orleans.TestingHost
-open Orleans
-open Microsoft.Extensions.DependencyInjection
 open Xunit
 
 
@@ -33,7 +30,7 @@ type AddApplicationParts () =
 
 
 
-type ClusterFixture() =
+type OrleansClusterFixture() =
     let builder = TestClusterBuilder()
     do builder.Options.ServiceId <- Guid.NewGuid().ToString()
     do builder.Options.InitialSilosCount <- (int16 1)
@@ -48,7 +45,11 @@ type ClusterFixture() =
         cluster.StopAllSilos()
 
 
-[<CollectionDefinition("silo")>]
+[<CollectionDefinition("Orleans")>]
 type ClusterCollection() =
 
-  interface ICollectionFixture<ClusterFixture>
+  interface ICollectionFixture<OrleansClusterFixture>
+ 
+[<Collection("Orleans")>]  
+type OrleansTestServer(fixture: OrleansClusterFixture) =
+  class end

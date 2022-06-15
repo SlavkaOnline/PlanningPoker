@@ -31,7 +31,7 @@ Implementation notes:
 -- This table defines Orleans operational queries. Orleans uses these to manage its operations,
 -- these are the only queries Orleans issues to the database.
 -- These can be redefined (e.g. to provide non-destructive updates) provided the stated interface principles hold.
-CREATE TABLE OrleansQuery
+CREATE TABLE IF NOT EXISTS OrleansQuery
 (
     QueryKey varchar(64) NOT NULL,
     QueryText varchar(8000) NOT NULL,
@@ -40,7 +40,7 @@ CREATE TABLE OrleansQuery
 );
 
 
-CREATE TABLE OrleansStorage
+CREATE TABLE IF NOT EXISTS OrleansStorage
 (
     grainidhash integer NOT NULL,
     grainidn0 bigint NOT NULL,
@@ -56,7 +56,7 @@ CREATE TABLE OrleansStorage
     version integer
 );
 
-CREATE INDEX ix_orleansstorage
+CREATE INDEX IF NOT EXISTS ix_orleansstorage
     ON orleansstorage USING btree
         (grainidhash, graintypehash);
 
@@ -184,6 +184,8 @@ BEGIN
 END
 
 $function$;
+
+DELETE FROM OrleansQuery;
 
 INSERT INTO OrleansQuery(QueryKey, QueryText)
 VALUES

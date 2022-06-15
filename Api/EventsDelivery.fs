@@ -14,7 +14,6 @@ open Newtonsoft.Json.Serialization
 open Orleans
 open Orleans.Streams
 open PlanningPoker.Domain
-open System.Security.Claims
 open PlanningPoker.Domain.CommonTypes
 open System.Threading.Tasks
 
@@ -130,6 +129,7 @@ module rec EventsDeliveryHub =
         member private this.CreateSubscriptionsToEvent<'TEvent>
             (
                 id: string,
+                _namespace: string,
                 version: int32,
                 eventConverter: Guid -> Event<'TEvent> -> Event,
                 [<EnumeratorCancellation>] cancellationToken: CancellationToken
@@ -146,7 +146,7 @@ module rec EventsDeliveryHub =
                 let! sub =
                     client
                         .GetStreamProvider("SMS")
-                        .GetStream<Event<'TEvent>>(guid, "DomainEvents")
+                        .GetStream<Event<'TEvent>>(guid, _namespace)
                         .SubscribeAsync(fun event token -> bufferChannel.Writer.WriteAsync(event).AsTask())
 
                 cancellationToken.Register
@@ -198,7 +198,7 @@ module rec EventsDeliveryHub =
 
                 let! _ = session.AddParticipant(user)
 
-                return! this.CreateSubscriptionsToEvent(id, version, convertSessionEvent, cancellationToken)
+                return! this.CreateSubscriptionsToEvent(id, CommonTypes.Streams.SessionEvents.Namespace, version, convertSessionEvent, cancellationToken)
 
             }
 
@@ -208,4 +208,4 @@ module rec EventsDeliveryHub =
                 version: int32,
                 [<EnumeratorCancellation>] cancellationToken: CancellationToken
             ) : Task<System.Collections.Generic.IAsyncEnumerable<Event>> =
-            this.CreateSubscriptionsToEvent(id, version, convertStoryEvent, cancellationToken)
+            this.CreateSubscriptionsToEvent(id, CommonTypes.Streams.StoreEvents.Namespace, version, convertStoryEvent, cancellationToken)

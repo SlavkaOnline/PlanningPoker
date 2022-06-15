@@ -37,6 +37,6 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
     - name: Tests
-      run: dotnet test ./Tests/Tests.fsproj --no-build --verbosity normal
+      run: dotnet test ./Tests/Tests.fsproj --no-build --verbosity normal -l "console;verbosity=detailed"
     - name: Integration Tests
-      run: dotnet test ./IntegrationTests/IntegrationTests.fsproj --no-build --verbosity normal
+      run: dotnet test ./IntegrationTests/IntegrationTests.fsproj --no-build --verbosity normal -l "console;verbosity=detailed"

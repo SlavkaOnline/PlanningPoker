@@ -27,7 +27,7 @@ namespace Grains
     public class StoryGrain : JournaledGrain<StoryGrainState, Story.Event>, IStoryGrain
     {
         private readonly Aggregate<StoryObj, Story.Command, Story.Event> _aggregate = null;
-        private IAsyncStream<Views.Event<Story.Event>> _domainEventStream = null;
+        private IAsyncStream<Views.Event<Story.Event>> _eventStream = null;
 
         public StoryGrain()
         {
@@ -36,8 +36,8 @@ namespace Grains
 
         public override Task OnActivateAsync()
         {
-            _domainEventStream = GetStreamProvider("SMS")
-                .GetStream<Views.Event<Story.Event>>(this.GetPrimaryKey(), "DomainEvents");
+            _eventStream = GetStreamProvider("SMS")
+                .GetStream<Views.Event<Story.Event>>(this.GetPrimaryKey(), CommonTypes.Streams.StoreEvents.Namespace);
             return base.OnActivateAsync();
         }
 
@@ -45,7 +45,7 @@ namespace Grains
         {
             RaiseEvent(e);
             await ConfirmEvents();
-            await _domainEventStream.OnNextAsync(new Views.Event<Story.Event>(Version, e));
+            await _eventStream.OnNextAsync(new Views.Event<Story.Event>(Version, e));
         }
 
         public async Task<Views.Story> Configure(CommonTypes.User user, string title, string[] cards)

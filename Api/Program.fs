@@ -1,12 +1,16 @@
 namespace Api
 
 open System.Security.Claims
+open Api.Commands
+open Api.DomainEventsHandlers
+open Api.Errors
 open GrainInterfaces
 open Microsoft.AspNetCore.Authentication
 open Microsoft.AspNetCore.Authentication.OpenIdConnect
 open Microsoft.AspNetCore.Authentication.JwtBearer
 open Microsoft.AspNetCore.HttpOverrides
 open Microsoft.AspNetCore.Routing
+open Microsoft.AspNetCore.SignalR
 open Microsoft.Extensions.Options
 open Microsoft.IdentityModel.Tokens
 open System.Text
@@ -34,6 +38,7 @@ open System.Threading.Tasks
 open Microsoft.AspNetCore.Builder
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Hosting
+open Microsoft.AspNetCore.Identity
 open Orleans
 open Orleans.Hosting
 open Orleans.Configuration
@@ -42,8 +47,12 @@ open Application
 open System.Text.Json
 open FSharp.UMX
 open Databases
+open Databases.Models
+open DomainEventsHandler
 
-type Program = class end
+type Program =
+    class
+    end
 
 module Program =
     let exitCode = 0
@@ -54,36 +63,48 @@ module Program =
 
         let builder = WebApplication.CreateBuilder(args)
 
-        builder.Host.UseOrleans
-            (fun siloBuilder ->
-                siloBuilder
-                    .AddAdoNetGrainStorage("Database", fun (options: AdoNetGrainStorageOptions) ->
+        builder.Host.UseOrleans (fun siloBuilder ->
+            siloBuilder
+                .AddAdoNetGrainStorage(
+                    "Database",
+                    fun (options: AdoNetGrainStorageOptions) ->
                         options.Invariant <- "Npgsql"
                         options.ConnectionString <- builder.Configuration.["ConnectionStrings:Default"]
                         options.UseJsonFormat <- true
-                        )
-                    .AddMemoryGrainStorage("PubSubStore")
-                    .AddLogStorageBasedLogConsistencyProvider()
-                    .AddSimpleMessageStreamProvider(
-                        "SMS",
-                        fun (configureStream: SimpleMessageStreamProviderOptions) ->
-                            configureStream.FireAndForgetDelivery <- true
-                    )
-                    .ConfigureApplicationParts(fun parts ->
-                        parts
-                            .AddApplicationPart(typeof<SessionGrain>.Assembly)
-                            .WithReferences()
-                        |> ignore)
-                    .UseLocalhostClustering()
-                |> ignore)
+                )
+                .AddMemoryGrainStorage("PubSubStore")
+                .AddLogStorageBasedLogConsistencyProvider()
+                .AddSimpleMessageStreamProvider(
+                    "SMS",
+                    fun (configureStream: SimpleMessageStreamProviderOptions) ->
+                        configureStream.FireAndForgetDelivery <- true
+                )
+                .ConfigureApplicationParts(fun parts ->
+                    parts
+                        .AddApplicationPart(typeof<SessionGrain>.Assembly)
+                        .WithReferences()
+                    |> ignore)
+                .UseLocalhostClustering()
+            |> ignore)
 
+
+        builder.Services.AddScoped<ICommand<GetOrCreateNewAccountCommandArgs, AuthUser>, GetOrCreateNewAccountCommand>()
 
         builder.Services.AddSingleton<JwtTokenProvider>()
         builder.Services.AddSingleton<CardsTypeProvider>()
 
+        builder.Services.AddDatabase(builder.Configuration)
+
         builder
             .Services
-            .AddDatabase(builder.Configuration)
+            .AddIdentity<Account, IdentityRole<Guid>>()
+            .AddEntityFrameworkStores<DataBaseContext>()
+
+        builder.Services.AddSingleton<IUserIdProvider, IdBasedUserIdProvider>()
+
+
+        builder
+            .Services
             .AddAuthentication(fun x ->
                 x.DefaultAuthenticateScheme <- JwtBearerDefaults.AuthenticationScheme
                 x.DefaultChallengeScheme <- OpenIdConnectDefaults.AuthenticationScheme)
@@ -93,6 +114,7 @@ module Program =
                 fun x ->
 
                     let tokenValidationParameters = TokenValidationParameters()
+
                     tokenValidationParameters.ValidateIssuerSigningKey <- true
 
                     tokenValidationParameters.IssuerSigningKey <-
@@ -105,15 +127,12 @@ module Program =
 
                     events.OnMessageReceived <-
                         (fun context ->
-                            let accessToken =
-                                context.Request.Query.["access_token"].ToString()
+                            let accessToken = context.Request.Query.["access_token"].ToString()
 
                             let path = context.HttpContext.Request.Path
 
-                            if
-                                (String.IsNullOrEmpty(accessToken) |> not)
-                                && (path.StartsWithSegments(PathString "/events"))
-                            then
+                            if (String.IsNullOrEmpty(accessToken) |> not)
+                               && (path.StartsWithSegments(PathString "/events")) then
                                 context.Token <- accessToken
                                 Task.CompletedTask
                             else
@@ -121,17 +140,18 @@ module Program =
 
                     events.OnAuthenticationFailed <-
                         (fun context ->
-                            upcast task {
-                                       context.Response.StatusCode <- StatusCodes.Status401Unauthorized
-                                       context.Response.ContentType <- "application/json; charset=utf-8"
+                            upcast
+                                task {
+                                    context.Response.StatusCode <- StatusCodes.Status401Unauthorized
+                                    context.Response.ContentType <- "application/json; charset=utf-8"
 
-                                       do!
-                                           context.Response.WriteAsync(
-                                               JsonSerializer.Serialize(
-                                                   {| Message = "An error occurred processing your authentication." |}
-                                               )
-                                           )
-                                   })
+                                    do!
+                                        context.Response.WriteAsync(
+                                            JsonSerializer.Serialize(
+                                                {| Message = "An error occurred processing your authentication." |}
+                                            )
+                                        )
+                                })
 
                     x.TokenValidationParameters <- tokenValidationParameters
                     x.Events <- events
@@ -154,14 +174,12 @@ module Program =
                     options.Scope.Add("email"))
             )
 
-        builder.Services.AddAuthorization
-            (fun options ->
+        builder.Services.AddAuthorization (fun options ->
 
-                let policy =
-                    AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
+            let policy = AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
 
-                policy.RequireAuthenticatedUser()
-                options.DefaultPolicy <- policy.Build())
+            policy.RequireAuthenticatedUser()
+            options.DefaultPolicy <- policy.Build())
 
         builder
             .Services
@@ -169,15 +187,17 @@ module Program =
             .AddJsonProtocol(fun options ->
                 options.PayloadSerializerOptions.PropertyNamingPolicy <- JsonNamingPolicy.CamelCase)
 
-        builder.Services.AddCors
-            (fun options ->
-                options.AddDefaultPolicy
-                    (fun (builder: CorsPolicyBuilder) ->
-                        builder
-                            .AllowAnyOrigin()
-                            .AllowAnyMethod()
-                            .AllowAnyHeader()
-                        |> ignore))
+        
+        builder.Services.AddEventHandlers<Session.DomainEvent.Started>(fun builder ->
+            builder.AddHandler<SessionStartSaveToAccountHandler>(CommonTypes.Streams.SessionDomainEvents))
+        
+        builder.Services.AddCors (fun options ->
+            options.AddDefaultPolicy (fun (builder: CorsPolicyBuilder) ->
+                builder
+                    .AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                |> ignore))
 
         builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"))
         builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>()
@@ -190,15 +210,22 @@ module Program =
         let app = builder.Build()
 
         if app.Environment.IsDevelopment() then
-           app.UseDeveloperExceptionPage();
-           app.UseSwagger()
-           app.UseSwaggerUI(fun c -> c.SwaggerEndpoint("/swagger/v1/swagger.json", "WebApi v1")) |> ignore
+            app.UseDeveloperExceptionPage()
+            app.UseSwagger()
+
+            app.UseSwaggerUI(fun c -> c.SwaggerEndpoint("/swagger/v1/swagger.json", "WebApi v1"))
+            |> ignore
         else
             ()
-            
+
         app.CreateDataBaseIfNotExist()
+
         let forwardedHeadersOptions = ForwardedHeadersOptions()
-        forwardedHeadersOptions.ForwardedHeaders <- ForwardedHeaders.XForwardedFor ||| ForwardedHeaders.XForwardedProto
+
+        forwardedHeadersOptions.ForwardedHeaders <-
+            ForwardedHeaders.XForwardedFor
+            ||| ForwardedHeaders.XForwardedProto
+
         app.UseForwardedHeaders(forwardedHeadersOptions)
 
         app.UseCors()
@@ -206,25 +233,24 @@ module Program =
         app.UseAuthentication()
         app.UseAuthorization()
 
-        app.UseExceptionHandler
-            (fun x ->
-                x.Run
-                    (fun context ->
-                        upcast task {
-                                   let exceptionHandlerPathFeature =
-                                       context.Features.Get<IExceptionHandlerPathFeature>()
+        app.UseExceptionHandler (fun x ->
+            x.Run (fun context ->
+                upcast
+                    task {
+                        let exceptionHandlerPathFeature =
+                            context.Features.Get<IExceptionHandlerPathFeature>()
 
-                                   let err = exceptionHandlerPathFeature.Error
+                        let err = exceptionHandlerPathFeature.Error
 
-                                   let code, message =
-                                       match err with
-                                       | :? PlanningPokerDomainException as ex -> HttpStatusCode.BadRequest, ex.Data0
-                                       | _ -> HttpStatusCode.InternalServerError, err.Message
+                        let code, message =
+                            match err with
+                            | :? PlanningPokerDomainException as ex -> HttpStatusCode.BadRequest, ex.Data0
+                            | _ -> HttpStatusCode.InternalServerError, err.Message
 
-                                   context.Response.StatusCode <- int code
-                                   context.Response.HttpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase <- message
-                                   do! context.Response.CompleteAsync()
-                               }))
+                        context.Response.StatusCode <- int code
+                        context.Response.HttpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase <- message
+                        do! context.Response.CompleteAsync()
+                    }))
 
         app.MapHub<DomainEventHub>("/events", (fun options -> options.Transports <- HttpTransportType.WebSockets))
 
@@ -233,8 +259,7 @@ module Program =
             fun ([<FromServices>] jwtTokenProvider: JwtTokenProvider) ([<FromBody>] request: AuthUserRequest) ->
                 let id = Guid.NewGuid()
 
-                let token =
-                    jwtTokenProvider.CreateToken(id, request.Name, "")
+                let token = jwtTokenProvider.CreateToken(id, request.Name, "", "")
 
                 { Token = token }
         )
@@ -247,180 +272,235 @@ module Program =
                 Results.Challenge(properties, [| GoogleDefaults.AuthenticationScheme |])
         )
 
-        app.MapGet(
+        app
+            .MapGet(
                 "/api/login/google",
-                fun ([<FromServices>] jwtTokenProvider: JwtTokenProvider) (returnUrl: string) ([<FromServices>] ctx: HttpContext) ->
+                fun ([<FromServices>] getOrCreateNewAccountCommand: ICommand<GetOrCreateNewAccountCommandArgs, AuthUser>) (returnUrl: string) ([<FromServices>] ctx: HttpContext) ->
                     task {
                         let! result = ctx.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme)
 
                         if not result.Succeeded then
                             return Results.BadRequest()
                         else
-                            let name =
-                                $"{result
-                                       .Ticket
-                                       .Principal
-                                       .FindFirst(
-                                           ClaimTypes.GivenName
-                                       )
-                                       .Value} {result
-                                                    .Ticket
-                                                    .Principal
-                                                    .FindFirst(
-                                                        ClaimTypes.Surname
-                                                    )
-                                                    .Value}"
-
-                            let picture =
-                                result.Ticket.Principal.FindFirst("picture").Value
-
                             let id = Guid.NewGuid()
 
-                            let token =
-                                jwtTokenProvider.CreateToken(id, name, picture)
+                            let name =
+                                result
+                                    .Ticket
+                                    .Principal
+                                    .FindFirst(
+                                        ClaimTypes.GivenName
+                                    )
+                                    .Value.Trim()
+
+                            let surname =
+                                result
+                                    .Ticket
+                                    .Principal
+                                    .FindFirst(
+                                        ClaimTypes.Surname
+                                    )
+                                    .Value.Trim()
+
+                            let email =
+                                result
+                                    .Ticket
+                                    .Principal
+                                    .FindFirst(
+                                        ClaimTypes.Email
+                                    )
+                                    .Value
+
+                            let picture = result.Ticket.Principal.FindFirst("picture").Value
+
+                            let! userResult =
+                                getOrCreateNewAccountCommand.Execute(
+                                    { Id = id
+                                      Email = email
+                                      UserName = $"{name}_{surname}"
+                                      Picture = picture
+                                      Name = result.Ticket.Principal.Identity.Name
+                                       }
+                                )
 
                             do! ctx.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme)
-                            return Results.Redirect($"{returnUrl}?access_token={token}")
+
+                            match userResult with
+                            | Ok user -> return Results.Redirect($"{returnUrl}?access_token={user.Token}")
+                            | Error err -> return AppErrors.toWebError err
                     }
             )
             .WithName("GoogleResponse")
 
 
-        app.MapGet(
-            "/api/sessions/{id:guid}",
-            fun (id: Guid) ([<FromService>] silo: IClusterClient) -> silo.GetGrain<ISessionGrain>(id).GetState()
-        ).RequireAuthorization()
+        app
+            .MapGet(
+                "/api/sessions/{id:guid}",
+                fun (id: Guid) ([<FromService>] silo: IClusterClient) -> silo.GetGrain<ISessionGrain>(id).GetState()
+            )
+            .RequireAuthorization()
 
-        app.MapPost(
-            "/api/sessions",
-            fun ([<FromBody>] request: CreateSession) ([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) ->
-                task {
-                    return!
-                        (silo.GetGrain<ISessionGrain> <| Guid.NewGuid())
-                            .Start(request.Title, ctx.User.GetDomainUser())
-                }
-        ).RequireAuthorization()
+        app
+            .MapPost(
+                "/api/sessions",
+                fun ([<FromBody>] request: CreateSession) ([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) ->
+                    task {
+                        return!
+                            (silo.GetGrain<ISessionGrain> <| Guid.NewGuid())
+                                .Start(request.Title, ctx.User.GetDomainUser())
+                    }
+            )
+            .RequireAuthorization()
 
-        app.MapPost(
-            "/api/sessions/{id:guid}/stories",
-            fun (id: Guid) ([<FromBody>] request: CreateStory) ([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) ([<FromServices>] cardsTypeProvider: CardsTypeProvider) ->
-                task {
-                    return!
-                        (silo.GetGrain<ISessionGrain> id)
-                            .AddStory(
-                                ctx.User.GetDomainUser(),
-                                request.Title,
-                                if String.IsNullOrEmpty(request.CardsId) then
-                                    request.CustomCards
-                                else
-                                    cardsTypeProvider.GetCardsByTypeId(request.CardsId)
-                            )
-                }
-        ).RequireAuthorization()
+        app
+            .MapPost(
+                "/api/sessions/{id:guid}/stories",
+                fun (id: Guid) ([<FromBody>] request: CreateStory) ([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) ([<FromServices>] cardsTypeProvider: CardsTypeProvider) ->
+                    task {
+                        return!
+                            (silo.GetGrain<ISessionGrain> id)
+                                .AddStory(
+                                    ctx.User.GetDomainUser(),
+                                    request.Title,
+                                    if String.IsNullOrEmpty(request.CardsId) then
+                                        request.CustomCards
+                                    else
+                                        cardsTypeProvider.GetCardsByTypeId(request.CardsId)
+                                )
+                    }
+            )
+            .RequireAuthorization()
 
-        app.MapPost(
-            "/api/sessions/{id:guid}/activestory/{storyId:guid}",
-            fun (id: Guid) (storyId: Guid) ([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) ->
-                task {
-                    return!
-                        silo
-                            .GetGrain<ISessionGrain>(id)
-                            .SetActiveStory(ctx.User.GetDomainUser(), storyId, DateTime.UtcNow)
-                }
-        ).RequireAuthorization()
+        app
+            .MapPost(
+                "/api/sessions/{id:guid}/activestory/{storyId:guid}",
+                fun (id: Guid) (storyId: Guid) ([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) ->
+                    task {
+                        return!
+                            silo
+                                .GetGrain<ISessionGrain>(id)
+                                .SetActiveStory(ctx.User.GetDomainUser(), storyId, DateTime.UtcNow)
+                    }
+            )
+            .RequireAuthorization()
 
-        app.MapGet(
-            "/api/sessions/cards_types",
-            fun ([<FromServices>] cardsTypeProvider: CardsTypeProvider) ->
-                cardsTypeProvider.CardsTypes
-                |> Seq.map (fun c -> { Id = c.Id; Caption = c.Caption })
-                |> Seq.toArray
-        ).RequireAuthorization()
+        app
+            .MapGet(
+                "/api/sessions/cards_types",
+                fun ([<FromServices>] cardsTypeProvider: CardsTypeProvider) ->
+                    cardsTypeProvider.CardsTypes
+                    |> Seq.map (fun c -> { Id = c.Id; Caption = c.Caption })
+                    |> Seq.toArray
+            )
+            .RequireAuthorization()
 
-        app.MapPost(
-            "/api/sessions/{id:guid}/groups",
-            fun (id: Guid) ([<FromBody>] request: CreateGroup) ([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) ->
-                task {
-                    return!
-                        silo
-                            .GetGrain<ISessionGrain>(id)
-                            .AddGroup(
-                                ctx.User.GetDomainUser(),
-                                { Id = % Guid.NewGuid()
-                                  Name = request.Name }
-                            )
-                }
-        ).RequireAuthorization()
+        app
+            .MapPost(
+                "/api/sessions/{id:guid}/groups",
+                fun (id: Guid) ([<FromBody>] request: CreateGroup) ([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) ->
+                    task {
+                        return!
+                            silo
+                                .GetGrain<ISessionGrain>(id)
+                                .AddGroup(
+                                    ctx.User.GetDomainUser(),
+                                    { Id = % Guid.NewGuid()
+                                      Name = request.Name }
+                                )
+                    }
+            )
+            .RequireAuthorization()
 
-        app.MapDelete(
-            "/api/sessions/{id:guid}/groups/{groupId:guid}",
-            fun (id: Guid) (groupId: Guid) ([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) ->
-                task {
-                    return! silo
+        app
+            .MapDelete(
+                "/api/sessions/{id:guid}/groups/{groupId:guid}",
+                fun (id: Guid) (groupId: Guid) ([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) ->
+                    task {
+                        return!
+                            silo
                                 .GetGrain<ISessionGrain>(id)
                                 .RemoveGroup(ctx.User.GetDomainUser(), groupId)
-                }
-            ).RequireAuthorization()
+                    }
+            )
+            .RequireAuthorization()
 
-        app.MapPost(
-            "/api/sessions/{id:guid}/groups/{groupId:guid}/participants",
-            fun (id: Guid) (groupId: Guid) (request: MoveParticipantToGroup) ([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) ->
-                task {
-                    return! silo
+        app
+            .MapPost(
+                "/api/sessions/{id:guid}/groups/{groupId:guid}/participants",
+                fun (id: Guid) (groupId: Guid) (request: MoveParticipantToGroup) ([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) ->
+                    task {
+                        return!
+                            silo
                                 .GetGrain<ISessionGrain>(id)
                                 .MoveParticipantToGroup(ctx.User.GetDomainUser(), request.ParticipantId, groupId)
-                }
-            ).RequireAuthorization()
+                    }
+            )
+            .RequireAuthorization()
 
-        app.MapGet(
-            "/api/stories/{id:guid}",
-            fun (id: Guid) ([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) ->
-                task {
-                    return! silo
+        app
+            .MapGet(
+                "/api/stories/{id:guid}",
+                fun (id: Guid) ([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) ->
+                    task {
+                        return!
+                            silo
                                 .GetGrain<IStoryGrain>(id)
                                 .GetState(ctx.User.GetDomainUser())
-                }
-            ).RequireAuthorization()
+                    }
+            )
+            .RequireAuthorization()
 
-        app.MapPost(
-            "/api/stories/{id:guid}/vote",
-            fun (id: Guid) (request: Vote) ([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) ->
-                task {
-                    return! silo
+        app
+            .MapPost(
+                "/api/stories/{id:guid}/vote",
+                fun (id: Guid) (request: Vote) ([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) ->
+                    task {
+                        return!
+                            silo
                                 .GetGrain<IStoryGrain>(id)
                                 .Vote(ctx.User.GetDomainUser(), request.Card, DateTime.UtcNow)
-                }
-            ).RequireAuthorization()
+                    }
+            )
+            .RequireAuthorization()
 
-        app.MapDelete(
-            "/api/stories/{id:guid}/vote",
-            fun (id: Guid)([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) ->
-                task {
-                    return! silo
+        app
+            .MapDelete(
+                "/api/stories/{id:guid}/vote",
+                fun (id: Guid) ([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) ->
+                    task {
+                        return!
+                            silo
                                 .GetGrain<IStoryGrain>(id)
                                 .RemoveVote(ctx.User.GetDomainUser())
-                }
-            ).RequireAuthorization()
+                    }
+            )
+            .RequireAuthorization()
 
-        app.MapPost(
-            "/api/stories/{id:guid}/closed",
-            fun (id: Guid) (request: CloseStory) ([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) ->
-                task {
-                    return! silo
+        app
+            .MapPost(
+                "/api/stories/{id:guid}/closed",
+                fun (id: Guid) (request: CloseStory) ([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) ->
+                    task {
+                        return!
+                            silo
                                 .GetGrain<IStoryGrain>(id)
                                 .Close(ctx.User.GetDomainUser(), DateTime.UtcNow, request.Groups)
-                }
-            ).RequireAuthorization()
+                    }
+            )
+            .RequireAuthorization()
 
-        app.MapPost(
-            "/api/stories/{id:guid}/cleared",
-            fun (id: Guid) ([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) ->
-                task {
-                    return! silo
+        app
+            .MapPost(
+                "/api/stories/{id:guid}/cleared",
+                fun (id: Guid) ([<FromService>] silo: IClusterClient) ([<FromServices>] ctx: HttpContext) ->
+                    task {
+                        return!
+                            silo
                                 .GetGrain<IStoryGrain>(id)
                                 .Clear(ctx.User.GetDomainUser(), DateTime.UtcNow)
-                }
-            ).RequireAuthorization()
+                    }
+            )
+            .RequireAuthorization()
 
         app.Run()
 

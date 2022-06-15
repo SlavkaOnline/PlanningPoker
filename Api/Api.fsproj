@@ -9,15 +9,25 @@
   <ItemGroup>
     <None Include="Dockerfile" />
     <Compile Include="Extensions.fs" />
+    <Compile Include="Errors.fs" />
     <Compile Include="Application.fs" />
     <Compile Include="EventsDelivery.fs" />
+    <Compile Include="DomainEventsHandler.fs" />
+    <Compile Include="DomainEventsHandlers.fs" />
+    <Compile Include="GetOrCreateNewAccountCommand.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FSharp.Control.AsyncSeq" Version="3.2.1" />
     <PackageReference Include="FSharp.UMX" Version="1.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.Routing.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.Orleans.Persistence.AdoNet" Version="3.5.1" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
       <PackageReference Include="Google.Apis.Auth.AspNetCore3" Version="1.55.0" />
