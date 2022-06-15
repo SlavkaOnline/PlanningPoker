@@ -130,15 +130,6 @@ module TestServer =
 
                 context.Database.EnsureDeleted() |> ignore)
             |> ignore
-        override this.DisposeAsync() =
-            task {
-                let! _ = (this.Seeder :> IAsyncDisposable).DisposeAsync()
-                let! _ = this.Db.DisposeAsync()
-                this.Scope.Dispose()
-                return! this.DisposeAsync()
-            }
-            |> ValueTask
-
 
     [<CollectionDefinition("TestServer")>]
     type RealServerCollectionFixture() =

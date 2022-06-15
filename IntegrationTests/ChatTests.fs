@@ -14,8 +14,9 @@ open Microsoft.AspNetCore.Mvc.Testing
 open Microsoft.AspNetCore.SignalR.Client
 open Xunit
 
-[<Collection("Real Server Collection")>]
+
 type ChatTests(fixture: CustomWebApplicationFactory<Program>) =
+    inherit TestServerBase(fixture)
 
     let server = fixture.Server
     let apiClient = fixture.CreateClient()
