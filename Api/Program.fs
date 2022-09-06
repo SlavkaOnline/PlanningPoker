@@ -1,5 +1,6 @@
 namespace Api
 
+open Microsoft.FSharp.Linq.RuntimeHelpers.LeafExpressionConverter
 open System.Security.Claims
 open Api.Commands
 open Api.DomainEventsHandlers
@@ -49,6 +50,9 @@ open FSharp.UMX
 open Databases
 open Databases.Models
 open DomainEventsHandler
+open Microsoft.EntityFrameworkCore
+open System.Linq
+open PageReader
 
 type Program =
     class
@@ -436,7 +440,7 @@ module Program =
                     }
             )
             .RequireAuthorization()
-
+            
         app
             .MapGet(
                 "/api/stories/{id:guid}",
@@ -501,6 +505,25 @@ module Program =
                     }
             )
             .RequireAuthorization()
+            
+        app
+            .MapPost(
+                "/api/user/{id:guid}/sessions",
+                fun (id: Guid) ([<FromBody>] request: PageRequest<AccountSessionsFilter,DateTime>) ([<FromService>] db: DataBaseContext) ->
+                    task {
+                        let query = {
+                            Query = fun db -> db.AccountSessions.AsNoTracking().AsQueryable()
+                            Mapper = AccountSessions.create
+                            ExtractToken = fun x -> x.CreatedUtc
+                            Order = fun q ->
+                                q
+                                |> QueryOrder.Asc <@ fun session -> session.CreatedUtc @>
+                                |> QueryOrder.Desc <@ fun session -> session.SessionName @>
+                        }
+                        let reader = GetPageReader query request.Token
+                        return! reader.GetPage db 
+                    }
+                ).RequireAuthorization()
 
         app.Run()
 

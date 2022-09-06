@@ -10,6 +10,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Databases\Databases.csproj" />
       <ProjectReference Include="..\PlanningPoker\PlanningPoker.fsproj" />
     </ItemGroup>
 

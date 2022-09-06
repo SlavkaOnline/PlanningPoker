@@ -32,7 +32,7 @@ public static class DataBasesExtensions
 
 public class DataBaseContext : IdentityDbContext<Account, IdentityRole<Guid>, Guid>
 {
-    public DbSet<AccountSession> AccountSession { get; set; } = null!;
+    public DbSet<AccountSessionEntity> AccountSessions { get; set; } = null!;
     
     public DataBaseContext(DbContextOptions<DataBaseContext> options) : base(options)
     {

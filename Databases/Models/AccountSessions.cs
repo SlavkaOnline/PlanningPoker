@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Databases.Models;
 
-public class AccountSession
+public class AccountSessionEntity
 {
     public Guid Id { get; set; }
 
@@ -17,7 +17,7 @@ public class AccountSession
     public DateTime CreatedUtc { get; set; }
 
 
-    public AccountSession(
+    public AccountSessionEntity(
         Guid id,
         Guid accountId,
         Guid sessionId,
@@ -31,9 +31,9 @@ public class AccountSession
         CreatedUtc = createdUtc;
     }
     
-    private class Config : IEntityTypeConfiguration<AccountSession>
+    private class Config : IEntityTypeConfiguration<AccountSessionEntity>
     {
-        public void Configure(EntityTypeBuilder<AccountSession> builder)
+        public void Configure(EntityTypeBuilder<AccountSessionEntity> builder)
         {
             builder.ToTable("account_session");
             builder.Property(x => x.SessionName).HasMaxLength(256);

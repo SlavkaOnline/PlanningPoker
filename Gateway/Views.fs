@@ -2,6 +2,7 @@ namespace Gateway
 
 open System
 open System.Collections.Generic
+open Databases.Models
 open PlanningPoker.Domain
 open FSharp.UMX
 open PlanningPoker.Domain.CommonTypes
@@ -55,30 +56,29 @@ module Views =
               OwnerName = session.Owner.Value.Name
               DefaultGroupId = %session.DefaultGroupId
               Groups =
-                  session.Groups
-                  |> List.map (fun g -> { Id = %g.Id; Name = g.Name })
-                  |> Array.ofList
+                session.Groups
+                |> List.map (fun g -> { Id = %g.Id; Name = g.Name })
+                |> Array.ofList
               ActiveStory =
-                  session.ActiveStory
-                  |> Option.map (fun id -> (%id).ToString())
-                  |> Option.defaultValue Unchecked.defaultof<_>
+                session.ActiveStory
+                |> Option.map (fun id -> (%id).ToString())
+                |> Option.defaultValue Unchecked.defaultof<_>
               Participants =
-                  session.Participants
-                  |> Map.toList
-                  |> List.map snd
-                  |> List.map
-                      (fun p ->
-                          { Id = %p.Id
-                            Name = p.Name
-                            Picture = p.Picture |> Option.defaultValue ""
-                            GroupId =
-                                %(session.UserGroupMap.TryFind p.Id
-                                  |> Option.defaultValue session.DefaultGroupId) })
-                  |> List.toArray
+                session.Participants
+                |> Map.toList
+                |> List.map snd
+                |> List.map (fun p ->
+                    { Id = %p.Id
+                      Name = p.Name
+                      Picture = p.Picture |> Option.defaultValue ""
+                      GroupId =
+                        %(session.UserGroupMap.TryFind p.Id
+                          |> Option.defaultValue session.DefaultGroupId) })
+                |> List.toArray
               Stories =
-                  session.Stories
-                  |> List.map UMX.untag
-                  |> List.toArray }
+                session.Stories
+                |> List.map UMX.untag
+                |> List.toArray }
 
     type Story =
         { Id: Guid
@@ -101,71 +101,68 @@ module Views =
               OwnerId = %story.Owner.Value.Id
               OwnerName = %story.Owner.Value.Name
               UserCard =
-                  match story.State with
-                  | ActiveStory s ->
-                      s.Votes.TryFind user
-                      |> Option.map (fun v -> %v.Card)
-                      |> Option.defaultValue ""
-                  | ClosedStory s ->
-                      fst s.Statistics.[0].Result
-                      |> Map.toSeq
-                      |> Seq.filter (fun s -> Array.contains user ((snd s).Voters |> Array.map (fun v -> v.User)))
-                      |> Seq.tryHead
-                      |> Option.map (fun v -> %(fst v))
-                      |> Option.defaultValue ""
+                match story.State with
+                | ActiveStory s ->
+                    s.Votes.TryFind user
+                    |> Option.map (fun v -> %v.Card)
+                    |> Option.defaultValue ""
+                | ClosedStory s ->
+                    fst s.Statistics.[0].Result
+                    |> Map.toSeq
+                    |> Seq.filter (fun s -> Array.contains user ((snd s).Voters |> Array.map (fun v -> v.User)))
+                    |> Seq.tryHead
+                    |> Option.map (fun v -> %(fst v))
+                    |> Option.defaultValue ""
 
               Cards = story.Cards |> Array.map UMX.untag
               IsClosed =
-                  match story.State with
-                  | ClosedStory _ -> true
-                  | _ -> false
+                match story.State with
+                | ClosedStory _ -> true
+                | _ -> false
               Result =
-                  match story.State with
-                  | ClosedStory s -> %s.Result
-                  | _ -> Unchecked.defaultof<_>
+                match story.State with
+                | ClosedStory s -> %s.Result
+                | _ -> Unchecked.defaultof<_>
               Voted =
-                  match story.State with
-                  | ActiveStory s ->
-                      s.Votes
-                      |> Map.toSeq
-                      |> Seq.map (fst)
-                      |> Seq.map (fun v -> %v.Id)
-                      |> Seq.toArray
-                  | ClosedStory s ->
-                      seq {
-                          for st in fst s.Statistics.[0].Result |> Map.toSeq do
-                              let results = snd st
+                match story.State with
+                | ActiveStory s ->
+                    s.Votes
+                    |> Map.toSeq
+                    |> Seq.map (fst)
+                    |> Seq.map (fun v -> %v.Id)
+                    |> Seq.toArray
+                | ClosedStory s ->
+                    seq {
+                        for st in fst s.Statistics.[0].Result |> Map.toSeq do
+                            let results = snd st
 
-                              for v in results.Voters -> %v.User.Id
+                            for v in results.Voters -> %v.User.Id
 
-                      }
-                      |> Array.ofSeq
+                    }
+                    |> Array.ofSeq
 
               Statistics =
                   match story.State with
                   | ClosedStory s ->
                       s.Statistics
-                      |> Array.map
-                          (fun s ->
-                              { Statistics.Id =
-                                    s.Id
-                                    |> Option.map Nullable
-                                    |> Option.defaultValue (Unchecked.defaultof<Guid Nullable>)
-                                Result =
-                                    fst s.Result
-                                    |> Map.toSeq
-                                    |> Seq.map
-                                        (fun m ->
-                                            (%(fst m),
-                                             { VoteResult.Percent = (snd m).Percent
-                                               Voters =
-                                                   (snd m).Voters
-                                                   |> Array.map
-                                                       (fun v ->
-                                                           { Name = v.User.Name
-                                                             Duration = v.Duration.ToString(@"hh\:mm\:ss") }) }))
-                                    |> dict
-                                    |> Dictionary })
+                      |> Array.map (fun s ->
+                          { Statistics.Id =
+                              s.Id
+                              |> Option.map Nullable
+                              |> Option.defaultValue (Unchecked.defaultof<Guid Nullable>)
+                            Result =
+                              fst s.Result
+                              |> Map.toSeq
+                              |> Seq.map (fun m ->
+                                  (%(fst m),
+                                   { VoteResult.Percent = (snd m).Percent
+                                     Voters =
+                                       (snd m).Voters
+                                       |> Array.map (fun v ->
+                                           { Name = v.User.Name
+                                             Duration = v.Duration.ToString(@"hh\:mm\:ss") }) }))
+                              |> dict
+                              |> Dictionary })
                   | _ -> Array.empty
 
               StartedAt =
@@ -187,3 +184,14 @@ module Views =
           Group: string
           User: ChatUser
           Text: string }
+
+    type AccountSessions =
+        { Id: Guid
+          SessionId: Guid
+          Name: string }
+        static member create(model: AccountSessionEntity) =
+            { Id = model.Id
+              SessionId = model.SessionId
+              Name = model.SessionName }
+
+    type PageView<'TView, 'TToken> = { View: 'TView array; Token: 'TToken }

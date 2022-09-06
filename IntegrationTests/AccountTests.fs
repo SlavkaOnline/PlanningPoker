@@ -1,7 +1,6 @@
 namespace IntegrationTests
 
 open System
-open System.Threading.Tasks
 open Api
 open Api.Application
 open Api.Commands

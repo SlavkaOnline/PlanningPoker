@@ -2,6 +2,7 @@ namespace IntegrationTests
 
 open System
 open System.Collections.Generic
+open System.IdentityModel.Tokens.Jwt
 open System.Net.Http
 open System.Net.Http.Headers
 open System.Text
@@ -130,6 +131,18 @@ module Helper =
             return connection
         }        
     
+    let getUserId (user: AuthUser) =
+      let tokenHandler = JwtSecurityTokenHandler()
+
+      let token =
+        tokenHandler.ReadJwtToken(user.Token)
+
+      token.Claims
+        |> Seq.filter (fun c -> c.Type = "nameid")
+        |> Seq.tryHead
+        |> Option.map (fun c -> c.Value |> Guid.Parse)
+        |> Option.defaultValue Guid.Empty
+    
     let createEventsConnection (testServer: TestServer) (token: string) =
         createWebSocketConnection testServer token "events"
         
@@ -174,3 +187,6 @@ module Helper =
 
     let moveParticipantToGroup (client: HttpClient) (token: string) (id: Guid) (userId: Guid) (groupId: Guid) =
         requestPost<_,Session> client {MoveParticipantToGroup.ParticipantId = userId} token $"sessions/%s{id.ToString()}/groups/%s{groupId.ToString()}/participants"
+        
+    let getAccountSessions<'TFilter, 'TToken, 'TView> (client: HttpClient) (token: string) (id: Guid) (request: PageRequest<'TFilter,'TToken>) =
+        requestPost<_, PageView<'TView,'TToken>> client request token $"user/%s{id.ToString()}/sessions"

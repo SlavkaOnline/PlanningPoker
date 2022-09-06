@@ -13,6 +13,7 @@
     <Compile Include="Application.fs" />
     <Compile Include="EventsDelivery.fs" />
     <Compile Include="DomainEventsHandler.fs" />
+    <Compile Include="PageReader.fs" />
     <Compile Include="DomainEventsHandlers.fs" />
     <Compile Include="GetOrCreateNewAccountCommand.fs" />
     <Compile Include="Program.fs" />

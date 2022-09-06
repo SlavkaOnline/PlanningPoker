@@ -34,3 +34,16 @@ module Requests =
     type AuthUserRequest = {
         Name: string
     }
+    
+    [<CLIMutable>]
+    type PageRequest<'TFilter, 'TToken> = {
+        Filter: 'TFilter option
+        Token: 'TToken option
+        Take: int
+    }
+
+    [<CLIMutable>]
+    type AccountSessionsFilter =
+        {
+            AccountId: Guid
+        }

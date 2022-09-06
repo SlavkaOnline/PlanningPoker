@@ -15,6 +15,7 @@
         <Compile Include="ChatTests.fs" />
         <Compile Include="DurationsTests.fs" />
         <Compile Include="AccountTests.fs" />
+        <Compile Include="AccountSessionsTests.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 

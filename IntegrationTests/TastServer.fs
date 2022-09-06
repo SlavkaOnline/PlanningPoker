@@ -57,6 +57,9 @@ module TestServer =
 
         member this.Account(id: Guid, userName: string, email: string, name: string) =
             userManager.CreateAsync(Account(id, userName, email, name))
+            
+        member this.AccountSessions(id: Guid, accountId: Guid, sessionId: Guid, sessionName: string, createdUtc: DateTime) =
+            this.Seed(AccountSessionEntity(id, accountId, sessionId, sessionName, createdUtc))
 
         interface IAsyncDisposable with
             member this.DisposeAsync() = db.DisposeAsync()
@@ -139,6 +142,10 @@ module TestServer =
     [<Collection("TestServer")>]
     type TestServerBase(fixture: CustomWebApplicationFactory<Program>) =
       
+        member _.Seeder = fixture.Seeder
+        
+        member  _.Client = fixture.Server.CreateClient()
+        
         member this.CreateEventHandler<'TEvent>(stream: CommonTypes.Streams.Stream) =
             task {
                 let client = fixture.GetService<IClusterClient>()

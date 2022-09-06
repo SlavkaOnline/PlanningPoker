@@ -17,7 +17,7 @@ module DomainEventsHandlers =
       member this.Handle(event) =
         task {
           try 
-            do db.AccountSession.Add(AccountSession(Guid.NewGuid(), %event.UserId, %event.Id, event.Title, DateTime.UtcNow)) |> ignore
+            do db.AccountSessions.Add(AccountSessionEntity(Guid.NewGuid(), %event.UserId, %event.Id, event.Title, DateTime.UtcNow)) |> ignore
             let! _ = db.SaveChangesAsync()
             return ()
           with
